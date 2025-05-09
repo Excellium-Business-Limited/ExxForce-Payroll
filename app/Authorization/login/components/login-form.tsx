@@ -17,8 +17,8 @@ export function LoginForm({
 				className
 			)}
 			{...props}>
-			<Card className='h-full overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
-				<CardContent className='h-full grid p-0 md:grid-cols-2'>
+			<Card className='h-full p-0 overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
+				<CardContent className='grid min-h-svh p-0 lg:grid-cols-2'>
 					<div className='relative h-full xl:h-[100%] bg-muted md:block'>
 						<Image
 							src={image}
@@ -91,7 +91,7 @@ export function LoginForm({
 							<div className='text-center text-sm'>
 								Don&apos;t have an account?{' '}
 								<a
-									href='#'
+									href='./signup'
 									className='underline underline-offset-4'>
 									Sign up
 								</a>
