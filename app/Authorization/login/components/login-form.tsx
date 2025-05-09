@@ -17,7 +17,7 @@ export function LoginForm({
 			// 	className
 			// )}
 			{...props}>
-			<div className='h-auto p-0 overflow-hidden mt-0 self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
+			<div className='h-auto p-0 overflow-hidden mt-0 self-center sm:w-[50%] w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
 				<CardContent className='grid min-h-svh p-0 lg:grid-cols-2'>
 					<div className='relative h-full xl:h-[100%] bg-muted md:block'>
 						<Image
