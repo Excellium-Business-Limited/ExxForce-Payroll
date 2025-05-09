@@ -17,7 +17,7 @@ export function LoginForm({
 				className
 			)}
 			{...props}>
-			<Card className='h-full p-0 overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
+			<div className='h-full p-0 overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
 				<CardContent className='grid min-h-svh p-0 lg:grid-cols-2'>
 					<div className='relative h-full xl:h-[100%] bg-muted md:block'>
 						<Image
@@ -63,43 +63,27 @@ export function LoginForm({
 								className='w-full bg-[#3D56A8]'>
 								Login
 							</Button>
-							<div className='relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border'>
-								<span className='relative z-10 bg-background px-2 text-muted-foreground'>
-									Or continue with
-								</span>
-							</div>
-							<div className='grid grid-cols-3 gap-4'>
-								<Button
-									variant='outline'
-									className='w-full'>
-									<p>Apple</p>
-									<span className='sr-only'>Login with Apple</span>
-								</Button>
-								<Button
-									variant='outline'
-									className='w-full'>
-									<p>Google</p>
-									<span className='sr-only'>Login with Google</span>
-								</Button>
-								<Button
-									variant='outline'
-									className='w-full'>
-									<p>Meta</p>
-									<span className='sr-only'>Login with Meta</span>
-								</Button>
+							<div className='relative flex items-center py-4'>
+
+								<Input
+									id='remember-me'
+									type='checkbox'
+									className='h-4 w-4 rounded border-gray-300 text-[#3D56A8] focus:ring-[#3D56A8]'/>
+								<Label htmlFor='remember-me' className=''>
+									Remember me </Label>
 							</div>
 							<div className='text-center text-sm'>
-								Don&apos;t have an account?{' '}
+									You are new here?{' '}
 								<a
 									href='./signup'
-									className='underline underline-offset-4'>
-									Sign up
+									className='underline underline-offset-4 text-blue-400 hover:text-blue-600'>
+									Create an account
 								</a>
 							</div>
 						</div>
 					</form>
 				</CardContent>
-			</Card>
+			</div>
 			<div className='text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary'>
 				By clicking continue, you agree to our <a href='#'>Terms of Service</a>{' '}
 				and <a href='#'>Privacy Policy</a>.

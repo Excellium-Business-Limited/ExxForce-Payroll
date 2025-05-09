@@ -5,11 +5,9 @@ import image from './components/resources/login.svg';
 
 const LoginPage = () => {
   return (
-		<div className=''>
 					<div className=''>
 						<LoginForm />
 					</div>
-		</div>
 	);
 }
 
