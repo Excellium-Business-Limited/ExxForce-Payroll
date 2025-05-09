@@ -12,12 +12,12 @@ export function LoginForm({
 }: React.ComponentProps<'div'>) {
 	return (
 		<div
-			className={cn(
-				'flex flex-col gap-6 justify-center min-h-screen items-center self-center',
-				className
-			)}
+			// className={cn(
+			// 	'flex flex-col gap-6 justify-center min-h-screen items-center self-center',
+			// 	className
+			// )}
 			{...props}>
-			<div className='h-full p-0 overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
+			<div className='h-auto p-0 overflow-hidden mt-0 self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
 				<CardContent className='grid min-h-svh p-0 lg:grid-cols-2'>
 					<div className='relative h-full xl:h-[100%] bg-muted md:block'>
 						<Image
@@ -69,7 +69,7 @@ export function LoginForm({
 									id='remember-me'
 									type='checkbox'
 									className='h-4 w-4 rounded border-gray-300 text-[#3D56A8] focus:ring-[#3D56A8]'/>
-								<Label htmlFor='remember-me' className=''>
+								<Label htmlFor='remember-me' className=' ml-1.5'>
 									Remember me </Label>
 							</div>
 							<div className='text-center text-sm'>
@@ -83,10 +83,6 @@ export function LoginForm({
 						</div>
 					</form>
 				</CardContent>
-			</div>
-			<div className='text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary'>
-				By clicking continue, you agree to our <a href='#'>Terms of Service</a>{' '}
-				and <a href='#'>Privacy Policy</a>.
 			</div>
 		</div>
 	);
