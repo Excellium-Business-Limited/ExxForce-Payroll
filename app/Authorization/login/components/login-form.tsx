@@ -17,13 +17,13 @@ export function LoginForm({
 				className
 			)}
 			{...props}>
-			<Card className='h-full overflow-hidden self-center mt-10 w-3xl'>
+			<Card className='h-full overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
 				<CardContent className='h-full grid p-0 md:grid-cols-2'>
-					<div className='relative hidden bg-muted md:block'>
+					<div className='relative h-full xl:h-[100%] bg-muted md:block'>
 						<Image
 							src={image}
 							alt='Image'
-							className='absolute inset-0 w-full object-cover dark:brightness-[0.2] dark:grayscale'
+							className='absolute inset-0 w-full h-full object-cover dark:brightness-[0.2] dark:grayscale'
 						/>
 					</div>
 					<form className='p-6 md:p-8'>
@@ -60,7 +60,7 @@ export function LoginForm({
 							</div>
 							<Button
 								type='submit'
-								className='w-full'>
+								className='w-full bg-[#3D56A8]'>
 								Login
 							</Button>
 							<div className='relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border'>
