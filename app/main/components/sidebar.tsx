@@ -10,7 +10,7 @@ import {
 
 const sidebar = ({className} : {className?: string}) => {
 	return (
-		<Sidebar className='h-fill flex flex-col justify-between ${className}'>
+		<Sidebar className='h-fill flex flex-col justify-between ${className} z-30'>
 				<SidebarHeader className='bg-black'>
 					<Image
 						src={img}
