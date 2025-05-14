@@ -25,14 +25,14 @@ const Dashboard = () => {
 						Export
 					</Button>
 				</div>
-				<div className='grid grid-cols-4 gap-4'>
+				<div className='grid grid-cols-4 gap-4 m-8'>
 					<Card></Card>
 					<Card></Card>
 					<Card></Card>
 					<Card></Card>
 				</div>
 			</div>
-			<div className='grid grid-cols-2'>
+			<div className='grid grid-cols-2 m-8 gap-7'>
 				<BarChart />
 				<Piechrt />
 			</div>
