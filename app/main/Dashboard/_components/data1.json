@@ -1,0 +1,42 @@
+[
+	{
+		"PayFrequency": "Bi-Weekly",
+		"CreatedBy": "John Doe",
+		"TotalEmployees": 25,
+		"LastUpdated": "2025-05-10T10:30:00Z",
+		"PayPeriod": "2025-05-01T00:00:00Z",
+		"Status": "Pending"
+	},
+	{
+		"PayFrequency": "Monthly",
+		"CreatedBy": "Jane Smith",
+		"TotalEmployees": 50,
+		"LastUpdated": "2025-05-12T14:45:00Z",
+		"PayPeriod": "2025-04-01T00:00:00Z",
+		"Status": "Processing"
+	},
+	{
+		"PayFrequency": "Weekly",
+		"CreatedBy": "Alice Johnson",
+		"TotalEmployees": 15,
+		"LastUpdated": "2025-05-14T09:15:00Z",
+		"PayPeriod": "2025-05-07T00:00:00Z",
+		"Status": "Approved"
+	},
+	{
+		"PayFrequency": "Semi-Monthly",
+		"CreatedBy": "Bob Brown",
+		"TotalEmployees": 30,
+		"LastUpdated": "2025-05-15T16:00:00Z",
+		"PayPeriod": "2025-05-01T00:00:00Z",
+		"Status": "Declined"
+	},
+	{
+		"PayFrequency": "Monthly",
+		"CreatedBy": "Charlie Green",
+		"TotalEmployees": 40,
+		"LastUpdated": "2025-05-13T11:20:00Z",
+		"PayPeriod": "2025-04-15T00:00:00Z",
+		"Status": "Pending"
+	}
+]
