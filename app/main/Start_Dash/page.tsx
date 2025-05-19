@@ -7,6 +7,7 @@ import { CircleCheck } from 'lucide-react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import CompanyForm from './companyForm';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const page = () => {
 	return (
@@ -62,19 +63,19 @@ const page = () => {
 					<p className='text-xs w-fit'>
 						Basic information about your company including address.
 					</p>
-					<Dialog>
-						<DialogTrigger asChild>
+					<Sheet>
+						<SheetTrigger asChild>
 							<Button
 								variant='outline'
 								className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-green-100 text-green-600'>
 								Complete
 							</Button>
-						</DialogTrigger>
-						<DialogContent className='sm:min-w-[400px] sm:max-h-[500px] overflow-y-auto'>
-							<DialogTitle className='hidden'>Company Details</DialogTitle>
+						</SheetTrigger>
+						<SheetContent className="min-w-[500px] p-4 overflow-auto">
+							<SheetTitle className='hidden'>Company Details</SheetTitle>
 							<CompanyForm />
-						</DialogContent>
-					</Dialog>
+						</SheetContent>
+					</Sheet>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>

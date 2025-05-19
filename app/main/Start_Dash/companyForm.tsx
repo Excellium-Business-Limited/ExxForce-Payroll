@@ -3,29 +3,42 @@ import { Card } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SelectItem } from '@radix-ui/react-select';
 import React from 'react';
 
 const companyForm = () => {
 	return (
-		<div className='w-full'>
-			<Card className=' w-full border-none border-transparent shadow-none'>
-					<div className=' absolute top-2 mt-0 mb-4 '>
-						<h4 className='font-bold'> Company Details</h4>
-						<p className='text-muted-foreground'> Add company details</p>
-					</div>
-				<form>
+		<div className=' h-screen'>
+			<Card className=' w-full border-transparent border-none shadow-none'>
+				<div className=' absolute top-2 mt-0 mb-4 '>
+					<h4 className='font-bold'> Company Details</h4>
+					<p className='text-muted-foreground'> Add company details</p>
+				</div>
+				<form className='m-4 h-[603px]'>
 					<span className='p-6 items-start'>
 						<Label
 							className='mb-3'
 							htmlFor='Industry'>
 							Industry
 						</Label>
-						<Input
-							className='h-8 mb-0.5'
-							type='text'
-							id='Industry'
-							required
-						/>
+						<Select>
+							<SelectTrigger className='h-8 mb-0.5 w-full'>
+								<SelectValue placeholder='Industry'/>
+							</SelectTrigger>
+							<SelectContent position='popper'>
+								<SelectItem value={'Technology'}>Technology</SelectItem>
+								<SelectItem value={' Healthcare'}>Healthcare</SelectItem>
+								<SelectItem value={'Finance'}>Finance</SelectItem>
+								<SelectItem value={' Education'}>Education</SelectItem>
+								<SelectItem value={' Manufacturing'}>Manufacturing</SelectItem>
+								<SelectItem value={'Retail '}>Retail</SelectItem>
+								<SelectItem value={' Hospitality'}>Hospitality</SelectItem>
+								<SelectItem value={'Energy '}>Energy</SelectItem>
+								<SelectItem value={' Government'}>Government</SelectItem>
+								<SelectItem value={'Media & Entertainment'}>Media & Entertainment</SelectItem>
+							</SelectContent>
+						</Select>
 					</span>
 					<div className='grid grid-cols-2 gap-6 '>
 						<span className=' items-start'>
@@ -130,7 +143,7 @@ const companyForm = () => {
 							<Label
 								className='mb-3'
 								htmlFor='TIN'>
-								Tax Identification Number (TIN)
+								Tax Identification Number(TIN)
 							</Label>
 							<Input
 								className='h-8 '
