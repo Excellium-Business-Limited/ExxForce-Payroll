@@ -1,14 +1,11 @@
-// import React from 'react'
-// // import { EmployeeForm} from './Components/EmployeeForm';
-// import  Image  from 'next/image';
-// import image from './components/resources/login.svg';
+import React from 'react'
 
-// const LoginPage = () => {
-//   return (
-//           <div>
-//             <EmployeeForm />
-//           </div>
-//   );
-// }
+const page = () => {
+  return (
+    <div>
+      
+    </div>
+  )
+}
 
-// // export Employee page;
+export default page

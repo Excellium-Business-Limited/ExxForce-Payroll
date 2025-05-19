@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { CircleCheck } from 'lucide-react';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import CompanyForm from './companyForm';
 
 const page = () => {
 	return (
@@ -60,9 +62,19 @@ const page = () => {
 					<p className='text-xs w-fit'>
 						Basic information about your company including address.
 					</p>
-					<span className='w-[134px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-green-100 text-green-300'>
-						Complete
-					</span>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button
+								variant='outline'
+								className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-green-100 text-green-600'>
+								Complete
+							</Button>
+						</DialogTrigger>
+						<DialogContent className='sm:min-w-[400px] sm:max-h-[500px] overflow-y-auto'>
+							<DialogTitle className='hidden'>Company Details</DialogTitle>
+							<CompanyForm />
+						</DialogContent>
+					</Dialog>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>
@@ -75,9 +87,11 @@ const page = () => {
 						Create pay grades to define salary levels and structure your payroll
 						system.
 					</p>
-					<span className='w-[134px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
+					<Button
+						variant='outline'
+						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
 						Start Setup
-					</span>
+					</Button>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>
@@ -90,9 +104,11 @@ const page = () => {
 						Add your team members and their personal information for payroll
 						processing.
 					</p>
-					<span className='w-[134px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
+					<Button
+						variant='outline'
+						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
 						Start Setup
-					</span>
+					</Button>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>
@@ -105,9 +121,11 @@ const page = () => {
 						Define salary components, allowances, and benefits for your
 						employees.
 					</p>
-					<span className='w-[134px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
+					<Button
+						variant='outline'
+						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
 						Start Setup
-					</span>
+					</Button>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>
@@ -119,9 +137,11 @@ const page = () => {
 					<p className='text-xs w-fit'>
 						Configure tax settings, social security and mandatory deductions.
 					</p>
-					<span className='w-[134px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-[#DEE7F6]'>
+					<Button
+						variant='outline'
+						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-[#DEE7F6]'>
 						Start Setup
-					</span>
+					</Button>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>
@@ -134,9 +154,11 @@ const page = () => {
 						Process your first payroll and generate payment slips for your
 						employees.
 					</p>
-					<span className='w-[134px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-[#DEE7F6]'>
+					<Button
+						variant='outline'
+						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px] bg-[#DEE7F6]'>
 						Start Setup
-					</span>
+					</Button>
 				</Card>
 			</div>
 		</div>

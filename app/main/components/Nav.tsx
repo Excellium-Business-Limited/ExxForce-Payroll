@@ -19,6 +19,7 @@ import {
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
 
 const Navigation = () => {
 	return (
@@ -44,8 +45,15 @@ const Navigation = () => {
 						<LucideMessageCircleQuestion className='h-5 w-5' />
 					</Button>
 					<Button className='rounded-full flex bg-white text-[#3D56A8]'>
-						<CircleUser className='h-5 w-5' />
-						<p> John Doe</p>
+						<Avatar>
+							<AvatarImage
+								src={'your_image_source_here'}
+								alt=''
+							/>
+							<AvatarFallback>
+								<CircleUser className='h-5 w-5' />
+							</AvatarFallback>
+						</Avatar>
 					</Button>
 				</div>
 			</Card>
