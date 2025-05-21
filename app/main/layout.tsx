@@ -26,19 +26,16 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang='en'>
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				<div className=' w-full mb-3'>
+		<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+			<div className=' w-full mb-3'>
 				<SidebarProvider>
 					<AppSidebar className='bg-black' />
 					<div className='grid w-full'>
-					<Navigation />
-					<main className='w-full mt-5'>{children}</main>
+						<Navigation />
+						<main className='w-full'>{children}</main>
 					</div>
 				</SidebarProvider>
-				</div>
-			</body>
-		</html>
+			</div>
+		</body>
 	);
 }
