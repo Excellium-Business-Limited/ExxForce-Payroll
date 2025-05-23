@@ -5,9 +5,20 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { CircleCheck } from 'lucide-react';
 import Image from 'next/image';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import CompanyForm from './companyForm';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
+import CompanyForm from './_resources/companyForm';
+import PayGradeForm from './_resources/paygradeForm';
+import {
+	Sheet,
+	SheetContent,
+	SheetTitle,
+	SheetTrigger,
+} from '@/components/ui/sheet';
 
 const page = () => {
 	return (
@@ -71,7 +82,7 @@ const page = () => {
 								Complete
 							</Button>
 						</SheetTrigger>
-						<SheetContent className="min-w-[500px] p-4 overflow-auto">
+						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
 							<SheetTitle className='hidden'>Company Details</SheetTitle>
 							<CompanyForm />
 						</SheetContent>
@@ -88,11 +99,19 @@ const page = () => {
 						Create pay grades to define salary levels and structure your payroll
 						system.
 					</p>
-					<Button
-						variant='outline'
-						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
-						Start Setup
-					</Button>
+					<Sheet>
+						<SheetTrigger asChild>
+							<Button
+								variant='outline'
+								className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6] text-[#3D56A8]'>
+								Start Setup
+							</Button>
+						</SheetTrigger>
+						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
+							<SheetTitle className='hidden'>Add PayGrade</SheetTitle>
+							<PayGradeForm />
+						</SheetContent>
+					</Sheet>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>

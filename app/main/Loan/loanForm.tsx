@@ -1,4 +1,4 @@
-import Image from 'next/image';
+"use client";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -11,31 +11,43 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { SelectItem } from '@radix-ui/react-select';
+import 'react-datepicker/dist/react-datepicker.css';
+import DatePicker from 'react-datepicker';
 import React from 'react';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function LoanForm() {
+	const [startDate, setStartDate] = React.useState<Date | null>(null);
 	return (
 		<div className=''>
-			<div className='self-center w-[688px] h-[603px] ml-7 gap-4'>
+			<Card className='self-center w-full gap-4 border-none shadow-none'>
 				<div>
 					<h1 className='text-2xl font-bold'>Add Loan</h1>
 					<p className='text-xs'>Add Loan details</p>
 				</div>
 				<form action=''>
-					<div>
+					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='loanNum'>Loan Number</Label>
+							<Label
+								htmlFor='loanNum'
+								className='mb-2'>
+								Loan Number
+							</Label>
 							<Input
-								className=''
+								className='w-[200px]'
 								type='text'
 								id='loanNum'
 								required
 							/>
 						</span>
 						<span>
-							<Label htmlFor='LoanName'>Loan Name</Label>
+							<Label
+								htmlFor='LoanName'
+								className='mb-2'>
+								Loan Name
+							</Label>
 							<Select required>
-								<SelectTrigger className='w-[180px]'>
+								<SelectTrigger className='w-[200px]'>
 									<SelectValue placeholder='Select Loan Name' />
 								</SelectTrigger>
 								<SelectContent position='popper'>
@@ -46,11 +58,15 @@ export default function LoanForm() {
 							</Select>
 						</span>
 					</div>
-					<div>
+					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='SelectEmp'>Select Employee</Label>
+							<Label
+								htmlFor='SelectEmp'
+								className='mb-2'>
+								Select Employee
+							</Label>
 							<Select>
-								<SelectTrigger className='w-[180px]'>
+								<SelectTrigger className='w-[200px]'>
 									<SelectValue placeholder='Select Employee' />
 								</SelectTrigger>
 								<SelectContent position='popper'>
@@ -61,18 +77,23 @@ export default function LoanForm() {
 							</Select>
 						</span>
 						<span>
-							<Label htmlFor='Loanamt'>Loan Amount</Label>
+							<Label
+								htmlFor='Loanamt'
+								className='mb-2'>
+								Loan Amount
+							</Label>
 							<Input
-								className=''
+								className='w-[200px]'
+								placeholder='Enter Loan Amount'
 								type='text'
 								id='LoanAmt'
 								required
 							/>
 						</span>
 					</div>
-					<div>
+					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='Repay'>Repayment Duration</Label>
+							<Label htmlFor='Repay' className='mb-2'>Repayment Duration</Label>
 							<Select>
 								<SelectTrigger className='w-[180px]'>
 									<SelectValue placeholder='Repayment Duration' />
@@ -85,36 +106,59 @@ export default function LoanForm() {
 							</Select>
 						</span>
 						<span>
-							<Label htmlFor='MonthDed'>Monthly Deductiond</Label>
+							<Label
+								htmlFor='MonthDed'
+								className='mb-2'>
+								Monthly Deductiond
+							</Label>
 							<Input
+								className='w-[200px]'
 								type='text'
+								placeholder='Enter Monthly Deduction'
 								id='MonthDed'
 								required
 							/>
 						</span>
 					</div>
-					<div>
+					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
 							<Label htmlFor='Start'>Start Date of Repayment</Label>
-							<Input
-								type='date'
+							<DatePicker
 								id='Start'
 								required
-								placeholder='25/5/2025'
+								selected={startDate}
+								onChange={(date) => setStartDate(date)}
+								dateFormat='dd/MM/yyyy'
+								placeholderText='25/5/2025'
+								className='h-8 mb-4 w-[200px] pl-3 pr-8 border rounded'
 							/>
 						</span>
 					</div>
-					<div>
+					<div> 
 						<span>
 							<Label htmlFor='Reason'>Reason</Label>
-							<Input
-								type='textarea'
+							<Textarea
+								className='h-24 mb-4 pl-3 pr-8 border'
 								id='Reason'
 							/>
 						</span>
 					</div>
 				</form>
-			</div>
+				<div className='self-end'>
+									<Button
+										className='m-3 text-muted-foreground'
+										variant='outline'>
+										{' '}
+										Close{' '}
+									</Button>
+									<Button
+										className='m-3 bg-[#3D56A8] text-white '
+										variant='outline'>
+										{' '}
+										Save{' '}
+									</Button>
+								</div>
+			</Card>
 		</div>
 	);
 }
