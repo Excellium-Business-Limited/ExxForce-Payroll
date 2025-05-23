@@ -91,8 +91,8 @@ export default function Home() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							<TableRow>
-								<TableCell>45623-05</TableCell>
+							<TableRow id='1'>
+								<TableCell  >45623-05</TableCell>
 								<TableCell>Ifunanya Johnson</TableCell>
 								<TableCell>Car Loan</TableCell>
 								<TableCell>₦600,000.00</TableCell>
