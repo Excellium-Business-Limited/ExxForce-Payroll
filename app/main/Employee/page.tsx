@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button'
 
 const page = () => {
   return (
-<<<<<<< HEAD
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-auto">
       {/* Header Section */}
       <div className='bg-[#EFF5FF] p-6 md:p-8'>
@@ -63,29 +62,6 @@ const page = () => {
       </main>
     </div>
   )
-=======
-		<div>
-			<div className='self-center h-[603px] ml-7 gap-4'>
-				<div>
-					<h3 className='text-2xl font-bold, top-0.5, left-0.5'>Employee</h3>
-
-					<p className='text-sm text-muted-foreground'>Manage your employees</p>
-					<Button variant='outline'>Add Employee</Button>
-					<Button variant='outline'>Import Employees</Button>
-				</div>
-				<div>
-					<h2>Add employees</h2>
-					<p>
-						Add employees to your company. You can add employees one by one or
-						import them in bulk.
-					</p>
-					<Button variant='outline'>Add Employee</Button>
-					<Button variant='outline'>Import Employees</Button>
-				</div>
-			</div>
-		</div>
-	);
->>>>>>> 84b7cf5b09aad3f96894a229d4b1f3bf7e9650f1
 }
 
 export default page
