@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,28 +12,22 @@ import {
   SelectItem
 } from '@/components/ui/select';
 
-export default function EmployeeForm({ onClose }) {
+export default function EmployeeForm({ open, onClose }) {
+  if (!open) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      ></div>
+      <div className="fixed inset-0 bg-black opacity-50" onClick={onClose} />
 
-      {/* Drawer from Right */}
-      <div className="ml-auto w-full max-w-xl h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Add Employee</h1>
-            <p className="text-sm text-muted-foreground">Enter employee details</p>
-          </div>
-          <Button variant="ghost" onClick={onClose}>✕</Button>
+      {/* Slide-in Panel */}
+      <div className="ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto shadow-xl">
+        <div className='mb-8'>
+          <h1 className='text-2xl font-bold'>Add Employee</h1>
+          <p className='text-sm text-muted-foreground'>Enter employee details</p>
         </div>
 
         <form className='space-y-8'>
-          {/* Employment Details Section */}
           <div className='space-y-4'>
             <h2 className='text-lg font-semibold'>Employment Details</h2>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -83,7 +78,6 @@ export default function EmployeeForm({ onClose }) {
             </div>
           </div>
 
-          {/* Personal Details Section */}
           <div className='space-y-4'>
             <h2 className='text-lg font-semibold'>Personal Details</h2>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -132,7 +126,6 @@ export default function EmployeeForm({ onClose }) {
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className='flex justify-end gap-4 pt-4'>
             <Button variant="outline" type="button" onClick={onClose}>
               Cancel
