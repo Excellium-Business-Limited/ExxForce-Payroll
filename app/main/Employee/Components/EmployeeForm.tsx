@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,14 +11,24 @@ import {
   SelectItem
 } from '@/components/ui/select';
 
-export default function EmployeeForm() {
+export default function EmployeeForm({ onClose }) {
   return (
-    <div className='p-6'>
-      <div className='max-w-4xl mx-auto'>
-        {/* Form Header */}
-        <div className='mb-8'>
-          <h1 className='text-2xl font-bold'>Add Employee</h1>
-          <p className='text-sm text-muted-foreground'>Enter employee details</p>
+    <div className="fixed inset-0 z-50 flex">
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50"
+        onClick={onClose}
+      ></div>
+
+      {/* Drawer from Right */}
+      <div className="ml-auto w-full max-w-xl h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto p-6">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Add Employee</h1>
+            <p className="text-sm text-muted-foreground">Enter employee details</p>
+          </div>
+          <Button variant="ghost" onClick={onClose}>✕</Button>
         </div>
 
         <form className='space-y-8'>
@@ -28,12 +40,10 @@ export default function EmployeeForm() {
                 <Label htmlFor='employeeId'>Employee ID</Label>
                 <Input id='employeeId' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='jobTitle'>Job Title</Label>
                 <Input id='jobTitle' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label>Department</Label>
                 <Select required>
@@ -48,7 +58,6 @@ export default function EmployeeForm() {
                   </SelectContent>
                 </Select>
               </div>
-              
               <div className='space-y-2'>
                 <Label>Employment Type</Label>
                 <Select required>
@@ -63,12 +72,10 @@ export default function EmployeeForm() {
                   </SelectContent>
                 </Select>
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='startDate'>Start Date</Label>
                 <Input id='startDate' type='date' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='taxStartDate'>Tax Start Date</Label>
                 <Input id='taxStartDate' type='date' required />
@@ -84,22 +91,18 @@ export default function EmployeeForm() {
                 <Label htmlFor='firstName'>First Name</Label>
                 <Input id='firstName' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='lastName'>Last Name</Label>
                 <Input id='lastName' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='phone'>Phone Number</Label>
                 <Input id='phone' type='tel' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='email'>Work Email</Label>
                 <Input id='email' type='email' required />
               </div>
-              
               <div className='space-y-2'>
                 <Label>Gender</Label>
                 <Select>
@@ -114,17 +117,14 @@ export default function EmployeeForm() {
                   </SelectContent>
                 </Select>
               </div>
-              
               <div className='space-y-2'>
                 <Label htmlFor='dob'>Date of Birth</Label>
                 <Input id='dob' type='date' required />
               </div>
-              
               <div className='space-y-2 md:col-span-2'>
                 <Label htmlFor='address1'>Address Line 1</Label>
                 <Input id='address1' required />
               </div>
-              
               <div className='space-y-2 md:col-span-2'>
                 <Label htmlFor='address2'>Address Line 2</Label>
                 <Input id='address2' />
@@ -134,7 +134,7 @@ export default function EmployeeForm() {
 
           {/* Form Actions */}
           <div className='flex justify-end gap-4 pt-4'>
-            <Button variant="outline" type="button">
+            <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" className='bg-[#3D56A8] hover:bg-[#2E4299]'>

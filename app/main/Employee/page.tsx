@@ -1,7 +1,14 @@
-import React from 'react'
-import { Button } from '@/components/ui/button'
+"use client";
 
-const page = () => {
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import BulkUploadModal from './Components/Import';
+import EmployeeForm from './Components/EmployeeForm'; // Assuming this is your employee form component
+
+const Page = () => {
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-auto">
       {/* Header Section */}
@@ -15,6 +22,7 @@ const page = () => {
             <Button 
               size="lg" 
               className='w-full md:w-auto bg-[#3D56A8] hover:bg-[#2E4299] text-white'
+              onClick={() => setShowEmployeeForm(true)}
             >
               Add Employee
             </Button>
@@ -22,6 +30,7 @@ const page = () => {
               size="lg" 
               variant="outline" 
               className='w-full md:w-auto border-[#3A1C1F] text-[#25282B] hover:bg-transparent hover:text-white bg-transparent'
+              onClick={() => setShowUploadModal(true)}
             >
               Import CSV
             </Button>
@@ -46,6 +55,7 @@ const page = () => {
               <Button 
                 size="lg"
                 className='bg-[#3D56A8] hover:bg-[#2E4299] text-white'
+                onClick={() => setShowEmployeeForm(true)}
               >
                 + Add Employee
               </Button>
@@ -53,6 +63,7 @@ const page = () => {
                 size="lg" 
                 variant="outline"
                 className='border-[#3A1C1F] text-[#25282B] hover:bg-transparent hover:text-[#3D56A8] bg-transparent'
+                onClick={() => setShowUploadModal(true)}
               >
                 Import Employees
               </Button>
@@ -60,8 +71,14 @@ const page = () => {
           </div>
         </div>
       </main>
-    </div>
-  )
-}
 
-export default page
+      {/* Modals */}
+      <BulkUploadModal open={showUploadModal} onClose={() => setShowUploadModal(false)} />
+      {showEmployeeForm && (
+        <EmployeeForm onClose={() => setShowEmployeeForm(false)} />
+      )}
+    </div>
+  );
+};
+
+export default Page;
