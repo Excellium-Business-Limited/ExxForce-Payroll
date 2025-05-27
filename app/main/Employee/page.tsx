@@ -72,21 +72,20 @@ const Page = () => {
 					</div>
 				</div>
 			</main>
-
       {/* Modals */}
       <BulkUploadModal open={showUploadModal} onClose={() => setShowUploadModal(false)} />
       <EmployeeForm open={showEmployeeForm} onClose={() => setShowEmployeeForm(false)} />
-    </div>
-  );
+	<div>
 			{/* Modals */}
 			<BulkUploadModal
 				open={showUploadModal}
 				onClose={() => setShowUploadModal(false)}
-			/>
+				/>
 			{showEmployeeForm && (
-				<EmployeeForm onClose={() => setShowEmployeeForm(false)} />
+				<EmployeeForm onClose={() => setShowEmployeeForm(false)} open={undefined} />
 			)}
 		</div>
+			</div>
 	);
 };
 
