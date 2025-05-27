@@ -189,6 +189,7 @@ const page = () => {
 						Start Setup
 					</Button>
 				</Card>
+				
 			</div>
 		</div>
 	);
