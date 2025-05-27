@@ -17,6 +17,13 @@ import {
 } from '@/components/ui/table';
 import Image from 'next/image';
 import LoanForm from './loanForm';
+import Link from 'next/link';
+const items = [
+	{ id: '1', name: 'Item One' },
+	{ id: '2', name: 'Item Two' },
+	{ id: '3', name: 'Item Three' },
+];
+
 
 export default function Home() {
 	return (
@@ -92,7 +99,7 @@ export default function Home() {
 						</TableHeader>
 						<TableBody>
 							<TableRow id='1'>
-								<TableCell  >45623-05</TableCell>
+								<TableCell>45623-05</TableCell>
 								<TableCell>Ifunanya Johnson</TableCell>
 								<TableCell>Car Loan</TableCell>
 								<TableCell>₦600,000.00</TableCell>
@@ -104,12 +111,14 @@ export default function Home() {
 									</h4>
 								</TableCell>
 								<TableCell>
+									<Link href={`/main/Loan/1`}>
 									<Image
 										width={25}
 										height={25}
 										src='/iconamoon_eye-light.png'
 										alt=''
-									/>
+										/>
+										</Link>
 								</TableCell>
 							</TableRow>
 
@@ -225,6 +234,13 @@ export default function Home() {
 						</TableBody>
 					</Table>
 				</div>
+				<ul>
+					{items.map((item) => (
+						<li key={item.id}>
+							<Link href={`/main/Loan/${item.id}`}>{item.name}</Link>
+						</li>
+					))}
+				</ul>
 			</div>
 		</div>
 	);

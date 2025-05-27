@@ -100,7 +100,7 @@ export default function LoanForm() {
 						className='m-3 bg-[#3D56A8] text-white '
 						variant='outline'>
 						{' '}
-						Save{' '}
+						Create Pay Grade{' '}
 					</Button>
 				</div>
 			</Card>
