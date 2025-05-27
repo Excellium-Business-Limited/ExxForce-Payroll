@@ -79,16 +79,6 @@ const Page = () => {
       <BulkUploadModal open={showUploadModal} onClose={() => setShowUploadModal(false)} />
       <EmployeeForm open={showEmployeeForm} onClose={() => setShowEmployeeForm(false)} />
     </div>
-  );
-			{/* Modals */}
-			<BulkUploadModal
-				open={showUploadModal}
-				onClose={() => setShowUploadModal(false)}
-			/>
-			{showEmployeeForm && (
-				<EmployeeForm onClose={() => setShowEmployeeForm(false)} />
-			)}
-		</div>
 	);
 };
 
