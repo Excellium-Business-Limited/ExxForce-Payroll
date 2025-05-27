@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import CompanyForm from './main/Start_Dash/_resources/companyForm';
+import CompanyForm from './main/components/companyForm';
 import LoanDetails from './main/Loan/loanDetails';
 
 export default function Home() {

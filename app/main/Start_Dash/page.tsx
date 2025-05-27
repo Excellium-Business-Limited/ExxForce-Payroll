@@ -11,14 +11,15 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import CompanyForm from './_resources/companyForm';
-import PayGradeForm from './_resources/paygradeForm';
+import CompanyForm from '../components/companyForm';
+import PayGradeForm from '../components/paygradeForm';
 import {
 	Sheet,
 	SheetContent,
 	SheetTitle,
 	SheetTrigger,
 } from '@/components/ui/sheet';
+import EmployeeForm from '../components/EmployeeForm';
 
 const page = () => {
 	return (
@@ -124,11 +125,19 @@ const page = () => {
 						Add your team members and their personal information for payroll
 						processing.
 					</p>
-					<Button
-						variant='outline'
-						className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6]'>
-						Start Setup
-					</Button>
+					<Sheet>
+						<SheetTrigger asChild>
+							<Button
+								variant='outline'
+								className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6] text-[#3D56A8]'>
+								Start Setup
+							</Button>
+						</SheetTrigger>
+						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
+							<SheetTitle className='hidden'>Company Details</SheetTitle>
+							<EmployeeForm onClose={undefined} />
+						</SheetContent>
+					</Sheet>
 				</Card>
 				<Card className='w-500px m-4 p-[12px] w-[300px] h-[216px]'>
 					<div className='flex flex-row m-3'>
