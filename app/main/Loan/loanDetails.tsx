@@ -96,8 +96,10 @@ export default function LoanDetails() {
 							<span className='my-2'>
 								<div>
 									<Image
-										src={''}
+										src={'/icons/CalenderDots.png'}
 										alt={''}
+										width={20}
+										height={20}
 									/>
 									<h6 className='text-xs text-muted-foreground'>Start Date</h6>
 								</div>
@@ -106,8 +108,10 @@ export default function LoanDetails() {
 							<span className='my-2'>
 								<div>
 									<Image
-										src={''}
+										src={'/icons/formkit_time.png'}
 										alt={''}
+										width={20}
+										height={20}
 									/>
 									<h6 className='text-xs text-muted-foreground'>Duration</h6>
 								</div>
@@ -116,8 +120,10 @@ export default function LoanDetails() {
 							<span className='my-2'>
 								<div>
 									<Image
-										src={''}
+										src={'/icons/iconoir_percentage.png'}
 										alt={''}
+										width={20}
+										height={20}
 									/>
 									<h6 className='text-xs text-muted-foreground'>
 										Monthly Deductions
@@ -128,8 +134,10 @@ export default function LoanDetails() {
 							<span className='my-2'>
 								<div>
 									<Image
-										src={''}
+										src={'/icons/Vector.png'}
 										alt={''}
+										width={20}
+										height={20}
 									/>
 									<h6 className='text-xs text-muted-foreground'>End Date</h6>
 								</div>

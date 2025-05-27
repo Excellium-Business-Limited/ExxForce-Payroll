@@ -18,6 +18,9 @@ import {
 import Image from 'next/image';
 import LoanForm from './loanForm';
 import Link from 'next/link';
+import LoanDetails from './loanDetails';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import UpdateRepay from '../components/updateRepay';
 const items = [
 	{ id: '1', name: 'Item One' },
 	{ id: '2', name: 'Item Two' },
@@ -112,13 +115,13 @@ export default function Home() {
 								</TableCell>
 								<TableCell>
 									<Link href={`/main/Loan/1`}>
-									<Image
-										width={25}
-										height={25}
-										src='/iconamoon_eye-light.png'
-										alt=''
+										<Image
+											width={25}
+											height={25}
+											src='/iconamoon_eye-light.png'
+											alt=''
 										/>
-										</Link>
+									</Link>
 								</TableCell>
 							</TableRow>
 
@@ -241,6 +244,8 @@ export default function Home() {
 						</li>
 					))}
 				</ul>
+				
+				<LoanDetails />
 			</div>
 		</div>
 	);
