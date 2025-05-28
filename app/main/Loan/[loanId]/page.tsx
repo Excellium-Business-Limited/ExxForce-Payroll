@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import Loans from '../loanDetails';
+import Loans from '../../Dashboard/_components/loanDetails';
 const items = [
 	{ id: '1', name: 'Item One', description: 'Details for item one' },
 	{ id: '2', name: 'Item Two', description: 'Details for item two' },

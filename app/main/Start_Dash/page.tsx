@@ -135,7 +135,7 @@ const page = () => {
 						</SheetTrigger>
 						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
 							<SheetTitle className='hidden'>Company Details</SheetTitle>
-							<EmployeeForm onClose={undefined} />
+							<EmployeeForm onClose={undefined} open={undefined} />
 						</SheetContent>
 					</Sheet>
 				</Card>

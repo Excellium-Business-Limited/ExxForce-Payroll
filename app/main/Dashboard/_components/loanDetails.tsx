@@ -14,7 +14,8 @@ import { DialogContent, DialogTitle } from '@radix-ui/react-dialog';
 import { MoreHorizontalIcon } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
-import UpdateRepay from '../components/updateRepay';
+import UpdateRepay from '../../components/updateRepay';
+import Dialogs from '../../components/dialog';
 
 export default function LoanDetails() {
 	return (
@@ -26,21 +27,9 @@ export default function LoanDetails() {
 						<h1>Loan Details</h1>
 					</span>
 					<div className='items-center self-end justify-between flex gap-4'>
-						<Dialog>
-							<DialogTrigger asChild>
-								<Button
-									variant={'outline'}
-									className='bg-[#3D56A8] text-white'>
-									Update Repayment
-								</Button>
-							</DialogTrigger>
-							<DialogContent>
-								<DialogTitle className='text-lg font-semibold'>
-									Update Repayment{' '}
-								</DialogTitle>
-								<UpdateRepay />
-							</DialogContent>
-						</Dialog>
+						<Dialogs>
+							<UpdateRepay/>
+						</Dialogs>
 						<MoreHorizontalIcon className='border-2 rounded-4xl border-black h-[30px] w-[30px]' />
 					</div>
 				</div>
@@ -96,7 +85,7 @@ export default function LoanDetails() {
 							<span className='my-2'>
 								<div>
 									<Image
-										src={'/icons/CalenderDots.png'}
+										src={'/icons/CalendarDots.png'}
 										alt={''}
 										width={20}
 										height={20}
