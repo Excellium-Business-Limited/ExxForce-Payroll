@@ -26,7 +26,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+		<div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 			<div className=' w-full mb-3'>
 				<SidebarProvider>
 					<AppSidebar className='bg-black' />
@@ -36,6 +36,6 @@ export default function RootLayout({
 					</div>
 				</SidebarProvider>
 			</div>
-		</body>
+		</div>
 	);
 }

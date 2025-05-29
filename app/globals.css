@@ -9,6 +9,11 @@
   /* Optional: Keeps the pointer cursor */
 }
 
+TableRow {
+  
+  height: 67;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

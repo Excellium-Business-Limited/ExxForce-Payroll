@@ -1,15 +1,21 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { DialogClose } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+	Select,
+	SelectContent,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { SelectItem } from '@radix-ui/react-select';
 import React from 'react';
 
 const companyForm = () => {
 	return (
-		<div className=' h-screen'>
+		<div className=' h-screen bg-white'>
 			<Card className=' w-full border-transparent border-none shadow-none'>
 				<div className=' absolute top-2 mt-0 mb-4 '>
 					<h4 className='font-bold'> Company Details</h4>
@@ -24,7 +30,7 @@ const companyForm = () => {
 						</Label>
 						<Select>
 							<SelectTrigger className='h-8 mb-0.5 w-full'>
-								<SelectValue placeholder='Industry'/>
+								<SelectValue placeholder='Industry' />
 							</SelectTrigger>
 							<SelectContent position='popper'>
 								<SelectItem value={'Technology'}>Technology</SelectItem>
@@ -36,7 +42,9 @@ const companyForm = () => {
 								<SelectItem value={' Hospitality'}>Hospitality</SelectItem>
 								<SelectItem value={'Energy '}>Energy</SelectItem>
 								<SelectItem value={' Government'}>Government</SelectItem>
-								<SelectItem value={'Media & Entertainment'}>Media & Entertainment</SelectItem>
+								<SelectItem value={'Media & Entertainment'}>
+									Media & Entertainment
+								</SelectItem>
 							</SelectContent>
 						</Select>
 					</span>
@@ -169,15 +177,17 @@ const companyForm = () => {
 				</form>
 
 				<div className='self-end'>
-					<Button
-						className='m-3 text-muted-foreground'
-						variant='outline'>
-						{' '}
-						Close{' '}
-					</Button>
+					<DialogClose asChild>
+						<Button
+							className='m-3 text-muted-foreground'
+							variant='outline'>
+							{' '}
+							Close{' '}
+						</Button>
+					</DialogClose>
 					<Button
 						className='m-3 bg-[#3D56A8] text-white '
-						variant='outline'>
+						variant='outline' type='submit'>
 						{' '}
 						Save{' '}
 					</Button>

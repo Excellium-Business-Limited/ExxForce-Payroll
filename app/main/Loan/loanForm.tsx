@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -15,11 +15,12 @@ import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
+import { DialogClose } from '@/components/ui/dialog';
 
 export default function LoanForm() {
 	const [startDate, setStartDate] = React.useState<Date | null>(null);
 	return (
-		<div className=''>
+		<div className='bg-white'>
 			<Card className='self-center w-full gap-4 border-none shadow-none'>
 				<div>
 					<h1 className='text-2xl font-bold'>Add Loan</h1>
@@ -93,7 +94,11 @@ export default function LoanForm() {
 					</div>
 					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='Repay' className='mb-2'>Repayment Duration</Label>
+							<Label
+								htmlFor='Repay'
+								className='mb-2'>
+								Repayment Duration
+							</Label>
 							<Select>
 								<SelectTrigger className='w-[180px]'>
 									<SelectValue placeholder='Repayment Duration' />
@@ -134,7 +139,7 @@ export default function LoanForm() {
 							/>
 						</span>
 					</div>
-					<div> 
+					<div>
 						<span>
 							<Label htmlFor='Reason'>Reason</Label>
 							<Textarea
@@ -145,19 +150,22 @@ export default function LoanForm() {
 					</div>
 				</form>
 				<div className='self-end'>
-									<Button
-										className='m-3 text-muted-foreground'
-										variant='outline'>
-										{' '}
-										Close{' '}
-									</Button>
-									<Button
-										className='m-3 bg-[#3D56A8] text-white '
-										variant='outline'>
-										{' '}
-										Save{' '}
-									</Button>
-								</div>
+					<DialogClose asChild>
+						<Button
+							className='m-3 text-muted-foreground'
+							variant='outline'>
+							{' '}
+							Close{' '}
+						</Button>
+					</DialogClose>
+					<Button
+						className='m-3 bg-[#3D56A8] text-white '
+						variant='outline'
+						type='submit'>
+						{' '}
+						Save{' '}
+					</Button>
+				</div>
 			</Card>
 		</div>
 	);

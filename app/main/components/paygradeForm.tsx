@@ -15,11 +15,12 @@ import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
+import { DialogClose } from '@/components/ui/dialog';
 
 export default function LoanForm() {
 	return (
-		<div className=''>
-			<Card className='self-center w-full gap-4 border-none shadow-none'>
+		<div className='bg-white'>
+			<Card className='self-center w-full gap-4 border-none shadow-none bg-white'>
 				<div>
 					<h1 className='text-xl'>Create New PayGrade</h1>
 					<p className='text-xs'>
@@ -90,15 +91,18 @@ export default function LoanForm() {
 					</div>
 				</form>
 				<div className='self-end'>
-					<Button
-						className='m-3 text-muted-foreground'
-						variant='outline'>
-						{' '}
-						Close{' '}
-					</Button>
+					<DialogClose asChild>
+						<Button
+							className='m-3 text-muted-foreground'
+							variant='outline'>
+							{' '}
+							Close{' '}
+						</Button>
+					</DialogClose>
 					<Button
 						className='m-3 bg-[#3D56A8] text-white '
-						variant='outline'>
+						variant='outline'
+						type='submit'>
 						{' '}
 						Create Pay Grade{' '}
 					</Button>
