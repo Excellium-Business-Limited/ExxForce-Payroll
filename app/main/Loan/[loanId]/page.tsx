@@ -37,13 +37,13 @@ export default function LoanDetails({ params }: { params: Promise<{ loanId: stri
 	// 	}
 	// }, [loanId]);
 
-	const item = items.find((item) => item.id === loanId); // Use params.loanId
+		const item = items.find((item) => item.id === loanId); // Use params.loanId
 
-	if (!item) {
-		return <div>Item not found.</div>;
-	}
+		if (!item) {
+			return <div>Item not found.</div>;
+		}
 
-	return (
+		return (
 		<div>
 			<h1>{item.name}</h1>
 			<p>ID: {item.id}</p>
