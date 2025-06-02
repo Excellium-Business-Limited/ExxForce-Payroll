@@ -182,7 +182,7 @@ export default function LoanDetails() {
 							</TableRow>
 							<TableRow>
 								<TableCell></TableCell>
-								<TableCell></TableCell>
+								<TableCell>nomen</TableCell>
 								<TableCell></TableCell>
 								<TableCell></TableCell>
 								<TableCell></TableCell>
