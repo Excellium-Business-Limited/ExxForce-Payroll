@@ -1,21 +1,18 @@
 'use client';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import Loans from '../../Dashboard/_components/loanDetails';
+import React, { useEffect, useState } from 'react';
+import Loans from '../components/loanDetails';
 const items = [
 	{ id: '1', name: 'Item One', description: 'Details for item one' },
 	{ id: '2', name: 'Item Two', description: 'Details for item two' },
 	{ id: '3', name: 'Item Three', description: 'Details for item three' },
 ];
 
-export default function LoanDetails({
-	params,
-}: {
-	params: { loanId: string };
-}) {
+export default function LoanDetails({ params }: { params: Promise<{ loanId: string }> }) {
 	// const router = useRouter();
 	// const { loanId } = router.query;
 	// const [loan, setLoan] = useState(null);
+	const {loanId} = React.use(params);
 	const [loading, setLoading] = useState(false);
 
 	// useEffect(() => {
@@ -40,13 +37,13 @@ export default function LoanDetails({
 	// 	}
 	// }, [loanId]);
 
-	const item = items.find((item) => item.id === params.loanId); // Use params.loanId
+		const item = items.find((item) => item.id === loanId); // Use params.loanId
 
-	if (!item) {
-		return <div>Item not found.</div>;
-	}
+		if (!item) {
+			return <div>Item not found.</div>;
+		}
 
-	return (
+		return (
 		<div>
 			<h1>{item.name}</h1>
 			<p>ID: {item.id}</p>

@@ -25,13 +25,15 @@ import {
 import Image from 'next/image';
 import LoanForm from './loanForm';
 import Link from 'next/link';
-import LoanDetails from '../Dashboard/_components/loanDetails';
+import LoanDetails from './components/loanDetails';
 import {
 	Dialog,
 	DialogTrigger,
 	DialogContent,
 	DialogTitle,
 } from '@/components/ui/dialog';
+import Dialogs from '../components/dialog';
+import Import from '../components/Import';
 import UpdateRepay from '../components/updateRepay';
 const items = [
 	{ id: '1', name: 'Item One' },
@@ -44,7 +46,7 @@ export default function Home() {
 
 	if (!isloan) {
 		return (
-			<div className='h-[680px] '>
+			<div className='h-[680px] m-7 gap-4 '>
 				<div className='flex flex-row items-center justify-between w-full'>
 					<span>
 						<h1>Loan</h1>
@@ -59,16 +61,16 @@ export default function Home() {
 									Add Loan
 								</Button>
 							</SheetTrigger>
-							<SheetContent className='min-w-[500px] p-4 overflow-auto'>
+							<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 								<SheetTitle className='hidden'></SheetTitle>
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-						<Button
-							variant={'outline'}
-							className='text-[#3D56A8]'>
-							Import
-						</Button>
+							<Dialogs title={'Import'}>
+								<Import
+								/>
+							</Dialogs>
+
 					</span>
 				</div>
 				<div className='text-center max-w-2xl mx-auto mt-[120px]'>
@@ -77,12 +79,13 @@ export default function Home() {
 						alt='Team Illustration'
 						className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
 					/>
-					<h2 className='text-2xl md:text-3xl  mb-4'>
-						No Loans Yet</h2>
-					<pre className='text-base md:text-lg text-muted-foreground mb-8'>
-						You haven’t added any employee loans.Manage staff<br/>
-						 loans easily by adding new loan records or importing<br/> 
-						 from a file.
+					<h2 className='text-2xl md:text-3xl  mb-4'>No Loans Yet</h2>
+					<pre className='text-base text-muted-foreground mb-8'>
+						You haven’t added any employee loans.Manage staff
+						<br />
+						loans easily by adding new loan records or importing
+						<br />
+						from a file.
 					</pre>
 					<div className='flex flex-col sm:flex-row gap-4 justify-center'>
 						<Sheet>

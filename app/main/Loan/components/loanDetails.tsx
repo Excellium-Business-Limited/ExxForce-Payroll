@@ -27,8 +27,10 @@ export default function LoanDetails() {
 						<h1>Loan Details</h1>
 					</span>
 					<div className='items-center self-end justify-between flex gap-4'>
-						<Dialogs>
-							<UpdateRepay/>
+						<Dialogs title={'Update Repayment'} className='bg-[#3D56A8] text-white'>
+							<pre className='rounded-md p-2'>
+								<UpdateRepay />
+							</pre>
 						</Dialogs>
 						<MoreHorizontalIcon className='border-2 rounded-4xl border-black h-[30px] w-[30px]' />
 					</div>
@@ -180,7 +182,7 @@ export default function LoanDetails() {
 							</TableRow>
 							<TableRow>
 								<TableCell></TableCell>
-								<TableCell></TableCell>
+								<TableCell>nomen</TableCell>
 								<TableCell></TableCell>
 								<TableCell></TableCell>
 								<TableCell></TableCell>

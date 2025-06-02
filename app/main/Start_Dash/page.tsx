@@ -83,8 +83,8 @@ const page = () => {
 								Complete
 							</Button>
 						</SheetTrigger>
-						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
-							<SheetTitle className='hidden'>Company Details</SheetTitle>
+						<SheetContent className=' bg-white min-w-[500px] p-4 overflow-auto'>
+							<SheetTitle className='hidden'></SheetTitle>
 							<CompanyForm />
 						</SheetContent>
 					</Sheet>
@@ -108,8 +108,8 @@ const page = () => {
 								Start Setup
 							</Button>
 						</SheetTrigger>
-						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
-							<SheetTitle className='hidden'>Add PayGrade</SheetTitle>
+						<SheetContent className='bg-white min-w-[500px] p-4 overflow-auto'>
+							<SheetTitle className='hidden'></SheetTitle>
 							<PayGradeForm />
 						</SheetContent>
 					</Sheet>
@@ -133,9 +133,9 @@ const page = () => {
 								Start Setup
 							</Button>
 						</SheetTrigger>
-						<SheetContent className='min-w-[500px] p-4 overflow-auto'>
+						<SheetContent className='bg-white min-w-[500px] p-4 overflow-auto'>
 							<SheetTitle className='hidden'>Company Details</SheetTitle>
-							<EmployeeForm onClose={undefined} open={undefined} />
+							<EmployeeForm />
 						</SheetContent>
 					</Sheet>
 				</Card>
