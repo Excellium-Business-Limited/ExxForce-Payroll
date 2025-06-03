@@ -4,41 +4,40 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import BulkUploadModal from '../components/Import';
 import EmployeeForm from '../components/EmployeeForm';
+import Dialogs from '../components/dialog'
+import Import from '../components/Import';
+import {Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
+
 
 const Page = () => {
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
-
   return (
-    <div className='flex-1 flex flex-col h-[calc(100vh-64px)] overflow-auto'>
-      {/* Header Section */}
-      <div className='bg-[#EFF5FF] p-6 md:p-8'>
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4'>
-          <div>
-            <h1 className='text-2xl md:text-3xl font-bold'>Employees</h1>
-            <p className='text-base md:text-lg text-muted-foreground'>
-              Manage your organization's team
-            </p>
-          </div>
-          <div className='flex gap-3 w-full md:w-auto'>
-            <Button
-              size='lg'
-              className='w-full md:w-auto bg-[#3D56A8] hover:bg-[#2E4299] text-white'
-              onClick={() => setShowEmployeeForm(true)}
-            >
-              Add Employee
-            </Button>
-            <Button
-              size='lg'
-              variant='outline'
-              className='w-full md:w-auto border-[#3A1C1F] text-[#25282B] hover:bg-transparent hover:text-white bg-transparent'
-              onClick={() => setShowUploadModal(true)}
-            >
-              Import CSV
-            </Button>
-          </div>
-        </div>
-      </div>
+		<div className='flex-1 flex flex-col h-[calc(100vh-64px)] overflow-auto'>
+			{/* Header Section */}
+			<div className='bg-[#EFF5FF] p-6 md:p-8'>
+				<div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4'>
+					<div>
+						<h1 className='text-2xl md:text-3xl font-bold'>Employees</h1>
+						<p className='text-base md:text-lg text-muted-foreground'>
+							Manage your organization's team
+						</p>
+					</div>
+					<div className='flex gap-3 w-full md:w-auto'>
+						<Button
+							size='lg'
+							className='w-full md:w-auto bg-[#3D56A8] hover:bg-[#2E4299] text-white'
+							>
+							Add Employee
+						</Button>
+						<Button
+							size='lg'
+							variant='outline'
+							className='w-full md:w-auto border-[#3A1C1F] text-[#25282B] hover:bg-transparent hover:text-white bg-transparent'
+							>
+							Import CSV
+						</Button>
+					</div>
+				</div>
+			</div>
 
 			{/* Main Content */}
 			<main className='flex-1 bg-[#EFF5FF] p-6 md:p-8 overflow-auto'>
@@ -57,28 +56,27 @@ const Page = () => {
 							employees at once.
 						</p>
 						<div className='flex flex-col sm:flex-row gap-4 justify-center'>
-							<Button
-								size='lg'
-								className='bg-[#3D56A8] hover:bg-[#2E4299] text-white'
-								onClick={() => setShowEmployeeForm(true)}>
-								+ Add Employee
-							</Button>
-							<Button
-								size='lg'
-								variant='outline'
-								className='border-[#3A1C1F] text-[#25282B] hover:bg-transparent hover:text-[#3D56A8] bg-transparent'
-								onClick={() => setShowUploadModal(true)}>
-								Import Employees
-							</Button>
+							<Sheet>
+							<SheetTrigger asChild>
+								<Button
+									variant={'outline'}
+									className='bg-[#3D56A8] text-white'>
+									Add Employee
+								</Button>
+							</SheetTrigger>
+							<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
+								<SheetTitle className='hidden'></SheetTitle>
+								<EmployeeForm />
+							</SheetContent>
+						</Sheet>
+							<Dialogs title={'Import'}>
+								<Import />
+							</Dialogs>
 						</div>
 					</div>
 				</div>
 			</main>
-
-      {/* Modals */}
-      <BulkUploadModal open={showUploadModal} onClose={() => setShowUploadModal(false)} />
-      <EmployeeForm open={showEmployeeForm} onClose={() => setShowEmployeeForm(false)} />
-    </div>
+		</div>
 	);
 };
 

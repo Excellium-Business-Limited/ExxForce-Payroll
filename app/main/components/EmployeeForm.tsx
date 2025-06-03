@@ -12,9 +12,9 @@ import {
 	SelectItem,
 } from '@/components/ui/select';
 import { DialogClose } from '@/components/ui/dialog';
+import { SheetClose } from '@/components/ui/sheet';
 
 export default function EmployeeForm() {
-	const [open, setOpen] = React.useState(true);
 	if (!open) return null;
 
 	return (
@@ -167,15 +167,15 @@ export default function EmployeeForm() {
 					</div>
 
 					<div className='flex justify-end gap-4 pt-4'>
-						<DialogClose asChild>
+						<SheetClose asChild>
 							<Button
 								variant='outline'
 								type='button'
 								className='text-muted-foreground'
-								onClick={() => setOpen(false)}>
+								>
 								Cancel
 							</Button>
-						</DialogClose>
+						</SheetClose>
 						<Button
 							type='submit'
 							className='bg-[#3D56A8] hover:bg-[#2E4299]'>
