@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import {
 	Select,
 	SelectContent,
+	SelectSeparator,
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
@@ -17,10 +18,10 @@ import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { DialogClose } from '@/components/ui/dialog';
 
-export default function LoanForm() {
+export default function LoanForm({className}: { className?: string }) {
 	const [startDate, setStartDate] = React.useState<Date | null>(null);
 	return (
-		<div className='bg-white'>
+		<div className={`bg-white ${className}`}>
 			<Card className='self-center w-full gap-4 border-none shadow-none'>
 				<div>
 					<h1 className='text-2xl font-bold'>Add Loan</h1>
@@ -51,10 +52,25 @@ export default function LoanForm() {
 								<SelectTrigger className='w-[200px]'>
 									<SelectValue placeholder='Select Loan Name' />
 								</SelectTrigger>
-								<SelectContent position='popper'>
-									<SelectItem value='Loan1'>Car Loan</SelectItem>
-									<SelectItem value='Loan2'>House Loan</SelectItem>
-									<SelectItem value='Loan3'>Loan3</SelectItem>
+								<SelectContent
+									position='popper'
+									className='z-[1050]'>
+									<SelectItem
+										value='Loan-1'
+										className=''>
+										Car Loan
+									</SelectItem>
+									<SelectSeparator />
+									<SelectItem value='Loan-2'>Housing Loan</SelectItem>
+									<SelectItem value='Loan-3'>Salary Advance</SelectItem>
+									<SelectItem value='Loan-4'>Emergency Loan</SelectItem>
+									<SelectItem value='Loan-5'>Education Loan</SelectItem>
+									<SelectItem value='Loan-6'>Medical Loan</SelectItem>
+									<SelectItem value='Loan-7'>Housing Loan</SelectItem>
+									<SelectItem value='Loan-8'>Personal Loan</SelectItem>
+									<SelectItem value='Loan-9'>
+										<Button>+ Add New Loan</Button>
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</span>

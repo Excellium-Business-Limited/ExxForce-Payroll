@@ -42,7 +42,7 @@ const items = [
 ];
 
 export default function Home() {
-	const [isloan, setisLoan] = React.useState(false);
+	const [isloan, setisLoan] = React.useState(true);
 
 	if (!isloan) {
 		return (
@@ -66,11 +66,9 @@ export default function Home() {
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-							<Dialogs title={'Import'}>
-								<Import
-								/>
-							</Dialogs>
-
+						<Dialogs title={'Import'}>
+							<Import />
+						</Dialogs>
 					</span>
 				</div>
 				<div className='text-center max-w-2xl mx-auto mt-[120px]'>
@@ -88,17 +86,17 @@ export default function Home() {
 						from a file.
 					</pre>
 					<div className='flex flex-col sm:flex-row gap-4 justify-center'>
-						<Sheet>
-							<SheetTrigger asChild>
+						<Sheet modal={false} >
+							<SheetTrigger >
 								<Button
 									variant={'outline'}
 									className='bg-[#3D56A8] text-white'>
 									Add Loan
 								</Button>
 							</SheetTrigger>
-							<SheetContent className='min-w-[500px] p-4 overflow-auto'>
+							<SheetContent className='min-w-[500px] p-4 z-[1000]'>
 								<SheetTitle className='hidden'></SheetTitle>
-								<LoanForm />
+								<LoanForm className='absolute' />
 							</SheetContent>
 						</Sheet>
 						<Button

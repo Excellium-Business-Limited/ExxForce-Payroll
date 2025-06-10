@@ -16,6 +16,8 @@ import Image from 'next/image';
 import React from 'react';
 import UpdateRepay from '../../components/updateRepay';
 import Dialogs from '../../components/dialog';
+import { Select, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { SelectTrigger } from '@radix-ui/react-select';
 
 export default function LoanDetails() {
 	return (
@@ -32,7 +34,18 @@ export default function LoanDetails() {
 								<UpdateRepay />
 							</pre>
 						</Dialogs>
+						<Select>
+							<SelectTrigger className=''>
+								<SelectValue>
+								</SelectValue>
 						<MoreHorizontalIcon className='border-2 rounded-4xl border-black h-[30px] w-[30px]' />
+							</SelectTrigger>
+							<SelectContent position='popper'>
+								<SelectItem value='edit'>Edit Loan</SelectItem>
+								<SelectItem value='pause'>Pause Loan</SelectItem>
+								<SelectItem value='reschedule'>Reschedule Loan</SelectItem>
+							</SelectContent>
+						</Select>
 					</div>
 				</div>
 				<div className='flex justify-between gap-4 my-4'>
