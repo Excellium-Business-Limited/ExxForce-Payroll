@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import React from 'react'
+import SalStruc from './_components/salStruc';
 
 const page = () => {
   return (
@@ -12,7 +13,7 @@ const page = () => {
 					<TabsTrigger value='payComp'>Pay Component</TabsTrigger>
 					<TabsTrigger value='payFreq'>Pay Frequency</TabsTrigger>
 				</TabsList>
-				<TabsContent value='salaryst'></TabsContent>
+				<TabsContent value='salaryst'><SalStruc/></TabsContent>
 				<TabsContent value='payG'></TabsContent>
 				<TabsContent value='workSch'></TabsContent>
 				<TabsContent value='payComp'></TabsContent>
