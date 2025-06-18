@@ -11,7 +11,7 @@ const page = () => {
 					Configure all payroll-related settings for your <br /> organization.
 				</h5>
 			</div>
-			<div className=' bg-white rounded-lg h-[433px] m-5'>
+			<div className=' bg-white rounded-lg h-screen m-5'>
 				<Tabs
 					className='self-center'
 					defaultValue='salaryst'>
@@ -51,7 +51,28 @@ const page = () => {
 					<TabsContent value='payG'></TabsContent>
 					<TabsContent value='workSch'></TabsContent>
 					<TabsContent value='payComp'></TabsContent>
-					<TabsContent value='payFreq'></TabsContent>
+					<TabsContent value='payFreq'>
+						<Tabs>
+							<TabsList>
+								<TabsTrigger
+		 value='stanfreq'>Standard Frequencies</TabsTrigger>
+		 			<TabsTrigger
+		 value='custoFreq'>Custom Frequencies</TabsTrigger>
+							</TabsList>
+									<TabsContent value='stanfreq'>
+		 <div className='p-4'>
+		  <h3>Standard Pay Frequencies</h3>
+		  <p>List of standard pay frequencies will be displayed here.</p>
+		 </div>
+		</TabsContent>
+		<TabsContent value='custoFreq'>
+		 <div className='p-4'>
+		  <h3>Custom Pay Frequencies</h3>
+		  <p>List of custom pay frequencies will be displayed here.</p>
+		 </div>
+		</TabsContent>
+						</Tabs>
+					</TabsContent>
 				</Tabs>
 			</div>
 		</div>
