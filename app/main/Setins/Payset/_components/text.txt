@@ -1,0 +1,68 @@
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Note: No TabsContent needed here if all elements are external
+import { useState } from "react";
+
+function MyComponentWithExternalElements() {
+  // State to hold the currently active tab's value
+  const [activeTab, setActiveTab] = useState("tab1"); // Set initial active tab
+
+  return (
+    <div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="tab1">User Settings</TabsTrigger>
+          <TabsTrigger value="tab2">Privacy Settings</TabsTrigger>
+          <TabsTrigger value="tab3">Notifications</TabsTrigger>
+        </TabsList>
+
+        {/* You can still have TabsContent if you have internal content */}
+        {/* <TabsContent value="tab1">
+          <div>Internal content for User Settings</div>
+        </TabsContent>
+        <TabsContent value="tab2">
+          <div>Internal content for Privacy Settings</div>
+        </TabsContent>
+        <TabsContent value="tab3">
+          <div>Internal content for Notifications</div>
+        </TabsContent> */}
+      </Tabs>
+
+      {/* --- Elements outside of TabsContent --- */}
+
+      <div className="mt-8 p-4 border rounded">
+        <h3>Actions for Current Tab:</h3>
+
+        {activeTab === "tab1" && (
+          <button className="bg-blue-500 text-white p-2 rounded mr-2">
+            Save User Profile
+          </button>
+        )}
+
+        {activeTab === "tab2" && (
+          <button className="bg-green-500 text-white p-2 rounded mr-2">
+            Manage Privacy Options
+          </button>
+        )}
+
+        {activeTab === "tab3" && (
+          <button className="bg-purple-500 text-white p-2 rounded">
+            Mark All Notifications as Read
+          </button>
+        )}
+
+        {/* Example: A component that shows only when 'Notifications' tab is active */}
+        {activeTab === "tab3" && <NotificationPreferences />}
+      </div>
+    </div>
+  );
+}
+
+function NotificationPreferences() {
+  return (
+    <div className="mt-4 p-3 bg-gray-100 rounded">
+      <p>Email notifications enabled.</p>
+      <button className="text-sm text-blue-600">Change preferences</button>
+    </div>
+  );
+}
+
+export default MyComponentWithExternalElements;

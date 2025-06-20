@@ -1,6 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import React from 'react';
 import SalStruc from './_components/salStruc';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
+import Stanfreq from './_components/stanfreq';
+import { Button } from '@/components/ui/button';
 
 const page = () => {
 	return (
@@ -52,26 +63,47 @@ const page = () => {
 					<TabsContent value='workSch'></TabsContent>
 					<TabsContent value='payComp'></TabsContent>
 					<TabsContent value='payFreq'>
-						<Tabs>
-							<TabsList>
-								<TabsTrigger
-		 value='stanfreq'>Standard Frequencies</TabsTrigger>
-		 			<TabsTrigger
-		 value='custoFreq'>Custom Frequencies</TabsTrigger>
-							</TabsList>
-									<TabsContent value='stanfreq'>
-		 <div className='p-4'>
-		  <h3>Standard Pay Frequencies</h3>
-		  <p>List of standard pay frequencies will be displayed here.</p>
-		 </div>
-		</TabsContent>
-		<TabsContent value='custoFreq'>
-		 <div className='p-4'>
-		  <h3>Custom Pay Frequencies</h3>
-		  <p>List of custom pay frequencies will be displayed here.</p>
-		 </div>
-		</TabsContent>
-						</Tabs>
+						<Card className='m-3 p-4'>
+							<Tabs
+								defaultValue='stanfreq'
+								className='rounded-lg'>
+								<div className='flex'>
+									<TabsList>
+										<TabsTrigger
+											value='stanfreq'
+											className='data-[state=active]:text-[#3d56a8] text-muted-foreground'>
+											Standard Frequencies
+										</TabsTrigger>
+										<TabsTrigger
+											value='custoFreq'
+											className='data-[state=active]:text-[#3d56a8] text-muted-foreground'>
+											Custom Frequencies
+										</TabsTrigger>
+									</TabsList>
+									{ (
+										<div>
+											{/* Add your content here */}
+										</div>
+									)}
+									<article className='self-end ml-auto'>
+										<Button variant={'default'} className=' bg-[#3d56a8] self-end hover:bg-white hover:text-[#3d56a8]'>
+											<span className='text-xs'> +Add Custom Frequency</span>
+										</Button>
+									</article>
+								</div>
+								<TabsContent value='stanfreq'>
+									<Stanfreq />
+								</TabsContent>
+								<TabsContent value='custoFreq'>
+									<div className='p-4'>
+										<h3>Custom Pay Frequencies</h3>
+										<p>
+											List of custom pay frequencies will be displayed here.
+										</p>
+									</div>
+								</TabsContent>
+							</Tabs>
+						</Card>
 					</TabsContent>
 				</Tabs>
 			</div>
