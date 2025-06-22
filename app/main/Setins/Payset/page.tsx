@@ -12,19 +12,21 @@ import {
 import { Card } from '@/components/ui/card';
 import Stanfreq from './_components/stanfreq';
 import { Button } from '@/components/ui/button';
+import Custfreq from './_components/custfreq';
+import Paygrade from './_components/paygrade';
 
 const page = () => {
 	return (
-		<div className='h-[680px]'>
+		<div className=''>
 			<div className='mx-4'>
 				<h1>Payroll Settings</h1>
 				<h5 className='text-sm'>
 					Configure all payroll-related settings for your <br /> organization.
 				</h5>
 			</div>
-			<div className=' bg-white rounded-lg h-screen m-5'>
+			<div className=' bg-white rounded-lg m-5'>
 				<Tabs
-					className='self-center'
+					className='self-center h-full'
 					defaultValue='salaryst'>
 					<TabsList className='no-design'>
 						<div className='m-2'>
@@ -59,7 +61,9 @@ const page = () => {
 					<TabsContent value='salaryst'>
 						<SalStruc />
 					</TabsContent>
-					<TabsContent value='payG'></TabsContent>
+					<TabsContent value='payG'>
+						<Paygrade/>
+					</TabsContent>
 					<TabsContent value='workSch'></TabsContent>
 					<TabsContent value='payComp'></TabsContent>
 					<TabsContent value='payFreq'>
@@ -80,13 +84,11 @@ const page = () => {
 											Custom Frequencies
 										</TabsTrigger>
 									</TabsList>
-									{ (
-										<div>
-											{/* Add your content here */}
-										</div>
-									)}
+									{<div>{/* Add your content here */}</div>}
 									<article className='self-end ml-auto'>
-										<Button variant={'default'} className=' bg-[#3d56a8] self-end hover:bg-white hover:text-[#3d56a8]'>
+										<Button
+											variant={'default'}
+											className=' bg-[#3d56a8] self-end hover:bg-white hover:text-[#3d56a8]'>
 											<span className='text-xs'> +Add Custom Frequency</span>
 										</Button>
 									</article>
@@ -95,12 +97,7 @@ const page = () => {
 									<Stanfreq />
 								</TabsContent>
 								<TabsContent value='custoFreq'>
-									<div className='p-4'>
-										<h3>Custom Pay Frequencies</h3>
-										<p>
-											List of custom pay frequencies will be displayed here.
-										</p>
-									</div>
+									<Custfreq />{' '}
 								</TabsContent>
 							</Tabs>
 						</Card>
