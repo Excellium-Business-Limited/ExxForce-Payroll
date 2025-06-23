@@ -14,10 +14,11 @@ import Stanfreq from './_components/stanfreq';
 import { Button } from '@/components/ui/button';
 import Custfreq from './_components/custfreq';
 import Paygrade from './_components/paygrade';
+import WrkSched from './_components/wrkSched';
 
 const page = () => {
 	return (
-		<div className=''>
+		<div className='h-[1600px]'>
 			<div className='mx-4'>
 				<h1>Payroll Settings</h1>
 				<h5 className='text-sm'>
@@ -26,7 +27,7 @@ const page = () => {
 			</div>
 			<div className=' bg-white rounded-lg m-5'>
 				<Tabs
-					className='self-center h-full'
+					className='self-center h-[1080px]'
 					defaultValue='salaryst'>
 					<TabsList className='no-design'>
 						<div className='m-2'>
@@ -64,7 +65,9 @@ const page = () => {
 					<TabsContent value='payG'>
 						<Paygrade/>
 					</TabsContent>
-					<TabsContent value='workSch'></TabsContent>
+					<TabsContent value='workSch'>
+						<WrkSched/>
+					</TabsContent>
 					<TabsContent value='payComp'></TabsContent>
 					<TabsContent value='payFreq'>
 						<Card className='m-3 p-4'>
