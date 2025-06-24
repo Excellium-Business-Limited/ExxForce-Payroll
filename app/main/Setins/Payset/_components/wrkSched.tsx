@@ -1,18 +1,26 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { set } from 'date-fns';
-import { Check } from 'lucide-react';
+import { ArrowDown, Check } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import React from 'react';
+import Dialogs from '@/app/main/components/dialog'
+import { Value } from '@radix-ui/react-select';
+import { date } from 'zod';
+import HolidayForm from '@/app/main/components/HolidayForm';
 
 const wrkSched = () => {
 	const data =[{name: 'New Year', date: '2024-01-01', type: 'Public', recurring: 'Yearly'},{name: 'Independence Day', date: '2024-07-04', type: 'Public', recurring: 'Yearly'}, {name: 'Christmas', date: '2024-12-25', type: 'Public', recurring: 'Yearly'}];
-	const [currday, setCurrday] = React.useState('');
+	const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
+	const [currday, setCurrday] = React.useState<Date | null>(null);
 	return (
 		<div className='h-full'>
 			<Card className='border-none h-full shadow-none'>
@@ -27,7 +35,11 @@ const wrkSched = () => {
 					</div>
 					<div className='flex flex-col gap-4 m-4'>
 						<h4>Select work week</h4>
-						<span className='flex items-center gap-4 align-middle w-[650px]'>
+						<ToggleGroup
+							type='multiple'
+							size={'sm'}
+							variant={'outline'}
+							className='flex items-center gap-1  align-middle '>
 							{[
 								'Sunday',
 								'Monday',
@@ -38,35 +50,34 @@ const wrkSched = () => {
 								'Saturday',
 							].map((day, index) => {
 								return (
-									<button
+									<ToggleGroupItem
+										value={day}
 										key={index}
-										className={`flex rounded-xl text-sm p-1 gap-1
-											${currday === day ? 'bg-[#3b56a8] text-white' : 'bg-[#EEEEEE] text-black'}`}
-										onClick={() => {
-											setCurrday(day);
-										}}>
+										className={`flex rounded-xl text-xs !px-5
+											`}>
 										<Check className='w-[12px] h-[12px] self-center' />
 										{day}
-									</button>
+									</ToggleGroupItem>
 								);
 							})}
-						</span>
+						</ToggleGroup>
 					</div>
 				</section>
 				<hr className=' h-[2px]' />
 				<section className='ml-4'>
-					<div>
+					<div className='flex flex-row gap-12'>
 						<span>
 							<Label htmlFor='start'>Payroll Start Date</Label>
-							<Input
-								type='date'
-								id='start'
-								className='w-[200px] mt-2'
+							<DatePicker
+								selected={selectedDate}
+								onChange={(date) => setSelectedDate(date)}
+								className='border-2 border-[#e5e5e5] rounded-lg h-8 mt-2'
+								placeholderText=' '
 							/>
 						</span>
-						<article>
-							<h3>Pay employee on</h3>
-							<span>
+						<article className='text-xs'>
+							<h3 className='text-lg'>Pay employee on</h3>
+							<span className='flex my-2'>
 								<Checkbox
 									id='payday'
 									className='w-4 h-4'
@@ -77,7 +88,7 @@ const wrkSched = () => {
 									Last Day of the Month
 								</Label>
 							</span>
-							<span>
+							<span className='flex my-2'>
 								<Checkbox
 									id='custom'
 									className='w-4 h-4'
@@ -86,10 +97,11 @@ const wrkSched = () => {
 									htmlFor='custom'
 									className='ml-2'>
 									Custom date{' '}
-									<input
-										type='date'
-										placeholder=''
-										className='w-[50px]'
+									<DatePicker
+										className='w-[50px] h-6 rounded border shadow border-[#e5e5e5] '
+										selected={currday}
+										placeholderText={`⇩`}
+										onChange={(date) => setCurrday(date)}
 									/>
 								</Label>
 							</span>
@@ -113,6 +125,15 @@ const wrkSched = () => {
 				</section>
 				<section className='mx-4'>
 					<Card>
+						<article className='flex justify-between mx-4'>
+							<h2 className='font-bold'>Holiday Management</h2>
+
+							<Dialogs
+								title={' Add Holiday'}
+								sim='+' className='bg-[#3d56a8] text-white'>
+								<HolidayForm/>
+							</Dialogs>
+						</article>
 						<Table>
 							<TableHeader>
 								<TableRow>
@@ -139,7 +160,7 @@ const wrkSched = () => {
 										<TableCell>{holiday.type}</TableCell>
 										<TableCell>{holiday.recurring}</TableCell>
 										<TableCell>
-											<span className='grid-cols-2 grid-rows-1 grid'>
+											<span className='grid-cols-2 w-14 grid'>
 												<img
 													src='/icons/mage_edit.png'
 													alt='#'

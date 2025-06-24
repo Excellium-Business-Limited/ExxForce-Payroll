@@ -11,11 +11,11 @@ import { UploadCloud } from "lucide-react";
 //   onClose: () => any;
 // }
 
-const BulkUploadModal = () => {
+const BulkUploadModal = ({title }: {title: string}) => {
   return (
     <div className="">
       <span className="max-w-lg w-fit rounded-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Bulk Upload Employees</h2>
+        <h2 className="text-xl font-semibold mb-4">Bulk Upload {title ? title : 'Employees'}</h2>
 
         <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center mb-4">
           <UploadCloud className="mx-auto mb-2 text-gray-400 w-8 h-8" />

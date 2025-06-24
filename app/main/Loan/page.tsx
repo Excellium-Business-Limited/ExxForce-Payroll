@@ -67,7 +67,7 @@ export default function Home() {
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>
-							<Import />
+							<Import title='Loans' />
 						</Dialogs>
 					</span>
 				</div>

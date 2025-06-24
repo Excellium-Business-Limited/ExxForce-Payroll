@@ -6,35 +6,35 @@ const paygrade = () => {
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance, Bonuses'],
+			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
 			Employees: '10',
 		},
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance, Bonuses'],
+			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
 			Employees: '10',
 		},
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance, Bonuses'],
+			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
 			Employees: '10',
 		},
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance, Bonuses'],
+			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
 			Employees: '10',
 		},
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance, Bonuses'],
+			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
 			Employees: '10',
 		},
@@ -85,7 +85,7 @@ const paygrade = () => {
 										return (
 											<p
 												key={index}
-												className='bg-[#dee7f6] text-[#3D56A8] rounded-lg mx-2 '>
+												className='bg-[#dee7f6] text-[#3D56A8] rounded-lg mx-2 px-2 text-xs'>
 												{comp}
 											</p>
 										);

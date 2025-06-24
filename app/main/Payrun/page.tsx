@@ -1,11 +1,84 @@
+'use client'
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import React from 'react'
+import LoanForm from '../Loan/loanForm';
+import Import from '../components/Import';
+import Dialogs from '../components/dialog'
 
 const page = () => {
+  const [isPayrun, setIsPayrun] = React.useState(false)
   return (
-    <div>
-      
-    </div>
-  )
+		<div className='h-[2000px]'>
+			{isPayrun === false ? (
+				<div>
+					<div className='h-[680px] m-7 gap-4 '>
+						<div className='flex flex-row items-center justify-between w-full'>
+							<span>
+								<h1>Pay Runs</h1>
+								<p className='text-xs'>Create and Mange your Payruns</p>
+							</span>
+							<span className='items-end self-end justify-between flex gap-4'>
+								<Sheet>
+									<SheetTrigger asChild>
+										<Button
+											variant={'outline'}
+											className='bg-[#3D56A8] text-white'>
+											Create Payrun
+										</Button>
+									</SheetTrigger>
+									<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
+										<SheetTitle className='hidden'></SheetTitle>
+										<LoanForm />
+									</SheetContent>
+								</Sheet>
+								<Dialogs title={'Import'}>
+									<Import title='Pay Runs' />
+								</Dialogs>
+							</span>
+						</div>
+						<section className='text-center flex flex-col items-center max-w-2xl mx-auto mt-[120px]'>
+							<img
+								src='/payrun.jpg'
+								alt='Team Illustration'
+								className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
+							/>
+							<h2 className='text-2xl md:text-3xl  mb-4'>Start Your First Payroll </h2>
+							<p className='text-base text-muted-foreground border-2 self mb-8 w-[460px]'>
+								Easily create and manage payruns for your employees. Select the
+								pay period, add employee data, and process salaries quickly.
+							</p>
+							<article className='flex flex-col sm:flex-row gap-4 justify-center'>
+								<Sheet modal={false}>
+									<SheetTrigger asChild>
+										<Button
+											variant={'outline'}
+											className='bg-[#3D56A8] text-white'
+											>
+											Create Payrun
+										</Button>
+									</SheetTrigger>
+									<SheetContent className='min-w-[500px] p-4 z-[1000]'>
+										<SheetTitle className='hidden'></SheetTitle>
+										<LoanForm className='absolute' />
+									</SheetContent>
+								</Sheet>
+								<Button
+									variant={'outline'}
+									className='text-[#3D56A8]'>
+									Import
+								</Button>
+							</article>
+						</section>
+					</div>
+				</div>
+			) : (
+				<div>
+          
+        </div>
+			)}
+		</div>
+	);
 }
 
 export default page

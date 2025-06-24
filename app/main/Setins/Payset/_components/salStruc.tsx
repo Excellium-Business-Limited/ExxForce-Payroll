@@ -29,11 +29,6 @@ const salStruc = () => {
 	const [add, setAdd] = React.useState(true);
 	const [value, setValue] = React.useState('');
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// Format the input value as currency
-		const formattedValue = e.target.value.replace(/[^0-9.]/g, ''); // Allow only numbers and dots
-		setValue(formattedValue);
-	};
 
 	const ShowAdd = () => {
 		setAdd(true);
@@ -103,7 +98,6 @@ const salStruc = () => {
 											id='Structure'
 											placeholder='Structure name'
 											className='w-[200px] my-3'
-											required
 										/>
 									</span>
 									<span>
@@ -111,12 +105,16 @@ const salStruc = () => {
 										<Input
 											id='currency'
 											type='text'
-											value={value}
-											onChange={handleChange}
+											list='currencies'
 											placeholder='Nigerian Naira(NGN)'
 											className='w-[200px] my-3'
-											required
 										/>
+										<datalist id='currencies'>
+											<option value='USD' />
+											<option value='EUR' />
+											<option value='GBP' />
+											<option value='NGN' />
+										</datalist>
 									</span>
 									<span>
 										<Label htmlFor='Description'>Description(Optional)</Label>
@@ -129,14 +127,16 @@ const salStruc = () => {
 									</span>
 								</div>
 								<Card>
-									<div className='flex items-center mx-5 justify-between
+									<div
+										className='flex items-center mx-5 justify-between
 									'>
 										<h6 className='text-md font-bold mb-4 flex text-center items-center mt-3.5'>
 											Salary Component
 										</h6>
 										<Button
 											variant={'outline'}
-											className='bg-[#3D56A8] text-white'>
+											className='bg-[#3D56A8] text-white'
+											onClick={() => ShowAdd}>
 											+ Add Salary Component
 										</Button>
 									</div>
@@ -167,7 +167,7 @@ const salStruc = () => {
 											<TableRow>
 												<TableCell>
 													<div className='text-center items-center justify-center flex'>
-														<Select required>
+														<Select>
 															<SelectTrigger className='w-[200px] z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
 																<SelectValue placeholder='Housing Allowance' />
 															</SelectTrigger>
