@@ -2,9 +2,9 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import React from 'react'
-import LoanForm from '../Loan/loanForm';
 import Import from '../components/Import';
 import Dialogs from '../components/dialog'
+import PayrunForm from './_components/PayrunForm';
 
 const page = () => {
   const [isPayrun, setIsPayrun] = React.useState(false)
@@ -29,7 +29,7 @@ const page = () => {
 									</SheetTrigger>
 									<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 										<SheetTitle className='hidden'></SheetTitle>
-										<LoanForm />
+										<PayrunForm/>
 									</SheetContent>
 								</Sheet>
 								<Dialogs title={'Import'}>
@@ -60,7 +60,7 @@ const page = () => {
 									</SheetTrigger>
 									<SheetContent className='min-w-[500px] p-4 z-[1000]'>
 										<SheetTitle className='hidden'></SheetTitle>
-										<LoanForm className='absolute' />
+										<PayrunForm className='absolute' />
 									</SheetContent>
 								</Sheet>
 								<Button
@@ -74,7 +74,7 @@ const page = () => {
 				</div>
 			) : (
 				<div>
-          
+
         </div>
 			)}
 		</div>

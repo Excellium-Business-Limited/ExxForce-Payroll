@@ -70,7 +70,7 @@ const Page = () => {
 							</SheetContent>
 						</Sheet>
 							<Dialogs title={'Import'}>
-								<Import />
+								<Import title={''} />
 							</Dialogs>
 						</div>
 					</div>
