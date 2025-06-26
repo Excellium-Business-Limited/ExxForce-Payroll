@@ -1,7 +1,7 @@
+'use client'
+
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { DialogClose } from '@/components/ui/dialog';
-import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -9,19 +9,20 @@ import {
 	SelectContent,
 	SelectTrigger,
 	SelectValue,
+	SelectItem
 } from '@/components/ui/select';
-import { SelectItem } from '@radix-ui/react-select';
+
 import React from 'react';
 
-const companyForm = () => {
+export default function companyForm () {
+	if (!open) return null;
 	return (
-		<div className=' h-screen bg-white'>
-			<Card className=' w-full border-transparent border-none shadow-none'>
+		<div className=' bg-white'>
+			<div className=' w-full border-transparent border-none shadow-none'>
 				<div className=' absolute top-2 mt-0 mb-4 '>
 					<h4 className='font-bold'> Company Details</h4>
-					<p className='text-muted-foreground'> Add company details</p>
 				</div>
-				<form className='m-4 h-[603px]'>
+				<form className='m-4 h-[603px] z-[50]'>
 					<span className='p-6 items-start'>
 						<Label
 							className='mb-3'
@@ -32,17 +33,17 @@ const companyForm = () => {
 							<SelectTrigger className='h-8 mb-0.5 w-full'>
 								<SelectValue placeholder='Industry' />
 							</SelectTrigger>
-							<SelectContent position='popper'>
-								<SelectItem value={'Technology'}>Technology</SelectItem>
-								<SelectItem value={' Healthcare'}>Healthcare</SelectItem>
-								<SelectItem value={'Finance'}>Finance</SelectItem>
-								<SelectItem value={' Education'}>Education</SelectItem>
-								<SelectItem value={' Manufacturing'}>Manufacturing</SelectItem>
-								<SelectItem value={'Retail '}>Retail</SelectItem>
-								<SelectItem value={' Hospitality'}>Hospitality</SelectItem>
-								<SelectItem value={'Energy '}>Energy</SelectItem>
-								<SelectItem value={' Government'}>Government</SelectItem>
-								<SelectItem value={'Media & Entertainment'}>
+							<SelectContent>
+								<SelectItem value='Technology'>Technology</SelectItem>
+								<SelectItem value=' Healthcare'>Healthcare</SelectItem>
+								<SelectItem value='Finance'>Finance</SelectItem>
+								<SelectItem value=' Education'>Education</SelectItem>
+								<SelectItem value=' Manufacturing'>Manufacturing</SelectItem>
+								<SelectItem value='Retail '>Retail</SelectItem>
+								<SelectItem value=' Hospitality'>Hospitality</SelectItem>
+								<SelectItem value='Energy '>Energy</SelectItem>
+								<SelectItem value=' Government'>Government</SelectItem>
+								<SelectItem value='Media & Entertainment'>
 									Media & Entertainment
 								</SelectItem>
 							</SelectContent>
@@ -192,9 +193,9 @@ const companyForm = () => {
 						Save{' '}
 					</Button>
 				</div>
-			</Card>
+			</div>
 		</div>
 	);
 };
 
-export default companyForm;
+

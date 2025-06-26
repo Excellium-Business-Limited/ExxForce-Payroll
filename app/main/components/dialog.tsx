@@ -15,7 +15,7 @@ function dialog({
 	className,
 }: {
 	children: React.ReactNode;
-	title: string | React.ReactNode;
+	title: string  | React.ReactNode;
 	className?: string;
 	sim?: string;
 }) {

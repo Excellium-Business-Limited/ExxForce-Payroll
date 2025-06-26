@@ -23,7 +23,7 @@ import EmployeeForm from '../components/EmployeeForm';
 
 const page = () => {
 	return (
-		<div className=''>
+		<div className=' h-[calc(100vh-64px)'>
 			<Card className='ml-4.5 grid-cols-3 grid-rows-2 p-4 min-w-5xl h-auto bg-[#3D56A8] flex mb-5'>
 				<div className='bg-[#3D56A8] text-white flex-1'>
 					<CardTitle>Welcome to ExxForce</CardTitle>
@@ -83,7 +83,7 @@ const page = () => {
 								Complete
 							</Button>
 						</SheetTrigger>
-						<SheetContent className=' bg-white min-w-[500px] p-4 overflow-auto'>
+						<SheetContent className=' z-[1000] bg-white min-w-[500px] p-4 overflow-auto'>
 							<SheetTitle className='hidden'></SheetTitle>
 							<CompanyForm />
 						</SheetContent>
@@ -108,7 +108,7 @@ const page = () => {
 								Start Setup
 							</Button>
 						</SheetTrigger>
-						<SheetContent className='bg-white min-w-[500px] p-4 overflow-auto'>
+						<SheetContent className='bg-white min-w-[500px] p-4 overflow-auto z-[1000]'>
 							<SheetTitle className='hidden'></SheetTitle>
 							<PayGradeForm />
 						</SheetContent>
@@ -128,13 +128,13 @@ const page = () => {
 					<Sheet>
 						<SheetTrigger asChild>
 							<Button
-								variant='outline'
+								variant={'outline'}
 								className='w-[124px] h-[46px] rounded-[10px] gap-[10px] pt-[12px] pr-[24px] pb-[12px] pl-[24px]  bg-[#DEE7F6] text-[#3D56A8]'>
 								Start Setup
 							</Button>
 						</SheetTrigger>
-						<SheetContent className='bg-white min-w-[500px] p-4 overflow-auto'>
-							<SheetTitle className='hidden'>Company Details</SheetTitle>
+						<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
+							<SheetTitle className='hidden'></SheetTitle>
 							<EmployeeForm />
 						</SheetContent>
 					</Sheet>
@@ -189,7 +189,6 @@ const page = () => {
 						Start Setup
 					</Button>
 				</Card>
-				
 			</div>
 		</div>
 	);

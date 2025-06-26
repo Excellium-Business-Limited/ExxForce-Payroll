@@ -1,5 +1,8 @@
 import { Card } from '@/components/ui/card';
+import Dialogs from '@/app/main/components/dialog';
+import DeleteMod from '@/app/main/components/deleteMod';
 import React from 'react';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const paygrade = () => {
 	const data = [
@@ -15,7 +18,7 @@ const paygrade = () => {
 			Salary: '₦200,000',
 			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
-			Employees: '10',
+			Employees: '12',
 		},
 		{
 			Level: 'Entry Level',
@@ -29,21 +32,21 @@ const paygrade = () => {
 			Salary: '₦200,000',
 			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
-			Employees: '10',
+			Employees: '5',
 		},
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
 			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
-			Employees: '10',
+			Employees: '20',
 		},
 		{
 			Level: 'Entry Level',
 			Salary: '₦200,000',
 			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
 			Description: 'Entry level position with basic responsibilities',
-			Employees: '10',
+			Employees: '40',
 		},
 	];
 	return (
@@ -68,10 +71,15 @@ const paygrade = () => {
 										src='/icons/mage_edit.png'
 										alt='#'
 									/>
-									<img
-										src='/icons/delete-icon.png'
-										alt='#'
-									/>
+									<Dialog >
+											<DialogTrigger className=''>
+											<img src='/icons/delete-icon.png' alt=''/>
+										</DialogTrigger>
+										<DialogContent className='bg-white'>
+											<DialogTitle className='hidden '></DialogTitle>
+											<DeleteMod emp={item.Employees} />
+										</DialogContent>
+									</Dialog>
 								</span>
 							</div>
 							<section className='grid-rows-2'>

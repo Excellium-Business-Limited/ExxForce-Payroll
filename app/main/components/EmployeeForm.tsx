@@ -18,7 +18,7 @@ export default function EmployeeForm() {
 	if (!open) return null;
 
 	return (
-		<div className='flex'>
+		<div className=''>
 			{/* Overlay */}
 
 			{/* Slide-in Panel */}
@@ -30,7 +30,7 @@ export default function EmployeeForm() {
 					</p>
 				</div>
 
-				<form className='space-y-8'>
+				<form className=''>
 					<div className='space-y-4'>
 						<h2 className='text-lg font-semibold'>Employment Details</h2>
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
