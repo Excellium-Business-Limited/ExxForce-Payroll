@@ -6,6 +6,7 @@ import Import from '../components/Import';
 import Dialogs from '../components/dialog'
 import PayrunForm from './_components/PayrunForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Monthly from './_components/monthly';
 
 const page = () => {
   const [isPayrun, setIsPayrun] = React.useState(true)
@@ -91,7 +92,8 @@ const page = () => {
 			) : (
 				<div>
 					<div className='m-3'>
-						<Tabs className='rounded-lg bg-transparent'>
+						<Tabs className='rounded-lg bg-transparent'
+						defaultValue='monthly'>
 							<TabsList className='bg-white w-[500px]'>
 								<TabsTrigger
 									value='monthly'
@@ -109,7 +111,9 @@ const page = () => {
 									Weekly
 								</TabsTrigger>
 							</TabsList>
-							<TabsContent value='monthly'></TabsContent>
+							<TabsContent value='monthly'>
+								<Monthly/>
+							</TabsContent>
 							<TabsContent value='bi-weekly'></TabsContent>
 							<TabsContent value='weekly'></TabsContent>
 						</Tabs>

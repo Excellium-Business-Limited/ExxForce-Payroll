@@ -32,7 +32,7 @@ function isValidDate(date: Date | undefined) {
 	return !isNaN(date.getTime());
 }
 
-export default function Calendar28({title} : {title:string}) {
+export default function Calendar28({title, className, placeholder} : {title:string, className?:string, placeholder?:string}) {
 	const [open, setOpen] = React.useState(false);
 	const [date, setDate] = React.useState<Date | undefined>(
 		new Date('2025-06-01')
@@ -51,7 +51,7 @@ export default function Calendar28({title} : {title:string}) {
 				<Input
 					id='date'
 					value={value}
-					placeholder=' '
+					placeholder={placeholder}
 					className=' pr-10'
 					onChange={(e) => {
 						const date = new Date(e.target.value);
@@ -75,7 +75,7 @@ export default function Calendar28({title} : {title:string}) {
 						<Button
 							id='date-picker'
 							variant='ghost'
-							className='absolute top-1/2 right-2 size-6 -translate-y-1/2'>
+							className={`absolute top-1/2 right-2 size-6 -translate-y-1/2 ${className}`}>
 							<CalendarIcon className='size-3.5' />
 							{/* <span className='sr-only'>Select date</span> */}
 						</Button>
