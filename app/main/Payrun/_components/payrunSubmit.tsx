@@ -4,10 +4,25 @@ import DatePicker from '../../components/datepicker';
 import React from 'react'
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {payruns} from './payrunData'
+// import {payruns} from './payrunData'
 
-const monthly = () => {
-  return (
+interface payrun {
+	id: number;
+	PAY_FREQUENCY: string;
+	CREATED_BY: string;
+	TOTAL_EMPLOYEES: number;
+	LAST_UPDATED: string;
+	PAY_PERIOD: string;
+	STATUS: string;
+}
+
+interface MonthlyProps {
+	payruns: payrun[];
+}
+
+
+const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
+	return (
 		<div>
 			<Card className='w-[250px] p-4 my-4'>
 				<div className='flex gap-4 '>
@@ -20,7 +35,7 @@ const monthly = () => {
 					<h4 className='text-muted-foreground'>Next Payroll Date</h4>
 				</div>
 				<hr />
-				<h2 className='font-bold'>24th, April 2025</h2>
+				<h2 className='font-bold'>{nexts}</h2>
 				<p className='text-sm text-muted-foreground'>
 					Scheduled next payroll run
 				</p>
@@ -29,7 +44,7 @@ const monthly = () => {
 			<Card>
 				<CardHeader className='flex justify-between content-center align-middle '>
 					<h3>PAYRUN OVERVIEW</h3>
-					<article className='self-end flex justify-evenly gap-3 text-[10px]/6  content-center align-middle items-center '>
+					<article className='self-end flex justify-evenly gap-3 text-[10px]/6 content-center align-middle items-center '>
 						<span>
 							<Input
 								id='status'
@@ -48,22 +63,40 @@ const monthly = () => {
 						</span>
 						<DatePicker
 							title={''}
+							cla='flex !gap-0'
 							className='!left-2'
+							place=' placeholder:flex  placeholder:pl-[80px]'
 							placeholder='Select Date'
 						/>
-						<Button variant={'secondary'}>Filter</Button>
+						<Button
+							variant={'secondary'}
+							className='p-4 bg-[#3d56a8] text-white  w-[90px]'>
+							Filter
+						</Button>
 					</article>
 				</CardHeader>
 				<CardContent>
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead>PAY FREQUENCY</TableHead>
-								<TableHead>CREATED BY</TableHead>
-								<TableHead>TOTAL EMPLOYEES</TableHead>
-								<TableHead>LAST UPDATED</TableHead>
-								<TableHead>PAY PERIOD</TableHead>
-								<TableHead>STATUS</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									PAY FREQUENCY
+								</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									CREATED BY
+								</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									TOTAL EMPLOYEES
+								</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									LAST UPDATED
+								</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									PAY PERIOD
+								</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									STATUS
+								</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -85,6 +118,6 @@ const monthly = () => {
 			</Card>
 		</div>
 	);
-}
+};
 
 export default monthly

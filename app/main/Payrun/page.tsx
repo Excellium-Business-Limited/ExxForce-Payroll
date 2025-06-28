@@ -6,11 +6,15 @@ import Import from '../components/Import';
 import Dialogs from '../components/dialog'
 import PayrunForm from './_components/PayrunForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Monthly from './_components/monthly';
+import Submit from './_components/payrunSubmit';
+import {payruns} from './_components/payrunData'
+
 
 const page = () => {
   const [isPayrun, setIsPayrun] = React.useState(true)
    const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+
+
   return (
 		<div className='h-[2000px]'>
 			<div className='flex flex-row items-center justify-between w-full my-7 px-3 gap-4'>
@@ -92,8 +96,9 @@ const page = () => {
 			) : (
 				<div>
 					<div className='m-3'>
-						<Tabs className='rounded-lg bg-transparent'
-						defaultValue='monthly'>
+						<Tabs
+							className='rounded-lg bg-transparent'
+							defaultValue='monthly'>
 							<TabsList className='bg-white w-[500px]'>
 								<TabsTrigger
 									value='monthly'
@@ -112,10 +117,29 @@ const page = () => {
 								</TabsTrigger>
 							</TabsList>
 							<TabsContent value='monthly'>
-								<Monthly/>
+								<Submit
+									payruns={payruns.filter(
+										(payrun) => payrun.PAY_FREQUENCY === 'Monthly'
+									)}
+									nexts='24th, April 2025'
+								/>
 							</TabsContent>
-							<TabsContent value='bi-weekly'></TabsContent>
-							<TabsContent value='weekly'></TabsContent>
+							<TabsContent value='bi-weekly'>
+								<Submit
+									payruns={payruns.filter(
+										(payrun) => payrun.PAY_FREQUENCY === 'Bi-Weekly'
+									)}
+									nexts='15th, April 2025'
+								/>
+							</TabsContent>
+							<TabsContent value='weekly'>
+								<Submit
+									payruns={payruns.filter(
+										(payrun) => payrun.PAY_FREQUENCY === 'Weekly'
+									)}
+									nexts='5th, April 2025'
+								/>
+							</TabsContent>
 						</Tabs>
 					</div>
 				</div>

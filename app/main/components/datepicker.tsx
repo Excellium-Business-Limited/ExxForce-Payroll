@@ -32,16 +32,17 @@ function isValidDate(date: Date | undefined) {
 	return !isNaN(date.getTime());
 }
 
-export default function Calendar28({title, className, placeholder} : {title:string, className?:string, placeholder?:string}) {
+export default function Calendar28({title, className, placeholder, cla, place} : {title:string, className?:string, placeholder?:string, cla?:string, place?:string}) {
 	const [open, setOpen] = React.useState(false);
 	const [date, setDate] = React.useState<Date | undefined>(
-		new Date('2025-06-01')
+		// new Date('2025-06-01') 
+		
 	);
 	const [month, setMonth] = React.useState<Date | undefined>(date);
 	const [value, setValue] = React.useState(formatDate(date));
 
 	return (
-		<div className='flex flex-col gap-3'>
+		<div className={`flex flex-col gap-3 ${cla}`}>
 			<Label
 				htmlFor='date'
 				className='px-1'>
@@ -52,7 +53,7 @@ export default function Calendar28({title, className, placeholder} : {title:stri
 					id='date'
 					value={value}
 					placeholder={placeholder}
-					className=' pr-10'
+					className={`pr-10 ${place}`}
 					onChange={(e) => {
 						const date = new Date(e.target.value);
 						setValue(e.target.value);
