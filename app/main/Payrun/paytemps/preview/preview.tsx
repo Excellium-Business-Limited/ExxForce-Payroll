@@ -4,7 +4,6 @@ import {
 	CardFooter,
 	CardHeader,
 } from '@/components/ui/card';
-import { Sheet } from '@/components/ui/sheet';
 import {
 	Table,
 	TableBody,
@@ -16,10 +15,10 @@ import {
 } from '@/components/ui/table';
 import React from 'react';
 
-const page = () => {
+const preview = () => {
 	return (
 		<div className='w-[784px] ml-3'>
-			{/* <section className='ml-2'>
+			<section className='ml-2'>
 				<h2>Preview Payslip</h2>
 				<p className='font-light text-sm text-muted-foreground w-[470px] m-2.5'>
 					These fields are populated with data from your completed pay run.
@@ -135,10 +134,9 @@ const page = () => {
 					</TableFooter>
 				</Table>
 			</Card>
-			<span className='bottom-0 right-0'>Generated Report by Exxforce LTD</span> */}
-			<Sheet>
+			<span className='bottom-0 right-0'>Generated Report by Exxforce LTD</span>
 		</div>
 	);
 };
 
-export default page;
+export default preview;
