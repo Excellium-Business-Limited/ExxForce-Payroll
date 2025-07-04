@@ -1,30 +1,43 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+} from '@/components/ui/card';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableFooter,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import React from 'react';
 
 const page = () => {
 	return (
-		<div>
-			<section>
+		<div className='w-[784px] ml-3'>
+			<section className='ml-2'>
 				<h2>Preview Payslip</h2>
-				<p>
+				<p className='font-light text-sm text-muted-foreground w-[470px] m-2.5'>
 					These fields are populated with data from your completed pay run.
 					Preview payslips to print or save them.
 				</p>
 			</section>
-			<section className='grid grid-cols-3 grid-rows-3'>
-				<p>Employee Name: John Smith</p>
-				<p>Company Name: Excellium Business LTD Pay</p>
-				<p>Frequency: Monthly</p>
-				<p>Employee ID: 23561</p>
-				<p>Company Address: Lagos, Nigeria</p>
-				<p>Payment Date: April 30,2025</p>
-				<p>Position: Software Engineer</p>
+			<section className='grid grid-cols-3 grid-rows-3 my-2'>
+				<p className='text-sm m-2'>Employee Name: John Smith</p>
+				<p className='text-sm m-2'>Company Name: Excellium Business LTD </p>
+				<p className='text-sm m-2'>Pay Frequency: Monthly</p>
+				<p className='text-sm m-2'>Employee ID: 23561</p>
+				<p className='text-sm m-2'>Company Address: Lagos, Nigeria</p>
+				<p className='text-sm m-2'>Payment Date: April 30,2025</p>
+				<p className='text-sm m-2'>Position: Software Engineer</p>
 				<p> </p>
-				<p>Pay Period: April 2- April 30, 2025 </p>
+				<p className='text-sm '>Pay Period: April 2- April 30, 2025 </p>
 			</section>
 			<hr />
-			<Card>
+			<Card className='my-3 !p-0'>
 				<CardHeader className='bg-[#f3f4f5]'>Earnings</CardHeader>
 				<CardContent>
 					<Table>
@@ -48,18 +61,18 @@ const page = () => {
 								<TableCell>₦30,000.00</TableCell>
 							</TableRow>
 						</TableBody>
-						<TableFooter className='bg-[#f3f4f5]'>
-							<TableRow>
-								<TableHead>Total Earnings</TableHead>
-								<TableHead>₦270,000:00</TableHead>
-							</TableRow>
-						</TableFooter>
 					</Table>
 				</CardContent>
+				<CardFooter className='bg-[#f3f4f5]'>
+					<TableRow>
+						<TableHead>Total Earnings</TableHead>
+						<TableHead>₦270,000:00</TableHead>
+					</TableRow>
+				</CardFooter>
 			</Card>
-			<Card>
-				<CardHeader className='bg-[#f3f4f5]'>Deductions</CardHeader>
-				<CardContent>
+			<Card className='my-3 !p-0 h-fit'>
+				<CardHeader className='bg-[#f3f4f5] h-fit'>Deductions</CardHeader>
+				<CardContent className='bg-white'>
 					<Table>
 						<TableHeader>
 							<TableRow className='flex justify-between'>
@@ -85,22 +98,20 @@ const page = () => {
 								<TableCell>₦2,000.00</TableCell>
 							</TableRow>
 						</TableBody>
-						<TableFooter className='bg-[#f3f4f5]'>
-							<TableRow className='flex justify-between'>
-								<TableHead>Total Deductions</TableHead>
-								<TableHead>₦270,000:00</TableHead>
-							</TableRow>
-						</TableFooter>
 					</Table>
 				</CardContent>
+				<CardFooter className='bg-[#f3f4f5] flex justify-between w-full h-full'>
+					<TableHead>Total Deductions</TableHead>
+					<TableHead>₦270,000:00</TableHead>
+				</CardFooter>
 			</Card>
-			<Card>
+			<Card className='my-3 !p-0'>
 				<CardHeader className='flex justify-between bg-[#f3f4f5]'>
 					<div>Net Pay</div>
 					<div>₦225,000.00</div>
 				</CardHeader>
 			</Card>
-			<Card>
+			<Card className='my-3 !p-0'>
 				<CardHeader>Company Benefit</CardHeader>
 				<Table>
 					<TableHeader>
