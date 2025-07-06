@@ -1,9 +1,22 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DatePicker from '../../components/datepicker';
-import React from 'react'
+import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
+import { CheckIcon, CircleCheck, CircleX, Edit, EllipsisVertical, Eye } from 'lucide-react';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
 // import {payruns} from './payrunData'
 
 interface payrun {
@@ -19,7 +32,6 @@ interface payrun {
 interface MonthlyProps {
 	payruns: payrun[];
 }
-
 
 const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 	return (
@@ -97,6 +109,9 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 								<TableHead className='text-[#3d56a8] font-semibold'>
 									STATUS
 								</TableHead>
+								<TableHead className='text-[#3d56a8] font-semibold'>
+									MORE
+								</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -109,6 +124,45 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 										<TableCell>{payrun.LAST_UPDATED}</TableCell>
 										<TableCell>{payrun.PAY_PERIOD}</TableCell>
 										<TableCell>{payrun.STATUS}</TableCell>
+										<TableCell>
+											<Popover>
+												<PopoverTrigger>
+													<EllipsisVertical />
+												</PopoverTrigger>
+												<PopoverContent className='grid grid-cols-1 !p-0 !m-0 w-fit'>
+													{payrun.STATUS !== 'Approved' ? (
+														<Button
+															variant={'default'}
+															className='flex bg-white text-black hover:bg-secondary w-fit'>
+															<CheckIcon className='text-[#20b49f]' />{' '}
+															<p className=' font-light text-[#20b49f]'>
+																Approve Payrun
+															</p>
+														</Button>
+													) : null}
+													<Button
+														variant={'default'}
+														className='flex bg-white text-black hover:bg-secondary w-fit'>
+														<Eye />{' '}
+														<p className=' font-light'>View Details</p>
+													</Button>
+													<Button
+														variant={'default'}
+														className='flex bg-white text-black hover:bg-secondary w-fit'>
+														<Edit />{' '}
+														<p className='font-light'>Edit Schedule</p>
+													</Button>
+													<Button
+														variant={'default'}
+														className='flex bg-white text-black hover:bg-secondary w-fit'>
+														<CircleX className='text-[#bf2821]'/>{' '}
+														<p className='font-light text-[#bf2821]'>
+															Reject Payrun
+														</p>
+													</Button>
+												</PopoverContent>
+											</Popover>
+										</TableCell>
 									</TableRow>
 								);
 							})}
@@ -118,6 +172,6 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 			</Card>
 		</div>
 	);
-};
+};3
 
-export default monthly
+export default monthly;
