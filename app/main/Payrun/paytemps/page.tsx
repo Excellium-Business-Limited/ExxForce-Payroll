@@ -151,7 +151,7 @@ const page = () => {
 													<EllipsisVertical />
 												</PopoverTrigger>
 												<PopoverContent className='grid grid-cols-1 !p-0 !m-0 w-fit'>
-													<Link href='/'>
+													<Link href={'./paytemps/preview'}>
 														<Button
 															variant={'default'}
 															className='flex bg-white text-black hover:bg-secondary w-fit'>

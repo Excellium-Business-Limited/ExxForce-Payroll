@@ -46,15 +46,15 @@ const chartConfig = {
 	},
 } satisfies ChartConfig;
 
-export function Component() {
+export function Component({className}: { className?: string }) {
 	return (
-		<Card>
+		<Card className={`w-fit h-fit ${className}`}>
 			<CardHeader>
 				<CardTitle>Bar Chart - Stacked + Legend</CardTitle>
 				<CardDescription>January - June 2024</CardDescription>
 			</CardHeader>
-			<CardContent>
-				<ChartContainer config={chartConfig}>
+			<CardContent className='w-full h-[300px]'>
+				<ChartContainer config={chartConfig} className='h-full'>
 					<BarChart
 						accessibilityLayer
 						data={chartData}>

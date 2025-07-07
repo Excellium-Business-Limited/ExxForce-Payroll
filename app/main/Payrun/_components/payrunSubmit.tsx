@@ -11,12 +11,27 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { CheckIcon, CircleCheck, CircleX, Edit, EllipsisVertical, Eye } from 'lucide-react';
+import {
+	Check,
+	CheckIcon,
+	CircleCheck,
+	CircleX,
+	Edit,
+	EllipsisVertical,
+	Eye,
+} from 'lucide-react';
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 // import {payruns} from './payrunData'
 
 interface payrun {
@@ -129,33 +144,81 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 												<PopoverTrigger>
 													<EllipsisVertical />
 												</PopoverTrigger>
-												<PopoverContent className='grid grid-cols-1 !p-0 !m-0 w-fit'>
+												<PopoverContent className='grid grid-cols-1  !m-0 w-fit'>
 													{payrun.STATUS !== 'Approved' ? (
 														<Button
 															variant={'default'}
-															className='flex bg-white text-black hover:bg-secondary w-fit'>
-															<CheckIcon className='text-[#20b49f]' />{' '}
-															<p className=' font-light text-[#20b49f]'>
-																Approve Payrun
-															</p>
+															className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
+															asChild>
+															<Dialog>
+																<DialogTrigger className='flex bg-white text-black hover:bg-secondary w-fit !text-sm  p-0.5 justify-start'>
+																	<Check
+																		size={18}
+																		color='#20b49f'
+																	/>{' '}
+																	<p className=' font-light text-[#20b49f] text-sm '>
+																		Approve Payrun
+																	</p>
+																</DialogTrigger>
+																<DialogContent className='w-[500px] bg-white'>
+																	<DialogTitle className='text-center text-lg font-semibold '>
+																		Approve Payrun
+																	</DialogTitle>
+																	<div>
+																		<p>
+																			You are about to approve the payrun “
+																			{`${payrun.PAY_PERIOD} ${payrun.PAY_FREQUENCY}`}
+																			”. This action cannot be undone
+																		</p>
+																	</div>
+																	<div>
+																		<section className='flex justify-between my-4'>
+																			<p>Pay Date:</p>
+																			<p>{payrun.PAY_PERIOD}</p>
+																		</section>
+																		<section className='flex justify-between my-4'>
+																			<p>Total Employees</p>
+																			<p>{payrun.TOTAL_EMPLOYEES}</p>
+																		</section>
+																		<section className='flex justify-between my-4'>
+																			<p>Total Net Pay</p>
+																			<p>₦147,000.00</p>
+																		</section>
+																	</div>
+																	<div className='flex gap-3 right-0 bottom-0 self-end justify-end'>
+																		<Button
+																			variant={'default'}
+																			className='bg-white border border-2-[#969393] text-[#969393]'
+																			asChild>
+																			<DialogClose className='text-[#969393] hover:text-black'>
+																				Close
+																			</DialogClose>
+																		</Button>
+																		<Button
+																			variant={'default'}
+																			className='bg-[#3a56d8] text-white hover:bg-[#20b49f]'>
+																			<Check className='text-white' />
+																			Approve Payrun
+																		</Button>
+																	</div>
+																</DialogContent>
+															</Dialog>
 														</Button>
 													) : null}
 													<Button
 														variant={'default'}
-														className='flex bg-white text-black hover:bg-secondary w-fit'>
-														<Eye />{' '}
-														<p className=' font-light'>View Details</p>
+														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
+														<Eye /> <p className=' font-light'>View Details</p>
 													</Button>
 													<Button
 														variant={'default'}
-														className='flex bg-white text-black hover:bg-secondary w-fit'>
-														<Edit />{' '}
-														<p className='font-light'>Edit Schedule</p>
+														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
+														<Edit /> <p className='font-light'>Edit Schedule</p>
 													</Button>
 													<Button
 														variant={'default'}
-														className='flex bg-white text-black hover:bg-secondary w-fit'>
-														<CircleX className='text-[#bf2821]'/>{' '}
+														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
+														<CircleX className='text-[#bf2821]' />{' '}
 														<p className='font-light text-[#bf2821]'>
 															Reject Payrun
 														</p>
@@ -172,6 +235,7 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 			</Card>
 		</div>
 	);
-};3
+};
+3;
 
 export default monthly;

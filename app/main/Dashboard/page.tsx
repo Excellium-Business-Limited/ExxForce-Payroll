@@ -20,7 +20,7 @@ const Dashboard = () => {
 		<div>
 			<div>
 				<div>
-					<h3>Hi, Welcome Back User</h3>
+					<h3>Hi, Welcome Back {`User`}</h3>
 					<p>Here's what is happening with your payroll today</p>
 				</div>
 				<div>
@@ -32,16 +32,92 @@ const Dashboard = () => {
 						Export
 					</Button>
 				</div>
-				<div className='grid grid-cols-4 gap-4 m-8'>
-					<Card></Card>
-					<Card></Card>
-					<Card></Card>
-					<Card></Card>
+				<div className='grid grid-cols-4 gap-16 m-8'>
+					<Card className='m-1 p-3 w-[250px] h-fit'>
+						<article className='flex gap-2 content-center items-center'>
+							<span className='bg-[#dee7f6] rounded-4xl p-2 '>
+								<img
+									src='/icons/employee-group.png'
+									alt=''
+									width={20}
+									height={20}
+								/>
+							</span>
+							<h5>Total Employees </h5>
+						</article>
+						<hr />
+						<span>
+							<h2 className='font-bold text-sm '>50</h2>
+							<p className='text-xs text-muted-foreground'>
+								90% of employees are regular staff
+							</p>
+						</span>
+					</Card>
+					<Card className='m-1 p-3 w-[245px] h-fit'>
+						<article className='flex gap-2 content-center items-center'>
+							<span className='bg-[#d9f2ef] rounded-4xl p-2 '>
+								<img
+									src='/icons/money-bag (2).png'
+									alt=''
+									width={20}
+									height={20}
+								/>
+							</span>
+							<h5>Total Net Salary</h5>
+						</article>
+						<hr />
+						<span>
+							<h2 className='font-bold'>₦3,500,000.00</h2>
+							<p className='text-xs text-muted-foreground'>
+								Total payroll after deductions
+							</p>
+						</span>
+					</Card>
+					<Card className='m-1 p-3 w-[245px] h-fit'>
+						<article className='flex gap-2 content-center items-center'>
+							<span className='bg-[#f4e0da] rounded-4xl p-2 '>
+								<img
+									src='/icons/percentage.png'
+									alt=''
+									width={20}
+									height={20}
+								/>
+							</span>
+							<h5>Total Deduction</h5>
+						</article>
+						<hr />
+						<span>
+							<h2 className='font-bold'>₦3,500,000.00</h2>
+							<p className='text-xs text-muted-foreground'>
+								Deduction from all employees in this run
+							</p>
+						</span>
+					</Card>
+					<Card className='m-1 p-3 w-[245px] h-fit'>
+						<article className='flex gap-2 content-center items-center'>
+							<span className='bg-[#f8edd9] rounded-4xl p-2 '>
+								<img
+									src='/icons/money-hand.png'
+									alt=''
+									width={20}
+									height={20}
+								/>
+							</span>
+							<h5 className=''>Prorated Salaries</h5>
+						</article>
+						<hr />
+						<span>
+							<h2 className='font-bold'>15 Employees</h2>
+							<p className='text-xs text-muted-foreground'>
+								30% of employees had prorated pay
+							</p>
+						</span>
+					</Card>
 				</div>
 			</div>
-			<div className='grid grid-cols-2 m-8 gap-7'>
-				<BarChart />
-				<Piechrt />
+			<div className='grid grid-cols-10 grid-rows-1 gap-x-0 gap-y-0 m-8 w-[920px]'>
+				<BarChart className='col-span-7' />
+				<Piechrt className='col-span-3 w-[390px]' />
 			</div>
 			<div className='flex gap-4'>
 				<div className='basis-[60%] w-[718px]'>
