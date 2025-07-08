@@ -21,8 +21,6 @@ const chartData = [
 	{ browser: 'chrome', visitors: 275, fill: '#f95321' },
 	{ browser: 'safari', visitors: 200, fill: '#3d56a8' },
 	{ browser: 'firefox', visitors: 187, fill: 'green' },
-	{ browser: 'edge', visitors: 173, fill: '#f95321' },
-	{ browser: 'other', visitors: 90, fill: '#3d56a8' },
 ];
 
 const chartConfig = {
@@ -55,8 +53,7 @@ export default function PieChrt({className}: { className?: string }) {
 	return (
 		<Card className={`flex flex-col w-full h-full ${className}`}>
 			<CardHeader className='items-center pb-0'>
-				<CardTitle>Pie Chart - Donut</CardTitle>
-				<CardDescription>January - June 2024</CardDescription>
+				<CardTitle>Salary Components Breakdown</CardTitle>
 			</CardHeader>
 			<CardContent className='flex-1 pb-0 w-full'>
 				<ChartContainer

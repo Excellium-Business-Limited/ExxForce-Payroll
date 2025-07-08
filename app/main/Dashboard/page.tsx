@@ -14,6 +14,7 @@ import BarChart from './_components/Barchart';
 import { Bar } from 'recharts';
 import Piechrt from './_components/Piechart';
 import { Card } from '@/components/ui/card';
+import Link from 'next/link';
 
 const Dashboard = () => {
 	return (
@@ -115,37 +116,75 @@ const Dashboard = () => {
 					</Card>
 				</div>
 			</div>
-			<div className='grid grid-cols-10 grid-rows-1 gap-x-0 gap-y-0 m-8 w-[920px]'>
-				<BarChart className='col-span-7' />
-				<Piechrt className='col-span-3 w-[390px]' />
+			<div className='grid grid-cols-3 gap-x-0 gap-y-0 m-8 w-[980px]'>
+				<BarChart className='col-span-2' />
+				<Piechrt className='col-span-1 w-[390px]' />
 			</div>
-			<div className='flex gap-4'>
-				<div className='basis-[60%] w-[718px]'>
+			<div className='grid grid-cols-3 m-8  gap-4'>
+				<div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px]'>
 					<DTable
 						data={data1}
 						columns={columns}
 					/>
 				</div>
-				<div className='basis-[40%] grid grid-flow-col grid-cols-2 grid-rows-2 m-0 gap-3'>
-					<Card className='w-[158px] h-[123px]'>
-						<Users2Icon />
-						<div>Employees</div>
+				<div className=' grid grid-cols-2 grid-rows-2 p-5 rounded-xl shadow gap-3 bg-white w-full'>
+					<Card className='h-[123px] items-center justify-center flex flex-col'>
+						<Link
+							href='/main/Employee'
+							className='flex flex-col items-center gap-2'>
+							<article className='bg-[#e9eff9] rounded-4xl w-fit p-2'>
+								<img
+									src='/icons/employee-group-line.svg'
+									alt=''
+									width={20}
+									height={20}
+								/>
+							</article>
+							<h4>Employee</h4>
+						</Link>
 					</Card>
-					<Card className='w-[158px] h-[123px]'>
-						<img
-							src='/money-bag.png'
-							alt=''
-							className='w-7 h-8'
-						/>
-						<div>Payrun</div>
+					<Card className=' h-[123px] grid place-content-center'>
+						<Link
+							href='/main/Payrun'
+							className='flex flex-col items-center gap-2'>
+							<article className='bg-[#e9eff9] w-fit rounded-4xl p-2'>
+								<img
+									src='/icons/material-symbol.png'
+									alt=''
+									width={20}
+									height={20}
+								/>
+							</article>
+							<div>Payrun</div>
+						</Link>
 					</Card>
-					<Card className='w-[158px] h-[123px]'>
-						<BarChartBigIcon />
-						<div>Reports</div>
+					<Card className=' h-[123px] grid place-content-center'>
+						<Link
+							href='/main/Reports'
+							className='flex flex-col items-center gap-2'>
+							<article className='bg-[#e9eff9] w-fit rounded-4xl p-2'>
+								<BarChartBigIcon
+									color='#3a56d8'
+									width={20}
+									height={20}
+								/>
+							</article>
+							<div>Reports</div>
+						</Link>
 					</Card>
-					<Card className='w-[158px] h-[123px]'>
-						<Settings />
-						<div>Settings</div>
+					<Card className=' h-[123px] grid place-content-center'>
+						<Link
+							href='/main/Setins/CompSet'
+							className='flex flex-col items-center gap-2'>
+							<article className='bg-[#e9eff9] w-fit rounded-4xl p-2'>
+								<Settings
+									color='#3a56d8'
+									width={20}
+									height={20}
+								/>
+							</article>
+							<div>Settings</div>
+						</Link>
 					</Card>
 				</div>
 			</div>
