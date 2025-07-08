@@ -21,40 +21,45 @@ import {
 	ChartTooltipContent,
 } from '@/components/ui/chart';
 const chartData = [
-	{ month: 'January', desktop: 186, mobile: 80 },
-	{ month: 'February', desktop: 305, mobile: 200 },
-	{ month: 'March', desktop: 237, mobile: 120 },
-	{ month: 'April', desktop: 73, mobile: 190 },
-	{ month: 'May', desktop: 209, mobile: 130 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-	{ month: 'June', desktop: 214, mobile: 140 },
+	{ month: 'January', incomes: 186, deductions: 80, others: 120 },
+	{ month: 'February', incomes: 305, deductions: 200, others: 180 },
+	{ month: 'March', incomes: 237, deductions: 120, others: 110 },
+	{ month: 'April', incomes: 73, deductions: 190, others: 90 },
+	{ month: 'May', incomes: 209, deductions: 130, others: 140 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
 ];
 
 const chartConfig = {
-	desktop: {
-		label: 'Desktop',
-		color: 'hsl(var(--chart-1))',
+	incomes: {
+		label: 'Incomes',
+		color: '#3d56a8',
 	},
-	mobile: {
-		label: 'Mobile',
-		color: 'hsl(var(--chart-2))',
+	deductions: {
+		label: 'Deductions',
+		color: '#255ec3',
 	},
+	others: {
+		label: 'Others',
+		color: '#dee7f6',
+	}
 } satisfies ChartConfig;
 
 export function Component({className}: { className?: string }) {
 	return (
-		<Card className={`w-fit h-fit ${className}`}>
+		<Card className={`w-[630px] h-fit ${className}`}>
 			<CardHeader>
-				<CardTitle>Bar Chart - Stacked + Legend</CardTitle>
-				<CardDescription>January - June 2024</CardDescription>
+				<CardTitle>Payroll Summary</CardTitle>
 			</CardHeader>
 			<CardContent className='w-full h-[300px]'>
-				<ChartContainer config={chartConfig} className='h-full'>
+				<ChartContainer
+					config={chartConfig}
+					className='w-full h-full'>
 					<BarChart
 						accessibilityLayer
 						data={chartData}>
@@ -64,40 +69,39 @@ export function Component({className}: { className?: string }) {
 							tickLine={false}
 							tickMargin={10}
 							axisLine={false}
-							// tickFormatter={(value) => value.slice(0, 3)}
 						/>
 						<YAxis
-							tickLine={false}
+							tickLine={true}
 							axisLine={false}
 							tickMargin={20}
-							ticks={[0, 100, 200, 300,400, 500, 600, 700, 800, 900, 1000]} // Custom spacing
+							ticks={[0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]} // Custom spacing
+							tickFormatter={(value) => `₦${value / 100}M`}
 							tick={{ fontSize: 12, fill: '#3D56A8' }}
 						/>
 						<ChartTooltip content={<ChartTooltipContent hideLabel />} />
 						<ChartLegend content={<ChartLegendContent />} />
 						<Bar
-							dataKey='desktop'
+							dataKey='incomes'
 							stackId='a'
-							fill='var(--color-desktop)'
+							fill='var(--color-incomes)'
 							radius={[0, 0, 4, 4]}
 						/>
 						<Bar
-							dataKey='mobile'
+							dataKey='deductions'
 							stackId='a'
-							fill='var(--color-mobile)'
+							fill='var(--color-deductions)'
+							radius={[4, 4, 0, 0]}
+						/>
+						<Bar
+							dataKey='others'
+							stackId='a'
+							fill='var(--color-others)'
 							radius={[4, 4, 0, 0]}
 						/>
 					</BarChart>
 				</ChartContainer>
 			</CardContent>
-			<CardFooter className='flex-col items-start gap-2 text-sm'>
-				<div className='flex gap-2 font-medium leading-none'>
-					Trending up by 5.2% this month <TrendingUp className='h-4 w-4' />
-				</div>
-				<div className='leading-none text-muted-foreground'>
-					Showing total visitors for the last 6 months
-				</div>
-			</CardFooter>
+			<CardFooter className='flex-col items-start gap-2 text-sm'></CardFooter>
 		</Card>
 	);
 }

@@ -18,42 +18,58 @@ import {
 	ChartTooltipContent,
 } from '@/components/ui/chart';
 const chartData = [
-	{ browser: 'chrome', visitors: 275, fill: '#f95321' },
-	{ browser: 'safari', visitors: 200, fill: '#3d56a8' },
-	{ browser: 'firefox', visitors: 187, fill: 'green' },
+	{ salaryComp: 'income', percentage: 60, fill: '#3d56a8' },
+	{ salaryComp: 'deductions', percentage: 20, fill: '#f95321' },
+	{ salaryComp: 'others', percentage: 20, fill: '#008000' },
 ];
 
 const chartConfig = {
-	visitors: {
-		label: 'Visitors',
+	Percentage: {
+		label: 'Salary Components',
 	},
-	chrome: {
-		label: 'Chrome',
+	income: {
+		label: 'Income',
 		color: 'hsl(var(--chart-1))',
 	},
-	safari: {
-		label: 'Safari',
+	deductions: {
+		label: 'Deductions',
 		color: 'hsl(var(--chart-2))',
 	},
-	firefox: {
-		label: 'Firefox',
-		color: 'hsl(var(--chart-3))',
-	},
-	edge: {
-		label: 'Edge',
-		color: 'hsl(var(--chart-4))',
-	},
-	other: {
-		label: 'Other',
+	others: {
+		label: 'Others',
 		color: 'hsl(var(--chart-5))',
 	},
 } satisfies ChartConfig;
+
+// Custom label renderer for Pie segments
+const renderCustomizedLabel = ({
+	cx, cy, midAngle, innerRadius, outerRadius, percent, index,
+}: any) => {
+	const RADIAN = Math.PI / 180;
+	const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+	const x = cx + radius * Math.cos(-midAngle * RADIAN);
+	const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+	return (
+		<text
+			x={x}
+			y={y}
+			fill="white"
+			textAnchor={x > cx ? 'start' : 'end'}
+			dominantBaseline="central"
+			fontSize={14}
+			fontWeight={600}
+		>
+			{`${chartData[index].percentage}%`}
+		</text>
+	);
+};
 
 export default function PieChrt({className}: { className?: string }) {
 	return (
 		<Card className={`flex flex-col w-full h-full ${className}`}>
 			<CardHeader className='items-center pb-0'>
-				<CardTitle>Salary Components Breakdown</CardTitle>
+				<CardTitle className='self-center ml-16'>Salary Components Breakdown</CardTitle>
 			</CardHeader>
 			<CardContent className='flex-1 pb-0 w-full'>
 				<ChartContainer
@@ -61,24 +77,37 @@ export default function PieChrt({className}: { className?: string }) {
 					className='mx-auto aspect-square max-h-[250px]'>
 					<PieChart>
 						<ChartTooltip
-							cursor={false}
-							content={<ChartTooltipContent hideLabel />}
+							cursor={true}
+							content={<ChartTooltipContent />}
 						/>
 						<Pie
 							data={chartData}
-							dataKey='visitors'
-							nameKey='browser'
+							dataKey='percentage'
+							nameKey='salaryComp'
 							innerRadius={60}
+							label={renderCustomizedLabel}
+							labelLine={false} // This removes the line
 						/>
 					</PieChart>
 				</ChartContainer>
 			</CardContent>
 			<CardFooter className='flex-col gap-2 text-sm'>
-				<div className='flex items-center gap-2 font-medium leading-none'>
-					Trending up by 5.2% this month <TrendingUp className='h-4 w-4' />
-				</div>
-				<div className='leading-none text-muted-foreground'>
-					Showing total visitors for the last 6 months
+				<div className='flex items-center justify-between'>
+					{chartData.map((item, index) => {
+						return (
+							<section
+								key={index}
+								className='flex items-center gap-1 m-3'>
+								<span
+									className='w-2 h-2 rounded-2xl'
+									style={{ backgroundColor: item.fill }}></span>
+								<h6>
+									{item.salaryComp.charAt(0).toUpperCase() +
+										item.salaryComp.slice(1).toLowerCase()}
+								</h6>
+							</section>
+						);
+					})}
 				</div>
 			</CardFooter>
 		</Card>
