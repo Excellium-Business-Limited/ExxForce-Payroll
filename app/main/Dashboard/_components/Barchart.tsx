@@ -27,12 +27,12 @@ const chartData = [
 	{ month: 'April', incomes: 73, deductions: 190, others: 90 },
 	{ month: 'May', incomes: 209, deductions: 130, others: 140 },
 	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'July', incomes: 214, deductions: 140, others: 130 },
+	{ month: 'August', incomes: 314, deductions: 120, others: 100 },
+	{ month: 'Sept.', incomes: 262, deductions: 115, others: 70 },
+	{ month: 'Oct.', incomes: 304, deductions: 156, others: 130 },
+	{ month: 'Nov.', incomes: 201, deductions: 50, others: 110 },
+	{ month: 'Dec.', incomes: 90, deductions: 80, others: 122 },
 ];
 
 const chartConfig = {

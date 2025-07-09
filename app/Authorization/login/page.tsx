@@ -5,7 +5,7 @@ import image from './components/resources/login.svg';
 
 const LoginPage = () => {
   return (
-					<div>
+					<div className='bg-white'>
 						<LoginForm />
 					</div>
 	);

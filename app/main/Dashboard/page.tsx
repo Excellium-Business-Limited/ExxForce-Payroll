@@ -20,18 +20,24 @@ const Dashboard = () => {
 	return (
 		<div>
 			<div>
-				<div>
-					<h3>Hi, Welcome Back {`User`}</h3>
-					<p>Here's what is happening with your payroll today</p>
-				</div>
-				<div>
-					<Button variant='outline'>
-						<CalendarDaysIcon /> Select Date
-					</Button>
-					<Button variant='outline'>
-						<ArrowDownToLineIcon />
-						Export
-					</Button>
+				<div className='flex gap-1.5 items-center ml-4 mt-4'>
+					<section>
+						<h3>Hi, Welcome Back {`User`}</h3>
+						<p>Here's what is happening with your payroll today</p>
+					</section>
+					<div className='flex gap-4 ml-auto'>
+						<Button
+							variant='outline'
+							className='bg-white text-black'>
+							<CalendarDaysIcon /> Select Date
+						</Button>
+						<Button
+							variant='outline'
+							className='bg-white text-black'>
+							<ArrowDownToLineIcon />
+							Export
+						</Button>
+					</div>
 				</div>
 				<div className='grid grid-cols-4 gap-16 m-8'>
 					<Card className='m-1 p-3 w-[250px] h-fit'>

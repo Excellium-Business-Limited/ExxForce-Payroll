@@ -35,6 +35,7 @@ import {
 import Dialogs from '../components/dialog';
 import Import from '../components/Import';
 import UpdateRepay from '../components/updateRepay';
+import { Card } from '@/components/ui/card';
 const items = [
 	{ id: '1', name: 'Item One' },
 	{ id: '2', name: 'Item Two' },
@@ -43,6 +44,68 @@ const items = [
 
 export default function Home() {
 	const [isloan, setisLoan] = React.useState(true);
+	const loanData = [
+						{
+							loanNumber: '45623-05',
+							employeeName: 'Ifunanya Johnson',
+							loanName: 'Car Loan',
+							loanAmount: '₦600,000.00',
+							deduction: '₦60,000.00',
+							balanceRemaining: '₦540,000.00',
+							status: 'Ongoing',
+							id: '1',
+						},
+						{
+							loanNumber: '45623-05',
+							employeeName: 'Ifunanya Johnson',
+							loanName: 'Car Loan',
+							loanAmount: '₦600,000.00',
+							deduction: '₦60,000.00',
+							balanceRemaining: '₦540,000.00',
+							status: 'Ongoing',
+							id: '2',
+						},
+						{
+							loanNumber: '45623-05',
+							employeeName: 'Ifunanya Johnson',
+							loanName: 'Car Loan',
+							loanAmount: '₦600,000.00',
+							deduction: '₦60,000.00',
+							balanceRemaining: '₦540,000.00',
+							status: 'Ongoing',
+							id: '3',
+						},
+						{
+							loanNumber: '45623-05',
+							employeeName: 'Ifunanya Johnson',
+							loanName: 'Car Loan',
+							loanAmount: '₦600,000.00',
+							deduction: '₦60,000.00',
+							balanceRemaining: '₦540,000.00',
+							status: 'Ongoing',
+							id: '4',
+						},
+						{
+							loanNumber: '45623-05',
+							employeeName: 'Ifunanya Johnson',
+							loanName: 'Car Loan',
+							loanAmount: '₦600,000.00',
+							deduction: '₦60,000.00',
+							balanceRemaining: '₦540,000.00',
+							status: 'Ongoing',
+							id: '5',
+						},
+						{
+							loanNumber: '45623-05',
+							employeeName: 'Ifunanya Johnson',
+							loanName: 'Car Loan',
+							loanAmount: '₦600,000.00',
+							deduction: '₦60,000.00',
+							balanceRemaining: '₦540,000.00',
+							status: 'Ongoing',
+							id: '6',
+						},
+					];
 
 	if (!isloan) {
 		return (
@@ -86,8 +149,8 @@ export default function Home() {
 						from a file.
 					</pre>
 					<div className='flex flex-col sm:flex-row gap-4 justify-center'>
-						<Sheet modal={false} >
-							<SheetTrigger >
+						<Sheet modal={false}>
+							<SheetTrigger>
 								<Button
 									variant={'outline'}
 									className='bg-[#3D56A8] text-white'>
@@ -99,11 +162,9 @@ export default function Home() {
 								<LoanForm className='absolute' />
 							</SheetContent>
 						</Sheet>
-						<Button
-							variant={'outline'}
-							className='text-[#3D56A8]'>
-							Import
-						</Button>
+						<Dialogs title={'Import'}>
+							<Import title='Loans' />
+						</Dialogs>
 					</div>
 				</div>
 			</div>
@@ -132,14 +193,12 @@ export default function Home() {
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-						<Button
-							variant={'outline'}
-							className='text-[#3D56A8]'>
-							Import
-						</Button>
+						<Dialogs title={'Import'}>
+							<Import title='Loans' />
+						</Dialogs>
 					</span>
 				</div>
-				<div className='mt-12'>
+				<Card className='mt-12 ml-auto w-full h-[750px] p-3'>
 					<div className='flex flex-row items-center justify-between w-full'>
 						<span>
 							<h1>Loan List</h1>
@@ -171,162 +230,51 @@ export default function Home() {
 					<Table border={4}>
 						<TableHeader>
 							<TableRow>
-								<TableHead>Loan Number</TableHead>
-								<TableHead>Employee Number</TableHead>
-								<TableHead>Loan Name</TableHead>
-								<TableHead>Loan Amount</TableHead>
-								<TableHead>Deduction</TableHead>
-								<TableHead>Balance Remaining</TableHead>
-								<TableHead>Status</TableHead>
-								<TableHead>View</TableHead>
+								<TableHead className='text-[#3D56A8]'>Loan Number</TableHead>
+								<TableHead className='text-[#3D56A8]'>
+									Employee Number
+								</TableHead>
+								<TableHead className='text-[#3D56A8]'>Loan Name</TableHead>
+								<TableHead className='text-[#3D56A8]'>Loan Amount</TableHead>
+								<TableHead className='text-[#3D56A8]'>Deduction</TableHead>
+								<TableHead className='text-[#3D56A8]'>
+									Balance Remaining
+								</TableHead>
+								<TableHead className='text-[#3D56A8]'>Status</TableHead>
+								<TableHead className='text-[#3D56A8]'>View</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							<TableRow id='1'>
-								<TableCell>45623-05</TableCell>
-								<TableCell>Ifunanya Johnson</TableCell>
-								<TableCell>Car Loan</TableCell>
-								<TableCell>₦600,000.00</TableCell>
-								<TableCell>₦60,000.00</TableCell>
-								<TableCell>₦540,000.00</TableCell>
-								<TableCell>
-									<h4 className='border justify-center flex rounded-4xl'>
-										Ongoing
-									</h4>
-								</TableCell>
-								<TableCell>
-									<Link href={`/main/Loan/1`}>
-										<Image
-											width={25}
-											height={25}
-											src='/iconamoon_eye-light.png'
-											alt=''
-										/>
-									</Link>
-								</TableCell>
-							</TableRow>
-
-							<TableRow>
-								<TableCell>45623-05</TableCell>
-								<TableCell>Ifunanya Johnson</TableCell>
-								<TableCell>Car Loan</TableCell>
-								<TableCell>₦600,000.00</TableCell>
-								<TableCell>₦60,000.00</TableCell>
-								<TableCell>₦540,000.00</TableCell>
-								<TableCell>
-									<h4 className='border justify-center flex rounded-4xl'>
-										Ongoing
-									</h4>
-								</TableCell>
-								<TableCell>
-									<Image
-										width={25}
-										height={25}
-										src='/iconamoon_eye-light.png'
-										alt=''
-									/>
-								</TableCell>
-							</TableRow>
-
-							<TableRow>
-								<TableCell>45623-05</TableCell>
-								<TableCell>Ifunanya Johnson</TableCell>
-								<TableCell>Car Loan</TableCell>
-								<TableCell>₦600,000.00</TableCell>
-								<TableCell>₦60,000.00</TableCell>
-								<TableCell>₦540,000.00</TableCell>
-								<TableCell>
-									<h4 className='border justify-center flex rounded-4xl'>
-										Ongoing
-									</h4>
-								</TableCell>
-								<TableCell>
-									<Image
-										width={25}
-										height={25}
-										src='/iconamoon_eye-light.png'
-										alt=''
-									/>
-								</TableCell>
-							</TableRow>
-
-							<TableRow>
-								<TableCell>45623-05</TableCell>
-								<TableCell>Ifunanya Johnson</TableCell>
-								<TableCell>Car Loan</TableCell>
-								<TableCell>₦600,000.00</TableCell>
-								<TableCell>₦60,000.00</TableCell>
-								<TableCell>₦540,000.00</TableCell>
-								<TableCell>
-									<h4 className='border justify-center flex rounded-4xl'>
-										Ongoing
-									</h4>
-								</TableCell>
-								<TableCell>
-									<Image
-										width={25}
-										height={25}
-										src='/iconamoon_eye-light.png'
-										alt=''
-									/>
-								</TableCell>
-							</TableRow>
-
-							<TableRow>
-								<TableCell>45623-05</TableCell>
-								<TableCell>Ifunanya Johnson</TableCell>
-								<TableCell>Car Loan</TableCell>
-								<TableCell>₦600,000.00</TableCell>
-								<TableCell>₦60,000.00</TableCell>
-								<TableCell>₦540,000.00</TableCell>
-								<TableCell>
-									<h4 className='border justify-center flex rounded-4xl'>
-										Ongoing
-									</h4>
-								</TableCell>
-								<TableCell>
-									<Image
-										width={25}
-										height={25}
-										src='/iconamoon_eye-light.png'
-										alt=''
-									/>
-								</TableCell>
-							</TableRow>
-
-							<TableRow>
-								<TableCell>45623-05</TableCell>
-								<TableCell>Ifunanya Johnson</TableCell>
-								<TableCell>Car Loan</TableCell>
-								<TableCell>₦600,000.00</TableCell>
-								<TableCell>₦60,000.00</TableCell>
-								<TableCell>₦540,000.00</TableCell>
-								<TableCell>
-									<h4 className='border justify-center flex rounded-4xl'>
-										Ongoing
-									</h4>
-								</TableCell>
-								<TableCell>
-									<Image
-										width={25}
-										height={25}
-										src='/iconamoon_eye-light.png'
-										alt=''
-									/>
-								</TableCell>
-							</TableRow>
+							{loanData.map((loan) => {
+								return (
+									<TableRow key={loan.id}>
+										<TableCell>{loan.loanNumber}</TableCell>
+										<TableCell>{loan.employeeName}</TableCell>
+										<TableCell>{loan.loanName}</TableCell>
+										<TableCell>{loan.loanAmount}</TableCell>
+										<TableCell>{loan.deduction}</TableCell>
+										<TableCell>{loan.balanceRemaining}</TableCell>
+										<TableCell>
+											<h4 className='border justify-center flex rounded-4xl'>
+												{loan.status}
+											</h4>
+										</TableCell>
+										<TableCell>
+											<Link href={`/main/Loan/${loan.id}`}>
+												<Image
+													width={25}
+													height={25}
+													src='/iconamoon_eye-light.png'
+													alt=''
+												/>
+											</Link>
+										</TableCell>
+									</TableRow>
+								);
+							})}
 						</TableBody>
 					</Table>
-				</div>
-				<ul>
-					{items.map((item) => (
-						<li key={item.id}>
-							<Link href={`/main/Loan/${item.id}`}>{item.name}</Link>
-						</li>
-					))}
-				</ul>
-
-				<LoanDetails />
+				</Card>
 			</div>
 		</div>
 	);

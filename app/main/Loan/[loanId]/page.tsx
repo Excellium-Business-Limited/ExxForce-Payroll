@@ -48,6 +48,7 @@ export default function LoanDetails({ params }: { params: Promise<{ loanId: stri
 			<h1>{item.name}</h1>
 			<p>ID: {item.id}</p>
 			<p>{item.description}</p>
+			<Loans/>
 		</div>
 	);
 }

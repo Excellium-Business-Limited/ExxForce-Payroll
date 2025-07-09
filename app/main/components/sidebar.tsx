@@ -46,8 +46,13 @@ const sidebar = ({ className }: { className?: string }) => {
 										pathname === '/main/Dashboard'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
-									}`}>
-									Dashboard
+									} flex gap-1`}>
+									<img
+										src='/sidebar/dashboard.png'
+										alt=''
+										className='h-4 self-center justify-center'
+									/>
+									<h4>Dashboard</h4>
 								</div>
 							</Link>
 						</SidebarMenuItem>
@@ -58,8 +63,13 @@ const sidebar = ({ className }: { className?: string }) => {
 										pathname === '/main/Employee'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
-									}`}>
-									Employees
+									} flex gap-1`}>
+									<img
+										src='/sidebar/emp-grp-side.png'
+										alt=''
+										className='h-4 self-center justify-center'
+									/>
+									<h4>Employees</h4>
 								</div>
 							</Link>
 						</SidebarMenuItem>
@@ -70,7 +80,12 @@ const sidebar = ({ className }: { className?: string }) => {
 										pathname === '/main/Payrun'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
-									}`}>
+									} flex gap-1`}>
+									<img
+										src='/sidebar/money-bag-side.png'
+										alt=''
+										className='h-4 self-center justify-center'
+									/>
 									Payrun
 								</div>
 							</Link>
@@ -82,8 +97,13 @@ const sidebar = ({ className }: { className?: string }) => {
 										pathname === '/main/Loan'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
-									}`}>
-									Loans
+									} flex gap-1`}>
+									<img
+										src='/sidebar/money-linear.png'
+										alt=''
+										className='h-4 self-center justify-center'
+									/>
+									<h4>Loans</h4>
 								</div>
 							</Link>
 						</SidebarMenuItem>
@@ -94,23 +114,31 @@ const sidebar = ({ className }: { className?: string }) => {
 										pathname === '/main/Reports'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
-									}`}>
-									Reports
+									} flex gap-1`}>
+									<img
+										src='/sidebar/ChartBar.png'
+										alt=''
+										className='h-4 self-center justify-center'
+									/>
+									<h4>Reports</h4>
 								</div>
 							</Link>
 						</SidebarMenuItem>
 						<Collapsible className='group/collapsible'>
 							<SidebarMenuItem className='p-3 m-0.5'>
-								<CollapsibleTrigger
-									className='flex justify-between items-end w-full'
-									asChild>
-									<SidebarMenuButton className='overflow-visible'>
-										<div className='text-white'>Settings</div>
-										<ChevronDown
-											className='ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180 
-									group-data-[state=closed]/collapsible:opacity-0 group-data-[state=closed]/collapsible:invisible self-end align-end'
+								<CollapsibleTrigger className='flex justify-between items-end w-full'> 
+									<div className='text-white flex gap-1'>
+										<img
+											src='/sidebar/Gear.png'
+											alt=''
+											className='h-4 self-center justify-center'
 										/>
-									</SidebarMenuButton>
+										<h4>Settings</h4>
+									</div>
+									<ChevronDown
+										className='ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180 
+									group-data-[state=closed]/collapsible:opacity-0 group-data-[state=closed]/collapsible:invisible self-end align-end'
+									/>
 								</CollapsibleTrigger>
 								<CollapsibleContent className='overflow-visible'>
 									<SidebarMenuSub className='overflow-visible'>
@@ -159,17 +187,31 @@ const sidebar = ({ className }: { className?: string }) => {
 							</SidebarMenuItem>
 						</Collapsible>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={''}></Link>
-
-							<div className=''>Help</div>
+							<Link href={''}>
+								<div className='flex gap-1'>
+									<img
+										src='/sidebar/carbon_help.png'
+										alt=''
+										className='h-4 self-center justify-center'
+									/>
+									<h4>Help</h4>
+								</div>
+							</Link>
 						</SidebarMenuItem>
 					</SidebarMenu>
 				</div>
 			</div>
 			<SidebarFooter className='bg-black'>
-				<div className='flex items-center justify-between p-4 text-sm text-muted-foreground'>
-					Log Out
+				<Link href={'/Authorization/login'}>
+				<div className='flex items-center gap-2 p-4 text-sm text-muted-foreground'>
+					<img
+						src='/sidebar/SignOut.png'
+						alt=''
+						className='h-4 self-center justify-center'
+						/>
+					<h4>Log Out</h4>
 				</div>
+						</Link>
 			</SidebarFooter>
 		</Sidebar>
 	);

@@ -4,7 +4,7 @@ import { SignupForm } from './components/signupform';
 
 export default function LoginPage() {
 	return (
-		<div className=''>
+		<div className='bg-white'>
 			<SignupForm />
 		</div>
 	);
