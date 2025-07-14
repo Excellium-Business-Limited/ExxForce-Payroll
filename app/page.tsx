@@ -181,6 +181,93 @@ export default function Home() {
 					</Card>
 				</article>
 			</section>
+			<section className='bg-[#f4f4f4] flex flex-col items-center justify-center gap-4 p-8'>
+				<div className='mt-7'>
+					<h2 className='text-[#3d56a8] text-4xl font-semibold self-center ml-9'>
+						How Exxforce Works
+					</h2>
+					<p className='text-[#707478] text-center max-w-2xl mt-2'>
+						Get your payroll process up and running in just four simple steps.
+					</p>
+				</div>
+				<div className='relative flex items-center justify-center w-full'>
+					<div className='absolute left-9 right-0 transform w-[1020px] h-2.5 bg-[#3d56a8] z-0' />
+					<article className='grid grid-cols-4 grid-rows-1 gap-4 p-8 w-full z-10'>
+						<Card className='p-4 w-fit bg-white justify-center items-center'>
+							<span className='w-8 h-8 flex items-center justify-center bg-[#3d56a8] rounded-full text-white text-lg font-semibold self-center p-2'>
+								1
+							</span>
+							<h2 className='font-semibold'>Add Your Employees</h2>
+							<p className='text-xs text-muted-foreground'>
+								Easily onboard your team members with our intuitive employee
+								setup wizard.
+							</p>
+						</Card>
+						<Card className='bg-white p-4 w-fit justify-center items-center'>
+							<span className='w-8 h-8 flex items-center justify-center bg-[#3d56a8] rounded-full text-white text-lg font-semibold self-center p-2'>
+								2
+							</span>
+							<h2 className='font-semibold'>Assign Salary Structure</h2>
+							<p className='text-xs text-muted-foreground'>
+								Set up salary components, pay grades, and benefits tailored to
+								your organization.
+							</p>
+						</Card>
+						<Card className='bg-white p-4 w-fit justify-center items-center'>
+							<span className='w-8 h-8 flex items-center justify-center bg-[#3d56a8] rounded-full text-white text-lg font-semibold self-center p-2'>
+								3
+							</span>
+							<h2 className='font-semibold'>Schedule & run payroll</h2>
+							<p className='text-xs text-muted-foreground'>
+								Create automated pay schedules or run ad-hoc pay cycles with a
+								few clicks.
+							</p>
+						</Card>
+						<Card className='bg-white p-4 w-fit justify-center items-center'>
+							<span className='w-8 h-8 flex items-center justify-center bg-[#3d56a8] rounded-full text-white text-lg font-semibold self-center p-2'>
+								4
+							</span>
+							<h2 className='font-semibold'>
+								Review, approve & generate payslips
+							</h2>
+							<p className='text-xs text-muted-foreground'>
+								Submit for review, get approvals, and deliver payslips to
+								employees securely.
+							</p>
+						</Card>
+					</article>
+				</div>
+				<article className='flex items-center justify-center gap-4 mt-10'>
+					<Button
+						variant={'default'}
+						className='bg-[#3d56a8] text-white mt-6'>
+						Get Started
+					</Button>
+					<Button
+						variant={'default'}
+						className='bg-[#e4e4e4] mt-6'>
+						Resquest a Demo
+					</Button>
+				</article>
+			</section>
+			<section className='grid grid-cols-2'>
+				<div>
+					<h2 className='text-[#3d56a8] text-4xl font-semibold self-center ml-9'>
+						Designed For HR Teams and Business Owners
+					</h2>
+					<p className='text-[#707478] text-center max-w-2xl mt-2'>
+						Tailor-made features that focus on what matters most: saving time,
+						reducing errors, and keeping your team happy with timely, accurate
+						pay.
+					</p>
+				</div>
+				<div></div>
+			</section>
+			<section></section>
+			<section></section>
+			<section></section>
+			<section></section>
+			<section></section>
 		</div>
 	);
 }
