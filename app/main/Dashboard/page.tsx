@@ -22,8 +22,8 @@ const Dashboard = () => {
 			<div>
 				<div className='flex gap-1.5 items-center mx-4 mt-4'>
 					<section>
-						<h3 className='font-semibold '>Hi, Welcome Back {`User`}</h3>
-						<p className='text-muted-foreground'>Here's what is happening with your payroll today</p>
+						<h3 className='font-semibold text-md'>Hi, Welcome Back {`User`}</h3>
+						<p className='text-muted-foreground text-md'>Here's what is happening with your payroll today</p>
 					</section>
 					<div className='flex gap-4 ml-auto'>
 						<Button

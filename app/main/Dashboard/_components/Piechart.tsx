@@ -67,7 +67,7 @@ const renderCustomizedLabel = ({
 
 export default function PieChrt({className}: { className?: string }) {
 	return (
-		<Card className={`flex flex-col w-full h-full ${className}`}>
+		<Card className={`flex flex-col w-full h-[420px] ${className}`}>
 			<CardHeader className='items-center pb-0'>
 				<CardTitle className='self-center ml-16'>Salary Components Breakdown</CardTitle>
 			</CardHeader>

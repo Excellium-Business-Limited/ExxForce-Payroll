@@ -56,7 +56,7 @@ TableRow {
 
 :root {
   --radius: 0.625rem;
-  --background: #E8F1FF;
+  --background: #eff5ff;
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
