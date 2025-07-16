@@ -20,10 +20,10 @@ const Dashboard = () => {
 	return (
 		<div>
 			<div>
-				<div className='flex gap-1.5 items-center ml-4 mt-4'>
+				<div className='flex gap-1.5 items-center mx-4 mt-4'>
 					<section>
-						<h3>Hi, Welcome Back {`User`}</h3>
-						<p>Here's what is happening with your payroll today</p>
+						<h3 className='font-semibold '>Hi, Welcome Back {`User`}</h3>
+						<p className='text-muted-foreground'>Here's what is happening with your payroll today</p>
 					</section>
 					<div className='flex gap-4 ml-auto'>
 						<Button
@@ -39,7 +39,7 @@ const Dashboard = () => {
 						</Button>
 					</div>
 				</div>
-				<div className='grid grid-cols-4 gap-16 m-8'>
+				<div className='grid grid-cols-4 gap-6 m-8 '>
 					<Card className='m-1 p-3 w-[250px] h-fit'>
 						<article className='flex gap-2 content-center items-center'>
 							<span className='bg-[#dee7f6] rounded-4xl p-2 '>
@@ -124,7 +124,7 @@ const Dashboard = () => {
 			</div>
 			<div className='grid grid-cols-3 gap-x-0 gap-y-0 m-8 w-[980px]'>
 				<BarChart className='col-span-2' />
-				<Piechrt className='col-span-1 w-[390px]' />
+				<Piechrt className='col-span-1 w-[340px]' />
 			</div>
 			<div className='grid grid-cols-3 m-8  gap-4'>
 				<div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px]'>
