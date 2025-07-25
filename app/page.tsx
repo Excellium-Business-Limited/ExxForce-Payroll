@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import CompanyForm from './main/components/companyForm';
-import LoanDetails from './main/Loan/components/loanDetails';
+import CompanyForm from './[tenant]/components/companyForm';
+import LoanDetails from './[tenant]/Loan/components/loanDetails';
 import img from './main/resources/logo.svg';
 import imagen from '../public/Payroll Dashboard.png';
 import { Button } from '@/components/ui/button';

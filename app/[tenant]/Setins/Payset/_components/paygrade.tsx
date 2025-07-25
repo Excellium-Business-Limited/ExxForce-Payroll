@@ -1,8 +1,13 @@
 import { Card } from '@/components/ui/card';
-import Dialogs from '@/app/main/components/dialog';
-import DeleteMod from '@/app/main/components/deleteMod';
+import Dialogs from '@/app/[tenant]/components/dialog';
+import DeleteMod from '@/app/[tenant]/components/deleteMod';
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 
 const paygrade = () => {
 	const data = [
@@ -71,9 +76,12 @@ const paygrade = () => {
 										src='/icons/mage_edit.png'
 										alt='#'
 									/>
-									<Dialog >
-											<DialogTrigger className=''>
-											<img src='/icons/delete-icon.png' alt=''/>
+									<Dialog>
+										<DialogTrigger className=''>
+											<img
+												src='/icons/delete-icon.png'
+												alt=''
+											/>
 										</DialogTrigger>
 										<DialogContent className='bg-white'>
 											<DialogTitle className='hidden '></DialogTitle>

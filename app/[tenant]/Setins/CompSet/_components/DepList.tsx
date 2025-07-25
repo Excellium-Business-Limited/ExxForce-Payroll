@@ -1,5 +1,5 @@
-'use client'
-import LoanForm from '@/app/main/Loan/loanForm';
+'use client';
+import LoanForm from '@/app/[tenant]/Loan/loanForm';
 import { Button } from '@/components/ui/button';
 import {
 	Sheet,
@@ -15,10 +15,15 @@ import {
 	TableBody,
 	TableCell,
 } from '@/components/ui/table';
-import Dialogs from '@/app/main/components/dialog'
+import Dialogs from '@/app/[tenant]/components/dialog';
 import React from 'react';
 import Add from './add';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 
 const DepList = () => {
 	return (
@@ -36,7 +41,7 @@ const DepList = () => {
 						</DialogTrigger>
 						<DialogContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 							<DialogTitle className='hidden'></DialogTitle>
-							<Add title ="Department" />
+							<Add title='Department' />
 						</DialogContent>
 					</Dialog>
 				</span>
