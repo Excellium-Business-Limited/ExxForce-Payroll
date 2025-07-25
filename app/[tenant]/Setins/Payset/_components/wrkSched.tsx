@@ -5,16 +5,42 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import { ArrowDown, Check } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import React from 'react';
-import Dialogs from '@/app/main/components/dialog'
-import HolidayForm from '@/app/main/components/HolidayForm';
+import Dialogs from '@/app/[tenant]/components/dialog';
+import HolidayForm from '@/app/[tenant]/components/HolidayForm';
 
 const wrkSched = () => {
-	const data =[{name: 'New Year', date: '2024-01-01', type: 'Public', recurring: 'Yearly'},{name: 'Independence Day', date: '2024-07-04', type: 'Public', recurring: 'Yearly'}, {name: 'Christmas', date: '2024-12-25', type: 'Public', recurring: 'Yearly'}];
+	const data = [
+		{
+			name: 'New Year',
+			date: '2024-01-01',
+			type: 'Public',
+			recurring: 'Yearly',
+		},
+		{
+			name: 'Independence Day',
+			date: '2024-07-04',
+			type: 'Public',
+			recurring: 'Yearly',
+		},
+		{
+			name: 'Christmas',
+			date: '2024-12-25',
+			type: 'Public',
+			recurring: 'Yearly',
+		},
+	];
 	const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
 	const [currday, setCurrday] = React.useState<Date | null>(null);
 	return (
@@ -126,8 +152,9 @@ const wrkSched = () => {
 
 							<Dialogs
 								title={' Add Holiday'}
-								sim='+' className='bg-[#3d56a8] text-white'>
-								<HolidayForm/>
+								sim='+'
+								className='bg-[#3d56a8] text-white'>
+								<HolidayForm />
 							</Dialogs>
 						</article>
 						<Table>
