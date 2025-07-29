@@ -1,3 +1,4 @@
+'use client'
 import {
 	Card,
 	CardContent,
@@ -20,9 +21,95 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import React from 'react';
-import Preview from './preview';
+
+const employeeData = {
+	employeeName: 'John Smith',
+	companyName: 'Excellium Business LTD',
+	payFrequency: 'Monthly',
+	employeeID: '23561',
+	companyAddress: 'Lagos, Nigeria',
+	paymentDate: 'April 30, 2025',
+	position: 'Software Engineer',
+	payPeriod: 'April 2 - April 30, 2025',
+	earnings: {
+		header: 'Earnings',
+		items: [
+			{
+				description: 'Basic Salary',
+				amount: '250000.00',
+			},
+			{
+				description: 'Housing Allowance',
+				amount: '50000.00',
+			},
+			{
+				description: 'Transport Allowance',
+				amount: '30000.00',
+			},
+		],
+		totalEarnings: '270000.00',
+	},
+	deductions: {
+		header: 'Deductions',
+		items: [
+			{
+				description: 'PAYE Tax',
+				amount: '20000.00',
+			},
+			{
+				description: 'Pension Contribution',
+				amount: '18000.00',
+			},
+			{
+				description: 'Loan Repayment',
+				amount: '5000.00',
+			},
+			{
+				description: 'Industrial Training Fund(ITF)',
+				amount: '2000.00',
+			},
+		],
+		totalDeductions: '270000.00',
+	},
+	netPay: '225000.00',
+	companyBenefit: {
+		header: 'Company Benefit',
+		items: [
+			{
+				description: 'HMO Insurance',
+				amount: '50000.00',
+			},
+		],
+		totalCompanyBenefit: '50000.00',
+	},
+};
+
+// const employee = [Object.entries(employeeData)];
+
 
 const page = () => {
+	React.useEffect(() => {
+			add(earnings);
+		}, []);
+	const {employeeName, employeeID, companyName, payFrequency, companyAddress, paymentDate, position, payPeriod, earnings, deductions, netPay, companyBenefit} = employeeData;
+
+	interface financials{
+		header: string;
+		items: Array<Items>;
+		totalEarnings?: string;
+	}
+
+	interface Items {
+  description: string;
+  amount: string;
+}
+
+	const add = (element : financials) =>{
+		const itemsarray : Items[] = element.items;
+		const constant : string[] = itemsarray.map(item => item.amount)
+		const num : number = constant.map(item => parseFloat(item)).reduce((acc, curr) => acc + curr, 0);
+		return(num);
+	}
 	return (
 		<div className='w-fit bg-white my-5 rounded-xl p-5 ml-3'>
 			<article className='bg-white'>
@@ -35,15 +122,15 @@ const page = () => {
 						</p>
 					</section>
 					<section className='grid grid-cols-3 grid-rows-3 my-2'>
-						<p className='text-sm m-2'>Employee Name: John Smith</p>
-						<p className='text-sm m-2'>Company Name: Excellium Business LTD </p>
-						<p className='text-sm m-2'>Pay Frequency: Monthly</p>
-						<p className='text-sm m-2'>Employee ID: 23561</p>
-						<p className='text-sm m-2'>Company Address: Lagos, Nigeria</p>
-						<p className='text-sm m-2'>Payment Date: April 30,2025</p>
-						<p className='text-sm m-2'>Position: Software Engineer</p>
+						<p className='text-sm m-2'>Employee Name: {employeeName}</p>
+						<p className='text-sm m-2'>Company Name: {companyName} </p>
+						<p className='text-sm m-2'>Pay Frequency: {payFrequency}</p>
+						<p className='text-sm m-2'>Employee ID: {employeeID}</p>
+						<p className='text-sm m-2'>Company Address: {companyAddress}</p>
+						<p className='text-sm m-2'>Payment Date: {paymentDate}</p>
+						<p className='text-sm m-2'>Position: {position}</p>
 						<p> </p>
-						<p className='text-sm '>Pay Period: April 2- April 30, 2025 </p>
+						<p className='text-sm '>Pay Period: {payPeriod}</p>
 					</section>
 					<hr />
 					<Card className='my-3 !p-0 h-fit'>
@@ -56,22 +143,21 @@ const page = () => {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>Basic Salary</TableCell>
-									<TableCell>₦250,000.00</TableCell>
-								</TableRow>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>Housing Allowance</TableCell>
-									<TableCell>₦50,000.00</TableCell>
-								</TableRow>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>Transport Allowance</TableCell>
-									<TableCell>₦30,000.00</TableCell>
-								</TableRow>
+								{earnings.items.map((item, index) => {
+									item = item as { description: string; amount: string };
+									return (
+										<TableRow
+											key={index}
+											className='text-muted-foreground flex justify-between'>
+											<TableCell>{item.description}</TableCell>
+											<TableCell>₦{item.amount}</TableCell>
+										</TableRow>
+									);
+								})}
 							</TableBody>
 							<TableFooter className='bg-[#f3f4f5] flex justify-between w-full h-full'>
 								<TableHead>Total Earnings</TableHead>
-								<TableHead>₦270,000.00</TableHead>
+								<TableHead>₦{`${add(earnings)}.00`}</TableHead>
 							</TableFooter>
 						</Table>
 					</Card>
@@ -86,33 +172,28 @@ const page = () => {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>PAYE Tax</TableCell>
-									<TableCell>₦20,000.00</TableCell>
-								</TableRow>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>Pension Contribution</TableCell>
-									<TableCell>₦18,000.00</TableCell>
-								</TableRow>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>Loan Repayment</TableCell>
-									<TableCell>₦5,000.00</TableCell>
-								</TableRow>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>Industrial Training Fund(ITF)</TableCell>
-									<TableCell>₦2,000.00</TableCell>
-								</TableRow>
+								{deductions.items.map((item, index) => {
+									item = item as { description: string; amount: string };
+									return (
+										<TableRow
+											key={index}
+											className='text-muted-foreground flex justify-between'>
+											<TableCell>{item.description}</TableCell>
+											<TableCell>₦{item.amount}</TableCell>
+										</TableRow>
+									);
+								})}
 							</TableBody>
 							<TableFooter className='bg-[#f3f4f5] flex justify-between w-full h-full'>
 								<TableHead>Total Deductions</TableHead>
-								<TableHead>₦270,000:00</TableHead>
+								<TableHead>₦{`${add(deductions)}.00`}</TableHead>
 							</TableFooter>
 						</Table>
 					</Card>
 					<Card className='my-3 !p-0 h-[50px] rounded-xl bg-[#f3f4f5]'>
 						<CardContent className='flex pt-4 justify-between bg-[#f3f4f5]'>
 							<h4 className='font-bold '>Net Pay</h4>
-							<h4 className='font-bold'>₦225,000.00</h4>
+							<h4 className='font-bold'>{netPay}</h4>
 						</CardContent>
 					</Card>
 					<Card className='my-3 !p-0'>
@@ -127,16 +208,21 @@ const page = () => {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								<TableRow className='text-muted-foreground flex justify-between'>
-									<TableCell>HMO Insurance</TableCell>
-									<TableCell>₦50,000.00</TableCell>
-								</TableRow>
+								{companyBenefit.items.map((item, index) => {
+									item = item as { description: string; amount: string };
+									return (
+										<TableRow
+											key={index}
+											className='text-muted-foreground flex justify-between'>
+											<TableCell>{item.description}</TableCell>
+											<TableCell>₦{item.amount}</TableCell>
+										</TableRow>
+									);
+								})}
 							</TableBody>
-							<TableFooter className='bg-[#f3f4f5]  mb-8'>
-								<TableRow className='flex justify-between'>
-									<TableHead>Total</TableHead>
-									<TableHead>₦50,000:00</TableHead>
-								</TableRow>
+							<TableFooter className='bg-[#f3f4f5] flex justify-between w-full h-full mb-8'>
+								<TableHead>Total</TableHead>
+								<TableHead>₦{`${add(companyBenefit)}.00`}</TableHead>
 							</TableFooter>
 						</Table>
 					</Card>
