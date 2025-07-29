@@ -32,6 +32,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
+import Link from 'next/link';
 // import {payruns} from './payrunData'
 
 interface payrun {
@@ -207,8 +208,12 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 													) : null}
 													<Button
 														variant={'default'}
-														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
-														<Eye /> <p className=' font-light'>View Details</p>
+														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
+														asChild>
+														<Link href='./Payrun/paytemps'>
+															<Eye />{' '}
+															<p className=' font-light'>View Details</p>
+														</Link>
 													</Button>
 													<Button
 														variant={'default'}

@@ -14,7 +14,8 @@ import {
 import { DialogClose } from '@/components/ui/dialog';
 import { SheetClose } from '@/components/ui/sheet';
 
-export default function EmployeeForm() {
+export default function EmployeeForm({employeeData, isEdit} : {
+	employeeData?: any; isEdit: boolean;}) {
 	if (!open) return null;
 
 	return (

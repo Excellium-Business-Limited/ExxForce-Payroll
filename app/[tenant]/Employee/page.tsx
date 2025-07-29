@@ -17,9 +17,9 @@ import { Pencil } from 'lucide-react';
 
 const Page = () => {
   const [isEdit, setIsEdit] = useState(false);
-  const [employeeData, setEmployeeData] = useState(null);
+  const [employeeData, setEmployeeData] = useState<{ employee?: null } | null>(null);
 
-  const handleEditClick = (employee) => {
+  const handleEditClick = (employee : {employee?: null}) => {
     setIsEdit(true);
     setEmployeeData(employee);
   };
