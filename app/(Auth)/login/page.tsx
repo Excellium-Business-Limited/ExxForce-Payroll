@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import axios from 'axios';
 import { LoginForm } from './components/login-form';
 import Image from 'next/image';
 import image from './components/resources/login.svg';
@@ -17,18 +18,34 @@ const LoginPage = () => {
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError('');
-		setIsLoading(true);
-
+		// setIsLoading(true);
+		console.log('Login attempt with:', { email, password });
 		try {
-			const response = await login(email, password);
-			const { access, refresh, redirect, tenant } = response;
+			axios
+				.post(
+					"http://localhost:8000/api/token/pair",
+					{ email, password },
+					{
+						withCredentials: true, // <--- Add this!
+					}
+				)
+				.then((response) => {
+					response.data = response.data || {};
+					const { access, refresh, redirect, tenant } = response.data;
+				})
+				.catch((error) => {
+					// Handle error
+					setError(error.message || 'Invalid credentials. Please try again.');
+					setIsLoading(false);
+				});
+			// const response = await login(email, password);
+			// const { access, refresh, redirect, tenant } = response;
+			// saveTokens(access, refresh);
 
-			saveTokens(access, refresh);
-
-			const redirectPath = redirect
-				? new URL(redirect).pathname
-				: `/${tenant}/dashboard`;
-			router.push(redirectPath);
+			// const redirectPath = redirect
+			// 	? new URL(redirect).pathname
+			// 	: `/${tenant}/Dashboard`;
+			// router.push(redirectPath);
 		} catch (err: any) {
 			setError(err.message || 'Invalid credentials. Please try again.');
 			setIsLoading(false);
@@ -36,7 +53,14 @@ const LoginPage = () => {
 	};
 	return (
 		<div className='bg-white'>
-			<LoginForm />
+			{/* <LoginForm /> */}
+			<form action="submit">
+				<label htmlFor="email">Email</label>
+				<input type="email" onChange={(e) => setEmail(e.target.value)} />
+				<label htmlFor="password">Password</label>
+				<input type="password" onChange={(e) => setPassword(e.target.value)} />
+				<button onClick={handleLogin}>Login</button>
+			</form>
 		</div>
 	);
 };

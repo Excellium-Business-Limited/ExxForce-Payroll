@@ -8,7 +8,7 @@ const EmployeePage = () => {
   const [employeeData, setEmployeeData] = useState<{ id: number; name: string } | null>(null);
   const [employees, setEmployees] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     department: 'All',
     designation: 'All',
@@ -30,7 +30,7 @@ const EmployeePage = () => {
     console.log('Import employee clicked');
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount : number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
@@ -38,7 +38,7 @@ const EmployeePage = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString : string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -46,13 +46,13 @@ const EmployeePage = () => {
     });
   };
 
-  const getEmployeeStatus = (employee) => {
+  const getEmployeeStatus = (employee : string) => {
     // You can add logic here to determine status based on employee data
     // For now, assuming active employees
     return 'Active';
   };
 
-  const getEmployeeType = (employmentType) => {
+  const getEmployeeType = (employmentType : string) => {
     switch (employmentType) {
       case 'FULL_TIME':
         return 'Full time';

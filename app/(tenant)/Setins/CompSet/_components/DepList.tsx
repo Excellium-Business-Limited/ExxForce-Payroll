@@ -1,5 +1,5 @@
 'use client';
-import LoanForm from '@/app/[tenant]/Loan/loanForm';
+import LoanForm from '@/app/(tenant)/Loan/loanForm';
 import { Button } from '@/components/ui/button';
 import {
 	Sheet,
@@ -15,7 +15,7 @@ import {
 	TableBody,
 	TableCell,
 } from '@/components/ui/table';
-import Dialogs from '@/app/[tenant]/components/dialog';
+import Dialogs from '@/app/(tenant)/components/dialog';
 import React from 'react';
 import Add from './add';
 import {

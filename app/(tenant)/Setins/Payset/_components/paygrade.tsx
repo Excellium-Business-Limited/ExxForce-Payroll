@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
-import Dialogs from '@/app/[tenant]/components/dialog';
-import DeleteMod from '@/app/[tenant]/components/deleteMod';
+import Dialogs from '@/app/(tenant)/components/dialog';
+import DeleteMod from '@/app/(tenant)/components/deleteMod';
 import React from 'react';
 import {
 	Dialog,
