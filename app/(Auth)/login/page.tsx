@@ -18,34 +18,17 @@ const LoginPage = () => {
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError('');
-		// setIsLoading(true);
-		console.log('Login attempt with:', { email, password });
-		try {
-			axios
-				.post(
-					"http://localhost:8000/api/token/pair",
-					{ email, password },
-					{
-						withCredentials: true, // <--- Add this!
-					}
-				)
-				.then((response) => {
-					response.data = response.data || {};
-					const { access, refresh, redirect, tenant } = response.data;
-				})
-				.catch((error) => {
-					// Handle error
-					setError(error.message || 'Invalid credentials. Please try again.');
-					setIsLoading(false);
-				});
-			// const response = await login(email, password);
-			// const { access, refresh, redirect, tenant } = response;
-			// saveTokens(access, refresh);
+		setIsLoading(true);
+		try{
+			const response = await login(email, password);
+			console.log(response);
+			const { access, refresh, redirect, tenant } = response;
+			saveTokens(access, refresh);
 
-			// const redirectPath = redirect
-			// 	? new URL(redirect).pathname
-			// 	: `/${tenant}/Dashboard`;
-			// router.push(redirectPath);
+			const redirectPath = redirect
+				? new URL(redirect).pathname
+				: `/${tenant}/Dashboard`;
+			router.push(redirectPath);
 		} catch (err: any) {
 			setError(err.message || 'Invalid credentials. Please try again.');
 			setIsLoading(false);
