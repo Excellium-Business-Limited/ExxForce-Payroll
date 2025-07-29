@@ -5,12 +5,12 @@ import axios from 'axios';
 
 const EmployeePage = () => {
   const [isEdit, setIsEdit] = useState(false);
-  const [employeeData, setEmployeeData] = useState(null);
-  const [employees, setEmployees] = useState([]);
+  const [employeeData, setEmployeeData] = useState<{ id: number; name: string } | null>(null);
+  const [employees, setEmployees] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleEditClick = (employee) => {
+  const handleEditClick = (employee: { id: number; name: string }) => {
     setIsEdit(true);
     setEmployeeData(employee);
   };
