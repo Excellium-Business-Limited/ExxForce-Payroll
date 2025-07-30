@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import EmployeeForm from '../components/EmployeeForm';
+import ImportModal from '../components/Import';
 
 const EmployeePage = () => {
   const [isEdit, setIsEdit] = useState(false);
@@ -9,6 +11,8 @@ const EmployeePage = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [filters, setFilters] = useState({
     department: 'All',
     designation: 'All',
@@ -18,16 +22,65 @@ const EmployeePage = () => {
   const handleEditClick = (employee) => {
     setIsEdit(true);
     setEmployeeData(employee);
+    setShowEmployeeForm(true);
   };
 
   const handleAddEmployee = () => {
-    // Add your add employee logic here
-    console.log('Add employee clicked');
+    setIsEdit(false);
+    setEmployeeData(null);
+    setShowEmployeeForm(true);
   };
 
   const handleImportEmployee = () => {
-    // Add your import employee logic here
-    console.log('Import employee clicked');
+    setShowImportModal(true);
+  };
+
+  const handleCloseEmployeeForm = () => {
+    setShowEmployeeForm(false);
+    setIsEdit(false);
+    setEmployeeData(null);
+  };
+
+  const handleCloseImportModal = () => {
+    setShowImportModal(false);
+  };
+
+  const handleEmployeeSubmit = async (employeeData) => {
+    // Handle employee creation/update logic here
+    try {
+      if (isEdit) {
+        // Update employee logic
+        console.log('Updating employee:', employeeData);
+      } else {
+        // Create new employee logic
+        console.log('Creating new employee:', employeeData);
+      }
+      
+      // Refresh the employee list after successful submission
+      const response = await axios.get(`http://excellium.localhost:8000/tenant/employee/list`);
+      setEmployees(response.data || []);
+      
+      // Close the form
+      handleCloseEmployeeForm();
+    } catch (error) {
+      console.error('Error submitting employee:', error);
+    }
+  };
+
+  const handleImportSubmit = async (importData) => {
+    // Handle import logic here
+    try {
+      console.log('Importing employees:', importData);
+      
+      // Refresh the employee list after successful import
+      const response = await axios.get(`http://excellium.localhost:8000/tenant/employee/list`);
+      setEmployees(response.data || []);
+      
+      // Close the modal
+      handleCloseImportModal();
+    } catch (error) {
+      console.error('Error importing employees:', error);
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -336,6 +389,50 @@ const EmployeePage = () => {
           <EmptyEmployeeState />
         )}
       </main>
+
+      {/* Employee Form Modal/Sidebar - Slides from right, covers half screen */}
+      {showEmployeeForm && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={handleCloseEmployeeForm}
+          />
+          
+          {/* Modal Content - Slides from right */}
+          <div className="absolute right-0 top-0 h-full w-1/2 transform transition-transform duration-300 ease-in-out">
+            <EmployeeForm
+              isOpen={showEmployeeForm}
+              isEdit={isEdit}
+              employeeData={employeeData}
+              onClose={handleCloseEmployeeForm}
+              onSubmit={handleEmployeeSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal - Centered */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={handleCloseImportModal}
+          />
+          
+          {/* Modal Content - Centered */}
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative transform transition-all duration-300 ease-in-out">
+              <ImportModal
+                isOpen={showImportModal}
+                onClose={handleCloseImportModal}
+                onSubmit={handleImportSubmit}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
