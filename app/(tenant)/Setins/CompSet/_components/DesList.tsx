@@ -1,5 +1,5 @@
 'use client';
-import LoanForm from '@/app/[tenant]/Loan/loanForm';
+import LoanForm from '@/app/(tenant)/Loan/loanForm';
 import { Button } from '@/components/ui/button';
 import {
 	Sheet,

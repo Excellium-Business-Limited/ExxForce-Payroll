@@ -17,8 +17,8 @@ import { ArrowDown, Check } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import React from 'react';
-import Dialogs from '@/app/[tenant]/components/dialog';
-import HolidayForm from '@/app/[tenant]/components/HolidayForm';
+import Dialogs from '@/app/(tenant)/components/dialog';
+import HolidayForm from '@/app/(tenant)/components/HolidayForm';
 
 const wrkSched = () => {
 	const data = [

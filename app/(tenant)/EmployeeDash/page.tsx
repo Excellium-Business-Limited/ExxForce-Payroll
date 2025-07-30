@@ -7,19 +7,23 @@ import ImportModal from '../components/Import';
 
 const EmployeePage = () => {
   const [isEdit, setIsEdit] = useState(false);
-  const [employeeData, setEmployeeData] = useState(null);
-  const [employees, setEmployees] = useState([]);
+  const [employeeData, setEmployeeData] = useState<{ id: number; name: string } | null>(null);
+  const [employees, setEmployees] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD:app/[tenant]/EmployeeDash/page.tsx
   const [error, setError] = useState(null);
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+=======
+  const [error, setError] = useState<string | null>(null);
+>>>>>>> 067eff2b54cb9e45946706d88dc705f05a726dfd:app/(tenant)/EmployeeDash/page.tsx
   const [filters, setFilters] = useState({
     department: 'All',
     designation: 'All',
     status: 'All'
   });
 
-  const handleEditClick = (employee) => {
+  const handleEditClick = (employee: { id: number; name: string }) => {
     setIsEdit(true);
     setEmployeeData(employee);
     setShowEmployeeForm(true);
@@ -83,7 +87,7 @@ const EmployeePage = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount : number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
@@ -91,7 +95,7 @@ const EmployeePage = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString : string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -99,13 +103,13 @@ const EmployeePage = () => {
     });
   };
 
-  const getEmployeeStatus = (employee) => {
+  const getEmployeeStatus = (employee : string) => {
     // You can add logic here to determine status based on employee data
     // For now, assuming active employees
     return 'Active';
   };
 
-  const getEmployeeType = (employmentType) => {
+  const getEmployeeType = (employmentType : string) => {
     switch (employmentType) {
       case 'FULL_TIME':
         return 'Full time';
