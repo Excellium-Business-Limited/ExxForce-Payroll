@@ -10,3 +10,11 @@ export function getAccessToken(): string | null {
 export function getRefreshToken(): string | null {
   return localStorage.getItem("refresh_token");
 }
+
+export function setTenant(tenant:string) {
+  console.log(tenant)
+  return localStorage.setItem("tenant", tenant);
+}
+export function getTenant() {
+  return localStorage.getItem("tenant");
+}
