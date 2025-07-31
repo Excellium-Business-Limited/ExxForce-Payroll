@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,47 +11,380 @@ import {
 	SelectValue,
 	SelectItem,
 } from '@/components/ui/select';
-import { DialogClose } from '@/components/ui/dialog';
 import { SheetClose } from '@/components/ui/sheet';
+import axios from 'axios';
+import { format, parseISO, isValid } from 'date-fns';
 
-export default function EmployeeForm({employeeData, isEdit} : {
-	employeeData?: any; isEdit: boolean;}) {
-	if (!open) return null;
+// Define the Employee interface to match your API
+interface Employee {
+	id?: number;
+	employee_id: string;
+	first_name: string;
+	last_name: string;
+	email: string;
+	phone_number: string;
+	gender: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+	date_of_birth: string;
+	address: string;
+	employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
+	start_date: string;
+	tax_start_date: string;
+	job_title: string;
+	department_name: string;
+	pay_grade_name?: string;
+	custom_salary?: number;
+	bank_name?: string;
+	account_number?: string;
+	account_name?: string;
+	pay_frequency?: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
+	is_paye_applicable?: boolean;
+	is_pension_applicable?: boolean;
+	is_nhf_applicable?: boolean;
+	is_nsitf_applicable?: boolean;
+}
+
+// Define props interface for the EmployeeForm component
+interface EmployeeFormProps {
+	isOpen: boolean;
+	isEdit: boolean;
+	employeeData: Employee | null;
+	onClose: () => void;
+	onSubmit: (employeeFormData: any) => Promise<void>;
+}
+
+// Form data interface that matches your form fields
+interface FormData {
+	employeeId: string;
+	jobTitle: string;
+	department: string;
+	employmentType: string;
+	startDate: string;
+	taxStartDate: string;
+	firstName: string;
+	lastName: string;
+	phone: string;
+	email: string;
+	gender: string;
+	dob: string;
+	address1: string;
+	address2: string;
+}
+
+const EmployeeForm: React.FC<EmployeeFormProps> = ({
+	isOpen,
+	isEdit,
+	employeeData,
+	onClose,
+	onSubmit
+}) => {
+	const [formData, setFormData] = useState<FormData>({
+		employeeId: '',
+		jobTitle: '',
+		department: '',
+		employmentType: '',
+		startDate: '',
+		taxStartDate: '',
+		firstName: '',
+		lastName: '',
+		phone: '',
+		email: '',
+		gender: '',
+		dob: '',
+		address1: '',
+		address2: '',
+	});
+
+	// Helper function to format date for input (YYYY-MM-DD) using date-fns
+	const formatDateForInput = (dateString: string): string => {
+		if (!dateString) return '';
+		
+		try {
+			// Try parsing as ISO string first
+			let date = parseISO(dateString);
+			
+			// If parseISO fails, try creating a new Date object
+			if (!isValid(date)) {
+				date = new Date(dateString);
+			}
+			
+			// If still invalid, try manual parsing for different formats
+			if (!isValid(date)) {
+				const parts = dateString.split(/[-\/]/);
+				if (parts.length === 3) {
+					// Try YYYY-MM-DD or YYYY/MM/DD
+					if (parts[0].length === 4) {
+						date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+					}
+					// Try MM/DD/YYYY or DD/MM/YYYY formats
+					else if (parts[2].length === 4) {
+						// Assume MM/DD/YYYY format (can be adjusted based on your data)
+						date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+					}
+				}
+			}
+			
+			if (isValid(date)) {
+				return format(date, 'yyyy-MM-dd');
+			}
+			
+			return '';
+		} catch (error) {
+			console.warn('Error formatting date for input:', dateString, error);
+			return '';
+		}
+	};
+
+	// Helper function to format date for display in YYYY-MM-DD format
+	const formatDateForDisplay = (dateString: string): string => {
+		if (!dateString) return '';
+		
+		try {
+			const date = parseISO(dateString);
+			if (isValid(date)) {
+				return format(date, 'yyyy-MM-dd'); // Changed to YYYY-MM-DD format
+			}
+			return dateString;
+		} catch (error) {
+			return dateString;
+		}
+	};
+
+	// Get today's date in YYYY-MM-DD format for max date validation
+	const getTodayFormatted = (): string => {
+		return format(new Date(), 'yyyy-MM-dd');
+	};
+
+	// Populate form when editing
+	useEffect(() => {
+		if (isEdit && employeeData) {
+			setFormData({
+				employeeId: employeeData.employee_id || '',
+				jobTitle: employeeData.job_title || '',
+				department: employeeData.department_name || '',
+				employmentType: employeeData.employment_type || '',
+				startDate: formatDateForInput(employeeData.start_date),
+				taxStartDate: formatDateForInput(employeeData.tax_start_date),
+				firstName: employeeData.first_name || '',
+				lastName: employeeData.last_name || '',
+				phone: employeeData.phone_number || '',
+				email: employeeData.email || '',
+				gender: employeeData.gender || '',
+				dob: formatDateForInput(employeeData.date_of_birth),
+				address1: employeeData.address || '',
+				address2: '', // Assuming address2 is part of address field
+			});
+		} else {
+			// Reset form for new employee
+			setFormData({
+				employeeId: '',
+				jobTitle: '',
+				department: '',
+				employmentType: '',
+				startDate: '',
+				taxStartDate: '',
+				firstName: '',
+				lastName: '',
+				phone: '',
+				email: '',
+				gender: '',
+				dob: '',
+				address1: '',
+				address2: '',
+			});
+		}
+	}, [isEdit, employeeData]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { id, value } = e.target;
+		setFormData((prev) => ({ ...prev, [id]: value }));
+	};
+
+	const handleSelectChange = (key: keyof FormData, value: string) => {
+		setFormData((prev) => ({ ...prev, [key]: value }));
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		console.log('Form submission started...');
+		console.log('Form data:', formData);
+
+		// Basic form validation
+		const requiredFields = [
+			'employeeId', 'jobTitle', 'department', 'employmentType', 
+			'startDate', 'taxStartDate', 'firstName', 'lastName', 
+			'phone', 'email', 'dob', 'address1'
+		];
+
+		const missingFields = requiredFields.filter(field => !formData[field as keyof FormData]);
+		
+		if (missingFields.length > 0) {
+			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+			console.log('Missing required fields:', missingFields);
+			return;
+		}
+
+		// Enhanced date formatting function to ensure YYYY-MM-DD format for API
+		const formatDateForAPI = (dateString: string): string => {
+			if (!dateString) return '';
+			
+			try {
+				// First try to parse as ISO string (YYYY-MM-DD)
+				let date = parseISO(dateString);
+				
+				// If parseISO fails, try other common formats
+				if (!isValid(date)) {
+					date = new Date(dateString);
+				}
+				
+				// If still invalid, try manual parsing for MM/DD/YYYY or DD/MM/YYYY
+				if (!isValid(date)) {
+					const parts = dateString.split(/[-\/]/);
+					if (parts.length === 3) {
+						// Try YYYY-MM-DD or YYYY/MM/DD
+						if (parts[0].length === 4) {
+							date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+						}
+						// Try MM/DD/YYYY or DD/MM/YYYY (assume MM/DD/YYYY for US format)
+						else if (parts[2].length === 4) {
+							date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+						}
+					}
+				}
+				
+				// Final validation and formatting
+				if (isValid(date)) {
+					return format(date, 'yyyy-MM-dd');
+				} else {
+					console.warn('Invalid date format:', dateString);
+					return '';
+				}
+			} catch (error) {
+				console.error('Error formatting date for API:', dateString, error);
+				return '';
+			}
+		};
+
+		const apiData = {
+			employee_id: formData.employeeId,
+			job_title: formData.jobTitle,
+			department_name: formData.department,
+			employment_type: formData.employmentType,
+			start_date: formatDateForAPI(formData.startDate),
+			tax_start_date: formatDateForAPI(formData.taxStartDate),
+			first_name: formData.firstName,
+			last_name: formData.lastName,
+			phone_number: formData.phone,
+			email: formData.email,
+			gender: formData.gender || 'PREFER_NOT_TO_SAY', // Default value if not selected
+			date_of_birth: formatDateForAPI(formData.dob),
+			address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}`,
+		};
+
+		try {
+			console.log('Starting API call...');
+
+			// Log the complete payload being sent to API for debugging
+			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
+			console.log('Formatted dates for API:', {
+				start_date: apiData.start_date,
+				tax_start_date: apiData.tax_start_date,
+				date_of_birth: apiData.date_of_birth
+			});
+
+			let response;
+			if (isEdit && employeeData?.id) {
+				// Update existing employee
+				console.log('Updating employee with ID:', employeeData.id);
+				response = await axios.put(
+					`http://excellium.localhost:8000/tenant/employee/update/${employeeData.id}`,
+					apiData,
+					{ headers: { 'Content-Type': 'application/json' } }
+				);
+				console.log('Employee updated:', response.data);
+			} else {
+				// Create new employee
+				console.log('Creating new employee...');
+				response = await axios.post(
+					'http://excellium.localhost:8000/tenant/employee/create',
+					apiData,
+					{ headers: { 'Content-Type': 'application/json' } }
+				);
+				console.log('Employee created:', response.data);
+			}
+
+			// Call the parent's onSubmit handler
+			console.log('Calling parent onSubmit...');
+			await onSubmit(apiData);
+			
+			console.log('Success! Employee saved.');
+			alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
+			
+			// Optionally close the form after successful submission
+			onClose();
+			
+		} catch (error) {
+			console.error('Error saving employee:', error);
+			
+			// Enhanced error logging for 422 errors
+			if (axios.isAxiosError(error)) {
+				console.error('Request that failed:', JSON.stringify(apiData, null, 2));
+				console.error('Response status:', error.response?.status);
+				console.error('Response data:', error.response?.data);
+				console.error('Response headers:', error.response?.headers);
+				
+				if (error.response?.status === 422) {
+					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+				} else {
+					alert(`Failed to save employee: ${error.response?.data?.message || error.message}`);
+				}
+			} else {
+				alert('Failed to save employee: Unknown error');
+			}
+		}
+	};
 
 	return (
-		<div className=''>
-			{/* Overlay */}
-
-			{/* Slide-in Panel */}
+		<div>
 			<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
 				<div className='mb-8'>
-					<h1 className='text-2xl font-bold'>Add Employee</h1>
+					<h1 className='text-2xl font-bold'>
+						{isEdit ? 'Edit Employee' : 'Add Employee'}
+					</h1>
 					<p className='text-sm text-muted-foreground'>
-						Enter employee details
+						{isEdit ? 'Update employee details' : 'Enter employee details'}
 					</p>
 				</div>
 
-				<form className=''>
+				<form onSubmit={handleSubmit}>
 					<div className='space-y-4'>
 						<h2 className='text-lg font-semibold'>Employment Details</h2>
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 							<div className='space-y-2'>
 								<Label htmlFor='employeeId'>Employee ID</Label>
-								<Input
-									id='employeeId'
-									required
+								<Input 
+									id='employeeId' 
+									value={formData.employeeId}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='jobTitle'>Job Title</Label>
-								<Input
-									id='jobTitle'
-									required
+								<Input 
+									id='jobTitle' 
+									value={formData.jobTitle}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2'>
 								<Label>Department</Label>
-								<Select required>
+								<Select 
+									value={formData.department}
+									onValueChange={(val) => handleSelectChange('department', val)} 
+									required
+								>
 									<SelectTrigger>
 										<SelectValue placeholder='Select department' />
 									</SelectTrigger>
@@ -65,126 +398,169 @@ export default function EmployeeForm({employeeData, isEdit} : {
 							</div>
 							<div className='space-y-2'>
 								<Label>Employment Type</Label>
-								<Select required>
+								<Select 
+									value={formData.employmentType}
+									onValueChange={(val) => handleSelectChange('employmentType', val)} 
+									required
+								>
 									<SelectTrigger>
 										<SelectValue placeholder='Select type' />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='full-time'>Full-time</SelectItem>
-										<SelectItem value='part-time'>Part-time</SelectItem>
-										<SelectItem value='contract'>Contract</SelectItem>
-										<SelectItem value='intern'>Intern</SelectItem>
+										<SelectItem value='FULL_TIME'>Full-time</SelectItem>
+										<SelectItem value='PART_TIME'>Part-time</SelectItem>
+										<SelectItem value='CONTRACT'>Contract</SelectItem>
+										<SelectItem value='INTERN'>Intern</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='startDate'>Start Date</Label>
-								<Input
-									id='startDate'
-									type='date'
-									required
+								<Input 
+									id='startDate' 
+									type='date' 
+									value={formData.startDate}
+									max="2099-12-31"
+									min="1900-01-01"
+									required 
+									onChange={handleChange}
+									className="block w-full"
 								/>
+								<p className="text-xs text-gray-500">
+									{formData.startDate && `Format: ${formatDateForDisplay(formData.startDate)}`}
+								</p>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='taxStartDate'>Tax Start Date</Label>
-								<Input
-									id='taxStartDate'
-									type='date'
-									required
+								<Input 
+									id='taxStartDate' 
+									type='date' 
+									value={formData.taxStartDate}
+									max="2099-12-31"
+									min="1900-01-01"
+									required 
+									onChange={handleChange}
+									className="block w-full"
 								/>
+								<p className="text-xs text-gray-500">
+									{formData.taxStartDate && `Format: ${formatDateForDisplay(formData.taxStartDate)}`}
+								</p>
 							</div>
 						</div>
 					</div>
 
-					<div className='space-y-4'>
+					<div className='space-y-4 mt-8'>
 						<h2 className='text-lg font-semibold'>Personal Details</h2>
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 							<div className='space-y-2'>
 								<Label htmlFor='firstName'>First Name</Label>
-								<Input
-									id='firstName'
-									required
+								<Input 
+									id='firstName' 
+									value={formData.firstName}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='lastName'>Last Name</Label>
-								<Input
-									id='lastName'
-									required
+								<Input 
+									id='lastName' 
+									value={formData.lastName}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='phone'>Phone Number</Label>
-								<Input
-									id='phone'
-									type='tel'
-									required
+								<Input 
+									id='phone' 
+									type='tel' 
+									value={formData.phone}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='email'>Work Email</Label>
-								<Input
-									id='email'
-									type='email'
-									required
+								<Input 
+									id='email' 
+									type='email' 
+									value={formData.email}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2'>
 								<Label>Gender</Label>
-								<Select>
+								<Select 
+									value={formData.gender}
+									onValueChange={(val) => handleSelectChange('gender', val)}
+								>
 									<SelectTrigger>
 										<SelectValue placeholder='Select gender' />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='male'>Male</SelectItem>
-										<SelectItem value='female'>Female</SelectItem>
-										<SelectItem value='other'>Other</SelectItem>
-										<SelectItem value='prefer-not-to-say'>
-											Prefer not to say
-										</SelectItem>
+										<SelectItem value='MALE'>Male</SelectItem>
+										<SelectItem value='FEMALE'>Female</SelectItem>
+										<SelectItem value='OTHER'>Other</SelectItem>
+										<SelectItem value='PREFER_NOT_TO_SAY'>Prefer not to say</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='dob'>Date of Birth</Label>
-								<Input
-									id='dob'
-									type='date'
-									required
+								<Input 
+									id='dob' 
+									type='date' 
+									value={formData.dob}
+									max={getTodayFormatted()} // Can't be born in the future
+									min="1900-01-01"
+									required 
+									onChange={handleChange}
+									className="block w-full"
 								/>
+								<p className="text-xs text-gray-500">
+									{formData.dob && `Format: ${formatDateForDisplay(formData.dob)}`}
+								</p>
 							</div>
 							<div className='space-y-2 md:col-span-2'>
 								<Label htmlFor='address1'>Address Line 1</Label>
-								<Input
-									id='address1'
-									required
+								<Input 
+									id='address1' 
+									value={formData.address1}
+									required 
+									onChange={handleChange} 
 								/>
 							</div>
 							<div className='space-y-2 md:col-span-2'>
 								<Label htmlFor='address2'>Address Line 2</Label>
-								<Input id='address2' />
+								<Input 
+									id='address2' 
+									value={formData.address2}
+									onChange={handleChange} 
+								/>
 							</div>
 						</div>
 					</div>
 
-					<div className='flex justify-end gap-4 pt-4'>
-						<SheetClose asChild>
-							<Button
-								variant='outline'
-								type='button'
-								className='text-muted-foreground'
-								>
-								Cancel
-							</Button>
-						</SheetClose>
+					<div className='flex justify-end gap-4 pt-4 mt-8'>
+						<Button
+							variant='outline'
+							type='button'
+							onClick={onClose}
+							className='text-muted-foreground'>
+							Cancel
+						</Button>
 						<Button
 							type='submit'
 							className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-							Save Employee
+							{isEdit ? 'Update Employee' : 'Save Employee'}
 						</Button>
 					</div>
 				</form>
 			</div>
 		</div>
 	);
-}
+};
+
+export default EmployeeForm;
