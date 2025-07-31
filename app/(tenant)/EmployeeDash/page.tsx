@@ -2,35 +2,127 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import EmployeeForm from '../components/EmployeeForm';
+import ImportModal from '../components/Import';
+import { Dialog, DialogContent } from '@/components/ui/dialog'; // Add this import
 
-const EmployeePage = () => {
-  const [isEdit, setIsEdit] = useState(false);
-  const [employeeData, setEmployeeData] = useState<{ id: number; name: string } | null>(null);
-  const [employees, setEmployees] = useState<{ id: number; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+// Define proper TypeScript interfaces
+interface Employee {
+  id?: number;
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  gender: 'MALE' | 'FEMALE';
+  date_of_birth: string;
+  address: string;
+  employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
+  start_date: string;
+  tax_start_date: string;
+  job_title: string;
+  department_name: string;
+  pay_grade_name: string;
+  custom_salary: number;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  pay_frequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
+  is_paye_applicable: boolean;
+  is_pension_applicable: boolean;
+  is_nhf_applicable: boolean;
+  is_nsitf_applicable: boolean;
+}
+
+interface Filters {
+  department: string;
+  designation: string;
+  status: string;
+}
+
+const EmployeePage: React.FC = () => {
+  // State with proper TypeScript types
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [employeeData, setEmployeeData] = useState<Employee | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
+  const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [filters, setFilters] = useState<Filters>({
     department: 'All',
     designation: 'All',
     status: 'All'
   });
 
-  const handleEditClick = (employee: { id: number; name: string }) => {
+  // Event handlers with proper types
+  const handleEditClick = (employee: Employee): void => {
     setIsEdit(true);
     setEmployeeData(employee);
+    setShowEmployeeForm(true);
   };
 
-  const handleAddEmployee = () => {
-    // Add your add employee logic here
-    console.log('Add employee clicked');
+  const handleAddEmployee = (): void => {
+    setIsEdit(false);
+    setEmployeeData(null);
+    setShowEmployeeForm(true);
   };
 
-  const handleImportEmployee = () => {
-    // Add your import employee logic here
-    console.log('Import employee clicked');
+  const handleImportEmployee = (): void => {
+    setShowImportModal(true);
   };
 
-  const formatCurrency = (amount : number) => {
+  const handleCloseEmployeeForm = (): void => {
+    setShowEmployeeForm(false);
+    setIsEdit(false);
+    setEmployeeData(null);
+  };
+
+  const handleCloseImportModal = (): void => {
+    setShowImportModal(false);
+  };
+
+  const handleEmployeeSubmit = async (employeeFormData: any): Promise<void> => {
+    try {
+      if (isEdit) {
+        // Update employee logic
+        console.log('Updating employee:', employeeFormData);
+        // TODO: Add actual API call for updating employee
+      } else {
+        // Create new employee logic
+        console.log('Creating new employee:', employeeFormData);
+        // TODO: Add actual API call for creating employee
+      }
+      
+      // Refresh the employee list after successful submission
+      await fetchEmployees();
+      
+      // Close the form
+      handleCloseEmployeeForm();
+    } catch (error) {
+      console.error('Error submitting employee:', error);
+      // TODO: Add proper error handling/notification
+    }
+  };
+
+  const handleImportSubmit = async (importData: any): Promise<void> => {
+    try {
+      console.log('Importing employees:', importData);
+      // TODO: Add actual API call for importing employees
+      
+      // Refresh the employee list after successful import
+      await fetchEmployees();
+      
+      // Close the modal
+      handleCloseImportModal();
+    } catch (error) {
+      console.error('Error importing employees:', error);
+      // TODO: Add proper error handling/notification
+    }
+  };
+
+  // Utility functions with proper types
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
@@ -38,7 +130,7 @@ const EmployeePage = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString : string) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -46,13 +138,13 @@ const EmployeePage = () => {
     });
   };
 
-  const getEmployeeStatus = (employee : string) => {
-    // You can add logic here to determine status based on employee data
+  const getEmployeeStatus = (employee: Employee): string => {
+    // Add logic here to determine status based on employee data
     // For now, assuming active employees
     return 'Active';
   };
 
-  const getEmployeeType = (employmentType : string) => {
+  const getEmployeeType = (employmentType: string): string => {
     switch (employmentType) {
       case 'FULL_TIME':
         return 'Full time';
@@ -67,27 +159,34 @@ const EmployeePage = () => {
     }
   };
 
+  // Extracted fetch function for reusability
+  const fetchEmployees = async (): Promise<void> => {
+    try {
+      const response = await axios.get<Employee[]>(`http://excellium.localhost:8000/tenant/employee/list`);
+      setEmployees(response.data || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching employees:', err);
+      setError('Failed to fetch employees');
+      setEmployees([]);
+    }
+  };
+
+  // Initial data fetching
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await axios.get(`http://excellium.localhost:8000/tenant/employee/list`);
-        setEmployees(response.data || []);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to fetch employees');
-        setEmployees([]); // Set to empty array on error
-      } finally {
-        setLoading(false);
-      }
+    const loadEmployees = async (): Promise<void> => {
+      setLoading(true);
+      await fetchEmployees();
+      setLoading(false);
     };
 
-    fetchEmployees();
+    loadEmployees();
   }, []);
 
   const hasEmployees = employees.length > 0;
 
-  // Empty state component that matches the Figma design
-  const EmptyEmployeeState = () => (
+  // Empty state component
+  const EmptyEmployeeState: React.FC = () => (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
       {/* Employee illustration */}
       <div className="mb-8">
@@ -154,7 +253,7 @@ const EmployeePage = () => {
   );
 
   // Employee table component
-  const EmployeeTable = () => (
+  const EmployeeTable: React.FC = () => (
     <div className="bg-white rounded-lg shadow-sm">
       {/* Stats card */}
       <div className="p-6 border-b">
@@ -168,7 +267,7 @@ const EmployeePage = () => {
             <h3 className="text-sm text-gray-600">Total Employees</h3>
             <p className="text-2xl font-semibold text-gray-900">{employees.length}</p>
             <p className="text-xs text-gray-500">
-              {Math.round((employees.filter(emp => emp.employment_type === 'FULL_TIME').length / employees.length) * 100)}% of employees are regular staff
+              {employees.length > 0 ? Math.round((employees.filter(emp => emp.employment_type === 'FULL_TIME').length / employees.length) * 100) : 0}% of employees are regular staff
             </p>
           </div>
         </div>
@@ -199,14 +298,29 @@ const EmployeePage = () => {
 
         {/* Filter dropdowns */}
         <div className="flex flex-wrap gap-4 mt-4">
-          <select className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm">
-            <option>Department: All</option>
+          <select 
+            className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm"
+            value={filters.department}
+            onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+          >
+            <option value="All">Department: All</option>
+            {/* TODO: Add dynamic department options */}
           </select>
-          <select className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm">
-            <option>Designation: All</option>
+          <select 
+            className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm"
+            value={filters.designation}
+            onChange={(e) => setFilters(prev => ({ ...prev, designation: e.target.value }))}
+          >
+            <option value="All">Designation: All</option>
+            {/* TODO: Add dynamic designation options */}
           </select>
-          <select className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm">
-            <option>Status: All</option>
+          <select 
+            className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm"
+            value={filters.status}
+            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+          >
+            <option value="All">Status: All</option>
+            {/* TODO: Add dynamic status options */}
           </select>
           <button className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm flex items-center gap-2">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -241,7 +355,7 @@ const EmployeePage = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {employees.map((employee, index) => (
-              <tr key={employee.employee_id || index} className="hover:bg-gray-50">
+              <tr key={employee.employee_id || employee.id || index} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <input type="checkbox" className="rounded" />
                 </td>
@@ -279,6 +393,7 @@ const EmployeePage = () => {
                   <button
                     onClick={() => handleEditClick(employee)}
                     className="text-gray-400 hover:text-gray-600"
+                    aria-label="Edit employee"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                       <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="currentColor"/>
@@ -299,7 +414,7 @@ const EmployeePage = () => {
           Total: {employees.length} entries
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded border border-gray-300 hover:bg-gray-50">
+          <button className="p-2 rounded border border-gray-300 hover:bg-gray-50" aria-label="Previous page">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
               <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -309,7 +424,7 @@ const EmployeePage = () => {
           <span className="px-3 py-1 text-gray-600 text-sm">3</span>
           <span className="text-gray-500">...</span>
           <span className="px-3 py-1 text-gray-600 text-sm">32</span>
-          <button className="p-2 rounded border border-gray-300 hover:bg-gray-50">
+          <button className="p-2 rounded border border-gray-300 hover:bg-gray-50" aria-label="Next page">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
               <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -336,6 +451,30 @@ const EmployeePage = () => {
           <EmptyEmployeeState />
         )}
       </main>
+
+      {/* Employee Form Dialog - Using proper Dialog component */}
+      <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <EmployeeForm
+            isOpen={showEmployeeForm}
+            isEdit={isEdit}
+            employeeData={employeeData}
+            onClose={handleCloseEmployeeForm}
+            onSubmit={handleEmployeeSubmit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Modal Dialog - Using proper Dialog component */}
+      <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <ImportModal
+            isOpen={showImportModal}
+            onClose={handleCloseImportModal}
+            onSubmit={handleImportSubmit}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
