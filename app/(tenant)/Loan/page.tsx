@@ -129,7 +129,11 @@ export default function Home() {
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>
-							<Import title='Loans' />
+							<Import title='Loans' isOpen={false} onClose={function (): void {
+								throw new Error('Function not implemented.');
+							} } onSubmit={function (importData: any): Promise<void> {
+								throw new Error('Function not implemented.');
+							} } />
 						</Dialogs>
 					</span>
 				</div>
@@ -162,7 +166,11 @@ export default function Home() {
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>
-							<Import title='Loans' />
+							<Import title='Loans' isOpen={false} onClose={function (): void {
+								throw new Error('Function not implemented.');
+							} } onSubmit={function (importData: any): Promise<void> {
+								throw new Error('Function not implemented.');
+							} } />
 						</Dialogs>
 					</div>
 				</div>
@@ -193,7 +201,11 @@ export default function Home() {
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>
-							<Import title='Loans' />
+							<Import title='Loans' isOpen={false} onClose={function (): void {
+								throw new Error('Function not implemented.');
+							} } onSubmit={function (importData: any): Promise<void> {
+								throw new Error('Function not implemented.');
+							} } />
 						</Dialogs>
 					</span>
 				</div>

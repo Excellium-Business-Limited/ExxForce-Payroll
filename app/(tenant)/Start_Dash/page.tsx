@@ -135,7 +135,11 @@ const page = () => {
 						</SheetTrigger>
 						<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 							<SheetTitle className='hidden'></SheetTitle>
-							<EmployeeForm isEdit={false} />
+							<EmployeeForm isEdit={false} isOpen={false} employeeData={null} onClose={function (): void {
+								throw new Error('Function not implemented.');
+							} } onSubmit={function (employeeFormData: any): Promise<void> {
+								throw new Error('Function not implemented.');
+							} } />
 						</SheetContent>
 					</Sheet>
 				</Card>

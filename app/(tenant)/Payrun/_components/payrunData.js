@@ -1,4 +1,4 @@
-const payruns = [
+const payrans = [
 	{
 		id: 1,
 		PAY_FREQUENCY: 'Monthly',
@@ -154,4 +154,4 @@ const payruns = [
 	},
 ];
 
-export {payruns}
+export {payrans}

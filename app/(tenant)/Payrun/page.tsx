@@ -86,7 +86,11 @@ const page = () => {
 					<Dialogs
 						title={'Import'}
 						className='border-[#d4d8de] border-2 px-7'>
-						<Import title='Pay Runs' />
+						<Import title='Pay Runs' isOpen={false} onClose={function (): void {
+						  throw new Error('Function not implemented.');
+					  } } onSubmit={function (importData: any): Promise<void> {
+						  throw new Error('Function not implemented.');
+					  } } />
 					</Dialogs>
 				</span>
 			</div>
@@ -129,7 +133,11 @@ const page = () => {
 								<Dialogs
 									title={'Import'}
 									className='border-[#d4d8de] border-2 px-7'>
-									<Import title='Pay Runs' />
+									<Import title='Pay Runs' isOpen={false} onClose={function (): void {
+									  throw new Error('Function not implemented.');
+								  } } onSubmit={function (importData: any): Promise<void> {
+									  throw new Error('Function not implemented.');
+								  } } />
 								</Dialogs>
 							</article>
 						</section>

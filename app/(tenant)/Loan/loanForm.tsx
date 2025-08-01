@@ -223,10 +223,10 @@ export default function LoanForm({ className }: { className?: string }) {
 								placeholder='Enter Monthly Deduction'
 								id='MonthDed'
 								required
-								onChange={() =>
+								onChange={(e) =>
 									setForm({
 										...form,
-										employee_id: employee.id.toString(),
+										employee_id: e.target.value.toString(),
 									})
 								}
 							/>
