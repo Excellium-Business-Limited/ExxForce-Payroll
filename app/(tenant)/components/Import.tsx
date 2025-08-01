@@ -1,45 +1,137 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { UploadCloud } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-// interface BulkUploadModalProps {
-//   open: any;
-//   onClose: () => any;
-// }
+// Define props interface for the ImportModal component
+interface ImportModalProps {
+	title?: string;
+	isOpen: boolean;
+	onClose: () => void;
+	onSubmit: (importData: any) => Promise<void>;
+}
 
-const BulkUploadModal = ({title }: {title: string}) => {
-  return (
-    <div className="">
-      <span className="max-w-lg w-fit rounded-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Bulk Upload {title ? title : 'Employees'}</h2>
+const ImportModal: React.FC<ImportModalProps> = ({
+	title = "Import Employees",
+	isOpen,
+	onClose,
+	onSubmit
+}) => {
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [isUploading, setIsUploading] = useState<boolean>(false);
 
-        <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center mb-4">
-          <UploadCloud className="mx-auto mb-2 text-gray-400 w-8 h-8" />
-          <p className="mb-2 text-gray-600 text-sm">Drag and drop CSV file here (Maximum 5mb)</p>
-          <Button className="bg-blue-100 text-blue-700 hover:bg-blue-200">Upload file</Button>
-        </div>
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			setSelectedFile(file);
+		}
+	};
 
-        <p className="text-sm text-gray-600 mb-4">
-          Click <a href="#" className="text-blue-600 underline">here</a> to download CSV file template.
-        </p>
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!selectedFile) {
+			alert('Please select a file to import');
+			return;
+		}
 
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm p-3 rounded mb-6">
-          <p className="m-0">
-            <strong>i</strong> Ensure your data is clean and validated before import. <br /> Invalid rows will be ignored and reported after processing.
-          </p>
-        </div>
+		setIsUploading(true);
 
-        <div className="flex justify-end gap-3">
-          <Button variant="outline">Close</Button>
-          <Button className="bg-blue-700 text-white hover:bg-blue-800">Save</Button>
-        </div>
-      </span>
-    </div>
-  );
+		try {
+			// Create FormData for file upload
+			const formData = new FormData();
+			formData.append('file', selectedFile);
+
+			// Call the parent's onSubmit handler
+			await onSubmit(formData);
+			
+			// Reset form
+			setSelectedFile(null);
+			const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+			if (fileInput) {
+				fileInput.value = '';
+			}
+			
+			alert('Employees imported successfully!');
+		} catch (error) {
+			console.error('Error importing employees:', error);
+			alert('Failed to import employees');
+		} finally {
+			setIsUploading(false);
+		}
+	};
+
+	return (
+		<div className="p-6">
+			<div className="mb-6">
+				<h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+				<p className="text-sm text-gray-600 mt-1">
+					Upload a CSV or Excel file containing employee data
+				</p>
+			</div>
+
+			<form onSubmit={handleSubmit}>
+				<div className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="file-upload">Select File</Label>
+						<Input
+							id="file-upload"
+							type="file"
+							accept=".csv,.xlsx,.xls"
+							onChange={handleFileChange}
+							required
+						/>
+						<p className="text-xs text-gray-500">
+							Supported formats: CSV, Excel (.xlsx, .xls)
+						</p>
+					</div>
+
+					{selectedFile && (
+						<div className="p-3 bg-blue-50 rounded-lg">
+							<p className="text-sm text-blue-800">
+								<strong>Selected file:</strong> {selectedFile.name}
+							</p>
+							<p className="text-xs text-blue-600">
+								Size: {(selectedFile.size / 1024).toFixed(2)} KB
+							</p>
+						</div>
+					)}
+
+					<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+						<h4 className="text-sm font-medium text-yellow-800 mb-2">
+							File Format Requirements:
+						</h4>
+						<ul className="text-xs text-yellow-700 space-y-1">
+							<li>• Employee ID, First Name, Last Name (required)</li>
+							<li>• Email, Phone Number, Job Title (required)</li>
+							<li>• Department, Employment Type, Start Date (required)</li>
+							<li>• Date of Birth, Gender, Address (optional)</li>
+						</ul>
+					</div>
+				</div>
+
+				<div className="flex justify-end gap-3 mt-6">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={onClose}
+						disabled={isUploading}
+					>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						disabled={!selectedFile || isUploading}
+						className="bg-[#3D56A8] hover:bg-[#2E4299]"
+					>
+						{isUploading ? 'Importing...' : 'Import Employees'}
+					</Button>
+				</div>
+			</form>
+		</div>
+	);
 };
 
-export default BulkUploadModal;
+export default ImportModal;
