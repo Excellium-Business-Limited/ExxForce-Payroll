@@ -6,7 +6,7 @@ import Image from 'next/image';
 import image from './components/resources/login.svg';
 import { useRouter } from 'next/navigation';
 import { login } from '@/lib/api';
-import { saveTokens } from '@/lib/auth';
+import { setTenant, saveTokens } from '@/lib/auth';
 
 const LoginPage = () => {
 	const router = useRouter();
@@ -24,11 +24,13 @@ const LoginPage = () => {
 			console.log(response);
 			const { access, refresh, redirect, tenant } = response;
 			saveTokens(access, refresh);
-
-			const redirectPath = redirect
-				? new URL(redirect).pathname
-				: `/${tenant}/Dashboard`;
-			router.push(redirectPath);
+			const redirectPath = new URL(redirect).pathname
+			const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);
+			setTenant(tenant);
+			// console.log(address);
+			// 	? new URL(redirect).pathname
+			// 	: `/${tenant}/Dashboard`;
+			router.push(address);
 		} catch (err: any) {
 			setError(err.message || 'Invalid credentials. Please try again.');
 			setIsLoading(false);
@@ -43,6 +45,7 @@ const LoginPage = () => {
 				<label htmlFor="password">Password</label>
 				<input type="password" onChange={(e) => setPassword(e.target.value)} />
 				<button onClick={handleLogin}>Login</button>
+				{error ? <p className="text-red-500">{error}</p> : null}
 			</form>
 		</div>
 	);

@@ -1,3 +1,4 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import {
 	ArrowDownToLineIcon,
@@ -9,14 +10,29 @@ import {
 import { DTable } from './_components/Table';
 import data1 from './_components/data1.json';
 import { Payrun, columns } from './_components/TableSchema';
-import React from 'react';
+import React, { useEffect } from 'react';
 import BarChart from './_components/Barchart';
 import { Bar } from 'recharts';
 import Piechrt from './_components/Piechart';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
+import { getTenant } from '@/lib/auth';
+import  { Global, useGlobal } from '@/app/Context/page';
+import { useContext } from 'react';
 
 const Dashboard = () => {
+	const { globalState, updateGlobalState } = useGlobal();
+	useEffect(() => {
+		timeout
+		const tenant = getTenant();
+		if (tenant) {
+			updateGlobalState({ tenant : tenant });
+		}
+		timeout;
+	}, []);
+	const timeout = setTimeout(() => {
+		console.log(globalState);
+	}, 2000);
 	return (
 		<div>
 			<div>
