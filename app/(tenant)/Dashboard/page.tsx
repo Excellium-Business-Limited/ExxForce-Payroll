@@ -17,16 +17,37 @@ import Piechrt from './_components/Piechart';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { getTenant } from '@/lib/auth';
-import  { Global, useGlobal } from '@/app/Context/page';
-import { useContext } from 'react';
+import { fetchEmployees } from '@/lib/api';
+import  { useGlobal } from '@/app/Context/page';
+
 
 const Dashboard = () => {
 	const { globalState, updateGlobalState } = useGlobal();
+	const [employees, setEmployees] = React.useState<any>([]);
+	const getSalaries = () => {
+		const Salaries = employees.map((employee: any) => employee.custom_salary);
+		const totalSalary = Salaries.reduce(
+			(acc: number, curr: number) => Number(acc) + Number(curr),
+			0
+		);
+		const formattedSalary = totalSalary.toLocaleString('en-NG', {
+			style: 'currency',
+		currency: 'NGN',})	
+		return formattedSalary;
+	}
+
 	useEffect(() => {
-		timeout
+		
 		const tenant = getTenant();
 		if (tenant) {
 			updateGlobalState({ tenant : tenant });
+			fetchEmployees(tenant).then((data) => {
+				setEmployees(data);
+				// updateGlobalState({ employees: data });
+				console.log(employees);
+			}).catch((error) => {
+				console.error("Error fetching employees:", error);
+			});
 		}
 		timeout;
 	}, []);
@@ -38,7 +59,7 @@ const Dashboard = () => {
 			<div>
 				<div className='flex gap-1.5 items-center mx-4 mt-4'>
 					<section>
-						<h3 className='font-semibold text-md'>Hi, Welcome Back {`User`}</h3>
+						<h3 className='font-semibold text-md'>Hi, Welcome Back {globalState.tenant}</h3>
 						<p className='text-muted-foreground text-md'>Here's what is happening with your payroll today</p>
 					</section>
 					<div className='flex gap-4 ml-auto'>
@@ -70,7 +91,7 @@ const Dashboard = () => {
 						</article>
 						<hr />
 						<span>
-							<h2 className='font-bold text-sm '>50</h2>
+							<h2 className='font-bold text-sm '>{employees.length}</h2>
 							<p className='text-xs text-muted-foreground'>
 								90% of employees are regular staff
 							</p>
@@ -90,7 +111,7 @@ const Dashboard = () => {
 						</article>
 						<hr />
 						<span>
-							<h2 className='font-bold'>₦3,500,000.00</h2>
+							<h2 className='font-bold'>{getSalaries()}</h2>
 							<p className='text-xs text-muted-foreground'>
 								Total payroll after deductions
 							</p>

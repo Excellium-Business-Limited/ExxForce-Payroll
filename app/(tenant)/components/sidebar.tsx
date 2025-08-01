@@ -40,10 +40,10 @@ const sidebar = ({ className }: { className?: string }) => {
 				<div className='mt-8 justify-between content-between gap-5'>
 					<SidebarMenu className=' content-center overflow-visible'>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'/main/Dashboard'}>
+							<Link href={'/Dashboard'}>
 								<div
 									className={`${
-										pathname === '/main/Dashboard'
+										pathname === '/Dashboard'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
 									} flex gap-1`}>
@@ -57,10 +57,10 @@ const sidebar = ({ className }: { className?: string }) => {
 							</Link>
 						</SidebarMenuItem>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'/main/Employee'}>
+							<Link href={'/Employee'}>
 								<div
 									className={`${
-										pathname === '/main/Employee'
+										pathname === '/Employee'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
 									} flex gap-1`}>
@@ -74,10 +74,10 @@ const sidebar = ({ className }: { className?: string }) => {
 							</Link>
 						</SidebarMenuItem>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'/main/Payrun'}>
+							<Link href={'/Payrun'}>
 								<div
 									className={`${
-										pathname === '/main/Payrun'
+										pathname === '/Payrun'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
 									} flex gap-1`}>
@@ -91,10 +91,10 @@ const sidebar = ({ className }: { className?: string }) => {
 							</Link>
 						</SidebarMenuItem>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'/main/Loan'}>
+							<Link href={'/Loan'}>
 								<div
 									className={`${
-										pathname === '/main/Loan'
+										pathname === '/Loan'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
 									} flex gap-1`}>
@@ -108,10 +108,10 @@ const sidebar = ({ className }: { className?: string }) => {
 							</Link>
 						</SidebarMenuItem>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'/main/Reports'}>
+							<Link href={'/Reports'}>
 								<div
 									className={`${
-										pathname === '/main/Reports'
+										pathname === '/Reports'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
 									} flex gap-1`}>
@@ -143,10 +143,10 @@ const sidebar = ({ className }: { className?: string }) => {
 								<CollapsibleContent className='overflow-visible'>
 									<SidebarMenuSub className='overflow-visible'>
 										<SidebarMenuSubItem>
-											<Link href={'/main/Setins/CompSet'}>
+											<Link href={'/Setins/CompSet'}>
 												<div
 													className={`${
-														pathname === '/main/Setins/CompSet'
+														pathname === '/Setins/CompSet'
 															? 'bg-[#3D56A8] rounded p-1 mx-1'
 															: ''
 													}`}>
@@ -157,10 +157,10 @@ const sidebar = ({ className }: { className?: string }) => {
 									</SidebarMenuSub>
 									<SidebarMenuSub className='overflow-visible'>
 										<SidebarMenuSubItem>
-											<Link href={'/main/Setins/Payset'}>
+											<Link href={'/Setins/Payset'}>
 												<div
 													className={`${
-														pathname === '/main/Setins/Payset'
+														pathname === '/Setins/Payset'
 															? 'bg-[#3D56A8] rounded p-1 mx-1'
 															: ''
 													}`}>
@@ -171,10 +171,10 @@ const sidebar = ({ className }: { className?: string }) => {
 									</SidebarMenuSub>
 									<SidebarMenuSub className='overflow-visible'>
 										<SidebarMenuSubItem>
-											<Link href={'/main/Setins/Userrole'}>
+											<Link href={'/Setins/Userrole'}>
 												<div
 													className={`${
-														pathname === '/main/Setins/Userrole'
+														pathname === '/Setins/Userrole'
 															? 'bg-[#3D56A8] rounded p-1 mx-1'
 															: ''
 													}`}>

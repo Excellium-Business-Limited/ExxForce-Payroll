@@ -1,8 +1,8 @@
 import axios from "axios";
-import { getAccessToken } from "./auth";
+import { getAccessToken, getTenant } from "./auth";
 
 export async function login(email: string, password: string) {
-  const res = await fetch("http://localhost:8000/api/token/pair", {
+  const res = await fetch(`http://localhost:8000/api/token/pair`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

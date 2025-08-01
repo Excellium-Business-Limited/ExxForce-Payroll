@@ -45,67 +45,67 @@ const items = [
 export default function Home() {
 	const [isloan, setisLoan] = React.useState(true);
 	const loanData = [
-						{
-							loanNumber: '45623-05',
-							employeeName: 'Ifunanya Johnson',
-							loanName: 'Car Loan',
-							loanAmount: '₦600,000.00',
-							deduction: '₦60,000.00',
-							balanceRemaining: '₦540,000.00',
-							status: 'Ongoing',
-							id: '1',
-						},
-						{
-							loanNumber: '45623-05',
-							employeeName: 'Ifunanya Johnson',
-							loanName: 'Car Loan',
-							loanAmount: '₦600,000.00',
-							deduction: '₦60,000.00',
-							balanceRemaining: '₦540,000.00',
-							status: 'Ongoing',
-							id: '2',
-						},
-						{
-							loanNumber: '45623-05',
-							employeeName: 'Ifunanya Johnson',
-							loanName: 'Car Loan',
-							loanAmount: '₦600,000.00',
-							deduction: '₦60,000.00',
-							balanceRemaining: '₦540,000.00',
-							status: 'Ongoing',
-							id: '3',
-						},
-						{
-							loanNumber: '45623-05',
-							employeeName: 'Ifunanya Johnson',
-							loanName: 'Car Loan',
-							loanAmount: '₦600,000.00',
-							deduction: '₦60,000.00',
-							balanceRemaining: '₦540,000.00',
-							status: 'Ongoing',
-							id: '4',
-						},
-						{
-							loanNumber: '45623-05',
-							employeeName: 'Ifunanya Johnson',
-							loanName: 'Car Loan',
-							loanAmount: '₦600,000.00',
-							deduction: '₦60,000.00',
-							balanceRemaining: '₦540,000.00',
-							status: 'Ongoing',
-							id: '5',
-						},
-						{
-							loanNumber: '45623-05',
-							employeeName: 'Ifunanya Johnson',
-							loanName: 'Car Loan',
-							loanAmount: '₦600,000.00',
-							deduction: '₦60,000.00',
-							balanceRemaining: '₦540,000.00',
-							status: 'Ongoing',
-							id: '6',
-						},
-					];
+		{
+			loanNumber: '45623-05',
+			employeeName: 'Ifunanya Johnson',
+			loanName: 'Car Loan',
+			loanAmount: '₦600,000.00',
+			deduction: '₦60,000.00',
+			balanceRemaining: '₦540,000.00',
+			status: 'Ongoing',
+			id: '1',
+		},
+		{
+			loanNumber: '45623-05',
+			employeeName: 'Ifunanya Johnson',
+			loanName: 'Car Loan',
+			loanAmount: '₦600,000.00',
+			deduction: '₦60,000.00',
+			balanceRemaining: '₦540,000.00',
+			status: 'Ongoing',
+			id: '2',
+		},
+		{
+			loanNumber: '45623-05',
+			employeeName: 'Ifunanya Johnson',
+			loanName: 'Car Loan',
+			loanAmount: '₦600,000.00',
+			deduction: '₦60,000.00',
+			balanceRemaining: '₦540,000.00',
+			status: 'Ongoing',
+			id: '3',
+		},
+		{
+			loanNumber: '45623-05',
+			employeeName: 'Ifunanya Johnson',
+			loanName: 'Car Loan',
+			loanAmount: '₦600,000.00',
+			deduction: '₦60,000.00',
+			balanceRemaining: '₦540,000.00',
+			status: 'Ongoing',
+			id: '4',
+		},
+		{
+			loanNumber: '45623-05',
+			employeeName: 'Ifunanya Johnson',
+			loanName: 'Car Loan',
+			loanAmount: '₦600,000.00',
+			deduction: '₦60,000.00',
+			balanceRemaining: '₦540,000.00',
+			status: 'Ongoing',
+			id: '5',
+		},
+		{
+			loanNumber: '45623-05',
+			employeeName: 'Ifunanya Johnson',
+			loanName: 'Car Loan',
+			loanAmount: '₦600,000.00',
+			deduction: '₦60,000.00',
+			balanceRemaining: '₦540,000.00',
+			status: 'Ongoing',
+			id: '6',
+		},
+	];
 
 	if (!isloan) {
 		return (
@@ -117,13 +117,12 @@ export default function Home() {
 					</span>
 					<span className='items-end self-end justify-between flex gap-4'>
 						<Sheet>
-							<SheetTrigger asChild>
-								<Button
-									variant={'outline'}
-									className='bg-[#3D56A8] text-white'>
-									Add Loan
-								</Button>
-							</SheetTrigger>
+							<Button
+								variant={'outline'}
+								className='bg-[#3D56A8] text-white'
+								asChild>
+								<SheetTrigger>Add Loan</SheetTrigger>
+							</Button>
 							<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 								<SheetTitle className='hidden'></SheetTitle>
 								<LoanForm />
@@ -149,7 +148,7 @@ export default function Home() {
 						from a file.
 					</pre>
 					<div className='flex flex-col sm:flex-row gap-4 justify-center'>
-						<Sheet modal={false}>
+						<Sheet>
 							<SheetTrigger>
 								<Button
 									variant={'outline'}
@@ -157,9 +156,9 @@ export default function Home() {
 									Add Loan
 								</Button>
 							</SheetTrigger>
-							<SheetContent className='min-w-[500px] p-4 z-[1000]'>
+							<SheetContent className='min-w-[500px] p-4 '>
 								<SheetTitle className='hidden'></SheetTitle>
-								<LoanForm className='absolute' />
+								<LoanForm />
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>

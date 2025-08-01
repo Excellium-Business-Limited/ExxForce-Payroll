@@ -14,12 +14,82 @@ import {
 import { SelectItem } from '@radix-ui/react-select';
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { DialogClose } from '@/components/ui/dialog';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import axios from 'axios';
+import { getAccessToken, getTenant } from '@/lib/auth';
+import { get } from 'http';
 
-export default function LoanForm({className}: { className?: string }) {
+interface LoanType {
+	id: number;
+	name: string;
+	is_interest_applied: boolean;
+	interest_rate: string | null;
+	interest_method: string | null;
+}
+
+interface Employee {
+	id: number;
+	employee_id: string;
+	first_name: string;
+	last_name: string;
+}
+
+export default function LoanForm({ className }: { className?: string }) {
+	const pathname = usePathname();
+	const router = useRouter();
+	const tenant = getTenant();
+	const baseURL = `http://${tenant}.localhost:8000`;
+	const [loanTypes, setLoanTypes] = useState<LoanType[]>([]);
+	const [employees, setEmployees] = useState<Employee[]>([]);
+	const [form, setForm] = useState({
+		loan_type_id: '',
+		employee_id: '',
+		amount: '',
+		repayment_months: '',
+		start_date: '',
+		reason: '',
+	});
+	const [error, setError] = useState('');
+	const [loading, setLoading] = useState(true);
 	const [startDate, setStartDate] = React.useState<Date | null>(null);
+
+	useEffect(() => {
+		const loadData = async () => {
+			const access = getAccessToken();
+			try {
+				const token = getAccessToken();
+				if (!token) throw new Error('No access token');
+
+				const [typesRes, empRes] = await Promise.all([
+					axios.get<LoanType[]>(`${baseURL}/tenant/loans/loan-types`, {
+						headers: { Authorization: `Bearer ${token}` },
+					}),
+					axios.get<Employee[]>(`${baseURL}/tenant/employee/list`, {
+						headers: { Authorization: `Bearer ${token}` },
+					}),
+				]);
+
+				setLoanTypes(typesRes.data);
+				setEmployees(empRes.data);
+			} catch (err: any) {
+				console.error(err);
+				setError('Failed loading loan types or employees.');
+			} finally {
+				setLoading(false);
+			}
+		};
+		loadData();
+	}, [tenant]);
+	console.log(loanTypes, employees);
+	useEffect(() =>{
+
+		console.log(form);
+	}, [form]);
+
 	return (
 		<div className={`bg-white ${className}`}>
 			<Card className='self-center w-full gap-4 border-none shadow-none'>
@@ -27,9 +97,11 @@ export default function LoanForm({className}: { className?: string }) {
 					<h1 className='text-2xl font-bold'>Add Loan</h1>
 					<p className='text-xs'>Add Loan details</p>
 				</div>
-				<form action=''>
+				<form
+					action=''
+					className=''>
 					<div className='grid grid-cols-2 gap-6 m-4'>
-						<span>
+						{/* <span>
 							<Label
 								htmlFor='loanNum'
 								className='mb-2'>
@@ -41,7 +113,7 @@ export default function LoanForm({className}: { className?: string }) {
 								id='loanNum'
 								required
 							/>
-						</span>
+						</span> */}
 						<span>
 							<Label
 								htmlFor='LoanName'
@@ -50,24 +122,25 @@ export default function LoanForm({className}: { className?: string }) {
 							</Label>
 							<Select required>
 								<SelectTrigger className='w-[200px]'>
-									<SelectValue placeholder='Select Loan Name' />
+									<SelectValue placeholder='Select Loan Name'>
+										{form.loan_type_id}
+									</SelectValue>
 								</SelectTrigger>
 								<SelectContent
 									position='popper'
-									className='z-[1050]'>
-									<SelectItem
-										value='Loan-1'
-										className=''>
-										Car Loan
-									</SelectItem>
-									<SelectSeparator />
-									<SelectItem value='Loan-2'>Housing Loan</SelectItem>
-									<SelectItem value='Loan-3'>Salary Advance</SelectItem>
-									<SelectItem value='Loan-4'>Emergency Loan</SelectItem>
-									<SelectItem value='Loan-5'>Education Loan</SelectItem>
-									<SelectItem value='Loan-6'>Medical Loan</SelectItem>
-									<SelectItem value='Loan-7'>Housing Loan</SelectItem>
-									<SelectItem value='Loan-8'>Personal Loan</SelectItem>
+									className=''>
+									{loanTypes.map((type) => {
+										return (
+											<SelectItem
+												key={type.id}
+												value={type.id.toString()}
+												onClick={() =>
+													setForm({ ...form, loan_type_id: type.id.toString() })
+												}>
+												{type.name}
+											</SelectItem>
+										);
+									})}
 									<SelectItem value='Loan-9'>
 										<Button>+ Add New Loan</Button>
 									</SelectItem>
@@ -87,9 +160,21 @@ export default function LoanForm({className}: { className?: string }) {
 									<SelectValue placeholder='Select Employee' />
 								</SelectTrigger>
 								<SelectContent position='popper'>
-									<SelectItem value='Emp1'>Employee 1</SelectItem>
-									<SelectItem value='Emp2'>Employee 2</SelectItem>
-									<SelectItem value='Emp3'>Employee 3</SelectItem>
+									{employees.map((employee) => {
+										return (
+											<SelectItem
+												key={employee.id}
+												value={employee.id.toString()}
+												onClick={() =>
+													setForm({
+														...form,
+														employee_id: employee.id.toString(),
+													})
+												}>
+												{`${employee.first_name} ${employee.last_name}`}
+											</SelectItem>
+										);
+									})}
 								</SelectContent>
 							</Select>
 						</span>
@@ -138,6 +223,12 @@ export default function LoanForm({className}: { className?: string }) {
 								placeholder='Enter Monthly Deduction'
 								id='MonthDed'
 								required
+								onChange={() =>
+									setForm({
+										...form,
+										employee_id: employee.id.toString(),
+									})
+								}
 							/>
 						</span>
 					</div>

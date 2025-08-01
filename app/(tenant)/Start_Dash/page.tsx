@@ -135,7 +135,7 @@ const page = () => {
 						</SheetTrigger>
 						<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 							<SheetTitle className='hidden'></SheetTitle>
-							<EmployeeForm />
+							<EmployeeForm isEdit={false} />
 						</SheetContent>
 					</Sheet>
 				</Card>
