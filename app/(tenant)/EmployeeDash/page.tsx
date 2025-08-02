@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
+import EmployeeDetails from '../components/EmployeeDetails'; // Add this line
 import { Dialog, DialogContent } from '@/components/ui/dialog'; // Add this import
 
 // Define proper TypeScript interfaces
@@ -49,6 +50,8 @@ const EmployeePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [showEmployeeDetails, setShowEmployeeDetails] = useState<boolean>(false);
   const [filters, setFilters] = useState<Filters>({
     department: 'All',
     designation: 'All',
@@ -80,6 +83,42 @@ const EmployeePage: React.FC = () => {
 
   const handleCloseImportModal = (): void => {
     setShowImportModal(false);
+  };
+
+  const handleViewEmployee = (employee: Employee): void => {
+    setSelectedEmployee(employee);
+    setShowEmployeeDetails(true);
+  };
+
+  const handleCloseEmployeeDetails = (): void => {
+    setShowEmployeeDetails(false);
+    setSelectedEmployee(null);
+  };
+
+  const handleEditFromDetails = (employee: Employee): void => {
+    setSelectedEmployee(employee);
+    setIsEdit(true);
+    setEmployeeData(employee);
+    setShowEmployeeDetails(false);
+    setShowEmployeeForm(true);
+  };
+
+  const handleEndEmployment = async (employee: Employee): Promise<void> => {
+    try {
+      console.log('Ending employment for:', employee.employee_id);
+      // TODO: Add actual API call for ending employment
+      
+      // Show confirmation dialog first
+      if (window.confirm(`Are you sure you want to end employment for ${employee.first_name} ${employee.last_name}?`)) {
+        // API call here
+        await fetchEmployees(); // Refresh the list
+        setShowEmployeeDetails(false);
+        setSelectedEmployee(null);
+      }
+    } catch (error) {
+      console.error('Error ending employment:', error);
+      // TODO: Add proper error handling/notification
+    }
   };
 
   const handleEmployeeSubmit = async (employeeFormData: any): Promise<void> => {
@@ -130,12 +169,101 @@ const EmployeePage: React.FC = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  // Enhanced date formatting function with better null handling
+  const formatDate = (dateString: string | null | undefined): string => {
+    // Handle null, undefined, or empty strings
+    if (!dateString || 
+        dateString === 'null' || 
+        dateString === 'undefined' || 
+        dateString.trim() === '') {
+      return '--'; // Use '--' instead of 'N/A' for better UI
+    }
+    
+    try {
+      let date: Date;
+      const dateStr = String(dateString).trim();
+      
+      // Handle ISO format (most common from APIs)
+      if (dateStr.includes('T') || dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        date = new Date(dateStr);
+      }
+      // Handle DD/MM/YYYY or MM/DD/YYYY format
+      else if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          // Assume DD/MM/YYYY format (common in many regions)
+          const day = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const year = parseInt(parts[2]);
+          
+          // Validate the parts make sense
+          if (day > 31 || month > 12 || year < 1900) {
+            return '--';
+          }
+          
+          date = new Date(year, month - 1, day);
+        } else {
+          return '--';
+        }
+      }
+      // Handle DD-MM-YYYY format
+      else if (dateStr.includes('-') && !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3 && parts[0].length <= 2) {
+          const day = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const year = parseInt(parts[2]);
+          
+          if (day > 31 || month > 12 || year < 1900) {
+            return '--';
+          }
+          
+          date = new Date(year, month - 1, day);
+        } else {
+          date = new Date(dateStr);
+        }
+      }
+      else {
+        date = new Date(dateStr);
+      }
+
+      // Validate the resulting date
+      if (isNaN(date.getTime())) {
+        return '--';
+      }
+
+      // Format to MM-DD-YYYY
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = date.getFullYear();
+
+      return `${month}-${day}-${year}`;
+      
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return '--';
+    }
+  };
+
+  // Alternative date formatting function with different display format
+  const formatDateLong = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return dateString;
+      }
+
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date (long):', dateString, error);
+      return dateString;
+    }
   };
 
   const getEmployeeStatus = (employee: Employee): string => {
@@ -163,6 +291,20 @@ const EmployeePage: React.FC = () => {
   const fetchEmployees = async (): Promise<void> => {
     try {
       const response = await axios.get<Employee[]>(`http://excellium.localhost:8000/tenant/employee/list`);
+      
+      // Log raw data to understand the date format from backend
+      console.log('Raw employee data from API:', response.data);
+      
+      // Log individual employee date fields for debugging
+      if (response.data && response.data.length > 0) {
+        const firstEmployee = response.data[0];
+        console.log('First employee date fields:', {
+          start_date: firstEmployee.start_date,
+          date_of_birth: firstEmployee.date_of_birth,
+          tax_start_date: firstEmployee.tax_start_date
+        });
+      }
+      
       setEmployees(response.data || []);
       setError(null);
     } catch (err) {
@@ -355,7 +497,11 @@ const EmployeePage: React.FC = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {employees.map((employee, index) => (
-              <tr key={employee.employee_id || employee.id || index} className="hover:bg-gray-50">
+              <tr 
+                key={employee.employee_id || employee.id || index} 
+                className="hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleViewEmployee(employee)}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <input type="checkbox" className="rounded" />
                 </td>
@@ -377,8 +523,12 @@ const EmployeePage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatCurrency(employee.custom_salary)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formatDate(employee.start_date)}
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {employee.start_date ? (
+                    <span className="text-gray-900">{formatDate(employee.start_date)}</span>
+                  ) : (
+                    <span className="text-gray-400 italic">Not set</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
@@ -391,7 +541,10 @@ const EmployeePage: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <button
-                    onClick={() => handleEditClick(employee)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click when clicking edit
+                      handleEditClick(employee);
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                     aria-label="Edit employee"
                   >
@@ -436,21 +589,33 @@ const EmployeePage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-auto">
-      <main className="flex-1 bg-[#EFF5FF] p-6 md:p-8 overflow-auto">
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-gray-600">Loading...</div>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-red-600">{error}</div>
-          </div>
-        ) : hasEmployees ? (
-          <EmployeeTable />
-        ) : (
-          <EmptyEmployeeState />
-        )}
-      </main>
+      {/* Show Employee Details Full Screen or Main Content */}
+      {showEmployeeDetails && selectedEmployee ? (
+        <div className="flex-1 bg-white overflow-auto">
+          <EmployeeDetails
+            employee={selectedEmployee}
+            onClose={handleCloseEmployeeDetails}
+            onEdit={handleEditFromDetails}
+            onEndEmployment={handleEndEmployment}
+          />
+        </div>
+      ) : (
+        <main className="flex-1 bg-[#EFF5FF] p-6 md:p-8 overflow-auto">
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-gray-600">Loading...</div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-red-600">{error}</div>
+            </div>
+          ) : hasEmployees ? (
+            <EmployeeTable />
+          ) : (
+            <EmptyEmployeeState />
+          )}
+        </main>
+      )}
 
       {/* Employee Form Dialog - Using proper Dialog component */}
       <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>

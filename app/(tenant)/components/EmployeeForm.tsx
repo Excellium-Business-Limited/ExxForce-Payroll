@@ -14,6 +14,7 @@ import {
 import { SheetClose } from '@/components/ui/sheet';
 import axios from 'axios';
 import { format, parseISO, isValid } from 'date-fns';
+import SalarySetupForm from './SalarySetupForm';
 
 // Define the Employee interface to match your API
 interface Employee {
@@ -23,7 +24,7 @@ interface Employee {
 	last_name: string;
 	email: string;
 	phone_number: string;
-	gender: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+	gender: 'MALE' | 'FEMALE' | 'OTHER' ;
 	date_of_birth: string;
 	address: string;
 	employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
@@ -41,6 +42,13 @@ interface Employee {
 	is_pension_applicable?: boolean;
 	is_nhf_applicable?: boolean;
 	is_nsitf_applicable?: boolean;
+}
+
+// Define department interface
+interface Department {
+	id: number | string;
+	name: string;
+	// Add other department properties if needed
 }
 
 // Define props interface for the EmployeeForm component
@@ -93,6 +101,16 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		address1: '',
 		address2: '',
 	});
+
+	// State for departments
+	const [departments, setDepartments] = useState<Department[]>([]);
+	const [loadingDepartments, setLoadingDepartments] = useState(false);
+	const [departmentError, setDepartmentError] = useState<string>('');
+
+	// State for form flow
+	const [showSalaryForm, setShowSalaryForm] = useState(false);
+	const [savedEmployeeData, setSavedEmployeeData] = useState<any>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Helper function to format date for input (YYYY-MM-DD) using date-fns
 	const formatDateForInput = (dateString: string): string => {
@@ -154,6 +172,65 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		return format(new Date(), 'yyyy-MM-dd');
 	};
 
+	// Function to fetch departments from API
+	const fetchDepartments = async () => {
+		setLoadingDepartments(true);
+		setDepartmentError('');
+		
+		try {
+			// Replace {{exx_url}} with your actual base URL
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+			const response = await axios.get(`${baseUrl}/tenant/employee/departments`);
+			
+			console.log('Departments fetched:', response.data);
+			
+			// Adjust this based on your API response structure
+			// If the response is an array directly:
+			if (Array.isArray(response.data)) {
+				setDepartments(response.data);
+			}
+			// If the response has a data property:
+			else if (response.data.data && Array.isArray(response.data.data)) {
+				setDepartments(response.data.data);
+			}
+			// If the response has departments property:
+			else if (response.data.departments && Array.isArray(response.data.departments)) {
+				setDepartments(response.data.departments);
+			}
+			else {
+				console.warn('Unexpected departments API response structure:', response.data);
+				setDepartmentError('Unexpected response format');
+			}
+			
+		} catch (error) {
+			console.error('Error fetching departments:', error);
+			setDepartmentError('Failed to load departments');
+			
+			// Fallback to hardcoded departments in case of API failure
+			setDepartments([
+				{ id: 'hr', name: 'Human Resources' },
+				{ id: 'finance', name: 'Finance' },
+				{ id: 'engineering', name: 'Engineering' },
+				{ id: 'marketing', name: 'Marketing' }
+			]);
+		} finally {
+			setLoadingDepartments(false);
+		}
+	};
+
+	// Fetch departments on component mount
+	useEffect(() => {
+		fetchDepartments();
+	}, []);
+
+	// Reset form states when component opens/closes
+	useEffect(() => {
+		if (!isOpen) {
+			setShowSalaryForm(false);
+			setSavedEmployeeData(null);
+		}
+	}, [isOpen]);
+
 	// Populate form when editing
 	useEffect(() => {
 		if (isEdit && employeeData) {
@@ -203,9 +280,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		setFormData((prev) => ({ ...prev, [key]: value }));
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		
+	const handleSaveEmployee = async (showSalaryNext: boolean = false) => {
 		console.log('Form submission started...');
 		console.log('Form data:', formData);
 
@@ -221,7 +296,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		if (missingFields.length > 0) {
 			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
 			console.log('Missing required fields:', missingFields);
-			return;
+			return false;
 		}
 
 		// Enhanced date formatting function to ensure YYYY-MM-DD format for API
@@ -281,6 +356,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}`,
 		};
 
+		setIsSubmitting(true);
+
 		try {
 			console.log('Starting API call...');
 
@@ -292,12 +369,13 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				date_of_birth: apiData.date_of_birth
 			});
 
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
 			let response;
 			if (isEdit && employeeData?.id) {
 				// Update existing employee
 				console.log('Updating employee with ID:', employeeData.id);
 				response = await axios.put(
-					`http://excellium.localhost:8000/tenant/employee/update/${employeeData.id}`,
+					`${baseUrl}/tenant/employee/update/${employeeData.id}`,
 					apiData,
 					{ headers: { 'Content-Type': 'application/json' } }
 				);
@@ -306,22 +384,32 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				// Create new employee
 				console.log('Creating new employee...');
 				response = await axios.post(
-					'http://excellium.localhost:8000/tenant/employee/create',
+					`${baseUrl}/tenant/employee/create`,
 					apiData,
 					{ headers: { 'Content-Type': 'application/json' } }
 				);
 				console.log('Employee created:', response.data);
 			}
 
+			// Store saved employee data for salary form
+			setSavedEmployeeData({ ...apiData, id: response.data.id || employeeData?.id });
+
 			// Call the parent's onSubmit handler
 			console.log('Calling parent onSubmit...');
 			await onSubmit(apiData);
 			
 			console.log('Success! Employee saved.');
-			alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
 			
-			// Optionally close the form after successful submission
-			onClose();
+			if (showSalaryNext && !isEdit) {
+				// Show salary form for new employees
+				setShowSalaryForm(true);
+			} else {
+				// Regular save - show success message and close
+				alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
+				onClose();
+			}
+
+			return true;
 			
 		} catch (error) {
 			console.error('Error saving employee:', error);
@@ -341,8 +429,49 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			} else {
 				alert('Failed to save employee: Unknown error');
 			}
+			return false;
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		await handleSaveEmployee(false);
+	};
+
+	const handleSaveAndNext = async (e: React.FormEvent) => {
+		e.preventDefault();
+		await handleSaveEmployee(true);
+	};
+
+	const handleSalaryFormClose = () => {
+		setShowSalaryForm(false);
+		onClose();
+	};
+
+	const handleSalaryFormSubmit = async (salaryData: any) => {
+		// The salary form will handle its own submission
+		// After successful submission, close the entire modal
+		setShowSalaryForm(false);
+		onClose();
+	};
+
+	const handleBackToEmployee = () => {
+		setShowSalaryForm(false);
+	};
+
+	// If showing salary form, render it instead
+	if (showSalaryForm) {
+		return (
+			<SalarySetupForm
+				employeeData={savedEmployeeData}
+				onClose={handleSalaryFormClose}
+				onSubmit={handleSalaryFormSubmit}
+				onBack={handleBackToEmployee}
+			/>
+		);
+	}
 
 	return (
 		<div>
@@ -384,17 +513,40 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 									value={formData.department}
 									onValueChange={(val) => handleSelectChange('department', val)} 
 									required
+									disabled={loadingDepartments}
 								>
 									<SelectTrigger>
-										<SelectValue placeholder='Select department' />
+										<SelectValue placeholder={
+											loadingDepartments 
+												? 'Loading departments...' 
+												: departmentError 
+													? 'Error loading departments' 
+													: 'Select department'
+										} />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='hr'>Human Resources</SelectItem>
-										<SelectItem value='finance'>Finance</SelectItem>
-										<SelectItem value='engineering'>Engineering</SelectItem>
-										<SelectItem value='marketing'>Marketing</SelectItem>
+										{departments.map((dept) => (
+											<SelectItem 
+												key={dept.id} 
+												value={typeof dept.id === 'string' ? dept.id : dept.name}
+											>
+												{dept.name}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
+								{departmentError && (
+									<p className="text-xs text-red-500 mt-1">
+										{departmentError}
+										<button 
+											type="button"
+											onClick={fetchDepartments}
+											className="ml-2 text-blue-500 underline hover:no-underline"
+										>
+											Retry
+										</button>
+									</p>
+								)}
 							</div>
 							<div className='space-y-2'>
 								<Label>Employment Type</Label>
@@ -548,14 +700,35 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							variant='outline'
 							type='button'
 							onClick={onClose}
+							disabled={isSubmitting}
 							className='text-muted-foreground'>
 							Cancel
 						</Button>
-						<Button
-							type='submit'
-							className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-							{isEdit ? 'Update Employee' : 'Save Employee'}
-						</Button>
+						{isEdit ? (
+							<Button
+								type='submit'
+								disabled={isSubmitting}
+								className='bg-[#3D56A8] hover:bg-[#2E4299]'>
+								{isSubmitting ? 'Updating...' : 'Update Employee'}
+							</Button>
+						) : (
+							<>
+								<Button
+									type='submit'
+									disabled={isSubmitting}
+									variant='outline'
+									className='text-gray-700 border-gray-300'>
+									{isSubmitting ? 'Saving...' : 'Save Employee'}
+								</Button>
+								<Button
+									type='button'
+									onClick={handleSaveAndNext}
+									disabled={isSubmitting}
+									className='bg-[#3D56A8] hover:bg-[#2E4299]'>
+									{isSubmitting ? 'Saving...' : 'Save and Next'}
+								</Button>
+							</>
+						)}
 					</div>
 				</form>
 			</div>
