@@ -35,10 +35,9 @@ const Dashboard = () => {
 		currency: 'NGN',})	
 		return formattedSalary;
 	}
+	const tenant = getTenant();
 
 	useEffect(() => {
-		
-		const tenant = getTenant();
 		if (tenant) {
 			updateGlobalState({ tenant : tenant });
 			fetchEmployees(tenant).then((data) => {

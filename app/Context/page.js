@@ -12,6 +12,18 @@ export const GlobalProvider = ({ children }) => {
     const updateGlobalState = (newState) => {
         setGlobalState((prevState) => ({ ...prevState, ...newState }));
     };
+    const getEmployees = () =>{
+        if (tenant) {
+                    updateGlobalState({ tenant : tenant });
+                  const emps =   fetchEmployees(tenant).then((data) => {
+                        setEmployees(data);
+                        // updateGlobalState({ employees: data });
+                        console.log(employees);
+                    }).catch((error) => {
+                        console.error("Error fetching employees:", error);
+                    });
+                }
+    }
 
     return (
         <Global.Provider value={{ Global, globalState, updateGlobalState }}>
