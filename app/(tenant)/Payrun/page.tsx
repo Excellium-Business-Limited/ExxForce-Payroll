@@ -10,6 +10,8 @@ import Submit from './_components/payrunSubmit';
 import {payrans} from './_components/payrunData'
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
+import  { useGlobal } from '@/app/Context/page';
+import { getAccessToken } from '@/lib/auth';
 
 
 interface PayRun {
@@ -25,9 +27,10 @@ interface PayRun {
 const page = () => {
   const [isPayrun, setIsPayrun] = React.useState(true)
    const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+   const {tenant} = useGlobal();
    const router = useRouter();
 		const pathname = usePathname();
-		const tenant = pathname.split('/')[1];
+		const tenantName = tenant ? tenant : pathname.split('/')[1];
 
 		const [payruns, setPayruns] = useState<PayRun[]>([]);
 		const [error, setError] = useState('');
@@ -35,9 +38,9 @@ const page = () => {
 		useEffect(() => {
 			const fetchPayRuns = async () => {
 				try {
-					const token = localStorage.getItem('access_token');
+					const token = getAccessToken()
 					const res = await axios.get<PayRun[]>(
-						`http://${tenant}.localhost:8000/tenant/payrun/list`,
+						`http://${tenantName}.localhost:8000/tenant/payrun/list`,
 						{ headers: { Authorization: `Bearer ${token}` } }
 					);
 					setPayruns(res.data);
@@ -48,12 +51,13 @@ const page = () => {
 			};
 
 			fetchPayRuns();
-		}, [tenant]);
+			const timeout = setTimeout(() => {
+				console.log(payruns);
+			})
+			timeout
+		}, []);
 
 		if (error) return <p >{error}</p>;
-		if (payruns.length === 0) {
-			setIsPayrun(false);
-			return <p>No pay runs found.</p>;}
 
 
 

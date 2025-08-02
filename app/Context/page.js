@@ -1,4 +1,5 @@
  'use client';
+import { getTenant } from '@/lib/auth';
 import { createContext, useContext, useState, } from 'react';
 
 export const Global = createContext()
@@ -24,9 +25,10 @@ export const GlobalProvider = ({ children }) => {
                     });
                 }
     }
+    const tenant = getTenant()
 
     return (
-        <Global.Provider value={{ Global, globalState, updateGlobalState }}>
+        <Global.Provider value={{ Global, globalState, updateGlobalState, getEmployees, tenant }}>
             {children}
         </Global.Provider>
     );

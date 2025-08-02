@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import React from 'react';
@@ -42,6 +42,7 @@ import { Card } from '@/components/ui/card';
 import { getTenant } from '@/lib/auth';
 
 interface Loan {
+  monthly_deduction: ReactNode;
   id: number;
   loan_number: string;
   loan_type: string;
@@ -67,68 +68,43 @@ export default function Home() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-	const loanData = [
-		{
-			loanNumber: '45623-05',
-			employeeName: 'Ifunanya Johnson',
-			loanName: 'Car Loan',
-			loanAmount: '₦600,000.00',
-			deduction: '₦60,000.00',
-			balanceRemaining: '₦540,000.00',
-			status: 'Ongoing',
-			id: '1',
-		},
-		{
-			loanNumber: '45623-05',
-			employeeName: 'Ifunanya Johnson',
-			loanName: 'Car Loan',
-			loanAmount: '₦600,000.00',
-			deduction: '₦60,000.00',
-			balanceRemaining: '₦540,000.00',
-			status: 'Ongoing',
-			id: '2',
-		},
-		{
-			loanNumber: '45623-05',
-			employeeName: 'Ifunanya Johnson',
-			loanName: 'Car Loan',
-			loanAmount: '₦600,000.00',
-			deduction: '₦60,000.00',
-			balanceRemaining: '₦540,000.00',
-			status: 'Ongoing',
-			id: '3',
-		},
-		{
-			loanNumber: '45623-05',
-			employeeName: 'Ifunanya Johnson',
-			loanName: 'Car Loan',
-			loanAmount: '₦600,000.00',
-			deduction: '₦60,000.00',
-			balanceRemaining: '₦540,000.00',
-			status: 'Ongoing',
-			id: '4',
-		},
-		{
-			loanNumber: '45623-05',
-			employeeName: 'Ifunanya Johnson',
-			loanName: 'Car Loan',
-			loanAmount: '₦600,000.00',
-			deduction: '₦60,000.00',
-			balanceRemaining: '₦540,000.00',
-			status: 'Ongoing',
-			id: '5',
-		},
-		{
-			loanNumber: '45623-05',
-			employeeName: 'Ifunanya Johnson',
-			loanName: 'Car Loan',
-			loanAmount: '₦600,000.00',
-			deduction: '₦60,000.00',
-			balanceRemaining: '₦540,000.00',
-			status: 'Ongoing',
-			id: '6',
-		},
-	];
+
+	useEffect(() => {
+    const fetchLoans = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("No access token");
+
+        const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/list`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setLoans(res.data);
+		console.log("Loans fetched successfully", loans);
+      } catch (err: any) {
+        console.error("Error fetching loans", err);
+        setError(err.message || "Failed to fetch loans");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLoans();
+	timeout
+  }, [tenant]);
+  const timeout = setTimeout(() => {
+		console.log(loans);
+		console.log(loans[0]);
+	}, 2000);
+
+  const handleCreate = () => {
+    router.push(`/${tenant}/loans/create`);
+  };
+
+  const goToDetail = (loanId: number) => {
+    router.push(`/${tenant}/loans/${loanId}`);
+  };
+
+  if (loading) return <p>Loading loans…</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
 	if (!isloan) {
 		return (
@@ -266,7 +242,7 @@ export default function Home() {
 							<TableRow>
 								<TableHead className='text-[#3D56A8]'>Loan Number</TableHead>
 								<TableHead className='text-[#3D56A8]'>
-									Employee Number
+									Employee Name
 								</TableHead>
 								<TableHead className='text-[#3D56A8]'>Loan Name</TableHead>
 								<TableHead className='text-[#3D56A8]'>Loan Amount</TableHead>
@@ -279,22 +255,22 @@ export default function Home() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{loanData.map((loan) => {
+							{loans.map((loan) => {
 								return (
 									<TableRow key={loan.id}>
-										<TableCell>{loan.loanNumber}</TableCell>
-										<TableCell>{loan.employeeName}</TableCell>
-										<TableCell>{loan.loanName}</TableCell>
-										<TableCell>{loan.loanAmount}</TableCell>
-										<TableCell>{loan.deduction}</TableCell>
-										<TableCell>{loan.balanceRemaining}</TableCell>
+										<TableCell>{loan.loan_number}</TableCell>
+										<TableCell>{loan.employee_name}</TableCell>
+										<TableCell>{loan.loan_type}</TableCell>
+										<TableCell>{loan.amount}</TableCell>
+										<TableCell>{loan.monthly_deduction}</TableCell>
+										<TableCell>{loan.balance}</TableCell>
 										<TableCell>
-											<h4 className='border justify-center flex rounded-4xl'>
+											<h4 className='border justify-center flex rounded-4xl bg-[#dee7f6] p-1'>
 												{loan.status}
 											</h4>
 										</TableCell>
 										<TableCell>
-											<Link href={`/main/Loan/${loan.id}`}>
+											<Link href={`/Loan/${loan.loan_number}`}>
 												<Image
 													width={25}
 													height={25}
