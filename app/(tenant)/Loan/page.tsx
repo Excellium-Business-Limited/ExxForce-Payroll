@@ -1,5 +1,8 @@
 'use client';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import axios from "axios";
 import React from 'react';
 import {
 	Select,
@@ -36,6 +39,19 @@ import Dialogs from '../components/dialog';
 import Import from '../components/Import';
 import UpdateRepay from '../components/updateRepay';
 import { Card } from '@/components/ui/card';
+import { getTenant } from '@/lib/auth';
+
+interface Loan {
+  id: number;
+  loan_number: string;
+  loan_type: string;
+  employee_name: string;
+  amount: number;
+  balance: number;
+  status: string;
+  start_date: string;
+}
+
 const items = [
 	{ id: '1', name: 'Item One' },
 	{ id: '2', name: 'Item Two' },
@@ -43,7 +59,14 @@ const items = [
 ];
 
 export default function Home() {
-	const [isloan, setisLoan] = React.useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+  const tenant = getTenant()
+  const baseURL = `http://${tenant}.localhost:8000`;
+  const [isloan, setisLoan] = React.useState(true);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 	const loanData = [
 		{
 			loanNumber: '45623-05',
