@@ -1,18 +1,60 @@
 'use client'
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Import from '../components/Import';
 import Dialogs from '../components/dialog'
 import PayrunForm from './_components/PayrunForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Submit from './_components/payrunSubmit';
-import {payruns} from './_components/payrunData'
+import {payrans} from './_components/payrunData'
+import { usePathname, useRouter } from 'next/navigation';
+import axios from 'axios';
 
+
+interface PayRun {
+	id: number;
+	name: string;
+	pay_period: string;
+	start_date: string;
+	end_date: string;
+	payment_date: string;
+	status: string;
+}
 
 const page = () => {
   const [isPayrun, setIsPayrun] = React.useState(true)
    const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+   const router = useRouter();
+		const pathname = usePathname();
+		const tenant = pathname.split('/')[1];
+
+		const [payruns, setPayruns] = useState<PayRun[]>([]);
+		const [error, setError] = useState('');
+
+		useEffect(() => {
+			const fetchPayRuns = async () => {
+				try {
+					const token = localStorage.getItem('access_token');
+					const res = await axios.get<PayRun[]>(
+						`http://${tenant}.localhost:8000/tenant/payrun/list`,
+						{ headers: { Authorization: `Bearer ${token}` } }
+					);
+					setPayruns(res.data);
+				} catch (err: any) {
+					console.error(err);
+					setError(err.response?.data?.detail || 'Failed to load pay runs');
+				}
+			};
+
+			fetchPayRuns();
+		}, [tenant]);
+
+		if (error) return <p >{error}</p>;
+		if (payruns.length === 0) {
+			setIsPayrun(false);
+			return <p>No pay runs found.</p>;}
+
 
 
   return (
@@ -44,7 +86,11 @@ const page = () => {
 					<Dialogs
 						title={'Import'}
 						className='border-[#d4d8de] border-2 px-7'>
-						<Import title='Pay Runs' />
+						<Import title='Pay Runs' isOpen={false} onClose={function (): void {
+						  throw new Error('Function not implemented.');
+					  } } onSubmit={function (importData: any): Promise<void> {
+						  throw new Error('Function not implemented.');
+					  } } />
 					</Dialogs>
 				</span>
 			</div>
@@ -87,7 +133,11 @@ const page = () => {
 								<Dialogs
 									title={'Import'}
 									className='border-[#d4d8de] border-2 px-7'>
-									<Import title='Pay Runs' />
+									<Import title='Pay Runs' isOpen={false} onClose={function (): void {
+									  throw new Error('Function not implemented.');
+								  } } onSubmit={function (importData: any): Promise<void> {
+									  throw new Error('Function not implemented.');
+								  } } />
 								</Dialogs>
 							</article>
 						</section>
@@ -118,24 +168,24 @@ const page = () => {
 							</TabsList>
 							<TabsContent value='monthly'>
 								<Submit
-									payruns={payruns.filter(
-										(payrun) => payrun.PAY_FREQUENCY === 'Monthly'
+									payruns={payrans.filter(
+										(payrun: any) => payrun.PAY_FREQUENCY === 'Monthly'
 									)}
 									nexts='24th, April 2025'
 								/>
 							</TabsContent>
 							<TabsContent value='bi-weekly'>
 								<Submit
-									payruns={payruns.filter(
-										(payrun) => payrun.PAY_FREQUENCY === 'Bi-Weekly'
+									payruns={payrans.filter(
+										(payrun: any) => payrun.PAY_FREQUENCY === 'Bi-Weekly'
 									)}
 									nexts='15th, April 2025'
 								/>
 							</TabsContent>
 							<TabsContent value='weekly'>
 								<Submit
-									payruns={payruns.filter(
-										(payrun) => payrun.PAY_FREQUENCY === 'Weekly'
+									payruns={payrans.filter(
+										(payrun: any) => payrun.PAY_FREQUENCY === 'Weekly'
 									)}
 									nexts='5th, April 2025'
 								/>

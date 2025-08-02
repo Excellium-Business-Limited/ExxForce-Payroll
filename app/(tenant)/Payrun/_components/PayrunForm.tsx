@@ -1,4 +1,7 @@
 'use client';
+import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import axios from 'axios';
 import {
 	Select,
 	SelectContent,
@@ -27,11 +30,55 @@ const PayrunForm = ({
 	setIsSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	setIsPayrun: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+	 const pathname = usePathname();
+		const router = useRouter();
+		const segments = pathname.split('/');
+		const tenant = segments[1];
+
+		const [name, setName] = useState('');
+		const [payPeriod, setPayPeriod] = useState('MONTHLY');
+		const [startDate, setStartDate] = useState('');
+		const [endDate, setEndDate] = useState('');
+		const [paymentDate, setPaymentDate] = useState('');
+		const [error, setError] = useState('');
+		const [isSubmitting, setIsSubmitting] = useState(false);
+
 	const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 	const handleButtonClick = () => {
 		setIsSheetOpen(false);
 		setIsPayrun(true); // Close the sheet;
 		// Open the dialog
+	};
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setIsSubmitting(true);
+		try {
+			const token = localStorage.getItem('access_token');
+			await axios.post(
+				`http://${tenant}.localhost:8000/tenant/payrun/create`,
+				{
+					name,
+					pay_period: payPeriod,
+					start_date: startDate,
+					end_date: endDate,
+					payment_date: paymentDate,
+				},
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+			alert('PayRun created successfully!');
+			router.push(`/${tenant}/payroll_payrun`);
+		} catch (err: any) {
+			console.error('Error creating payrun', err);
+			setError(
+				Array.isArray(err.response?.data?.detail)
+					? err.response.data.detail.map((e: any) => e.msg).join(', ')
+					: err.response?.data?.detail || 'Failed to create payrun'
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 	return (
 		<div className={`h screen ${className} flex flex-col`}>
