@@ -8,7 +8,7 @@ import PayrunForm from './_components/PayrunForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Submit from './_components/payrunSubmit';
 import {payrans} from './_components/payrunData'
-import { usePathname, useRouter } from 'next/navigation';
+import { redirect, usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import  { useGlobal } from '@/app/Context/page';
 import { getAccessToken } from '@/lib/auth';
@@ -47,13 +47,18 @@ const page = () => {
 				} catch (err: any) {
 					console.error(err);
 					setError(err.response?.data?.detail || 'Failed to load pay runs');
+					if (err.response?.status === 401) {
+						// Redirect to login if unauthorized
+						setTimeout(()=>{
+							redirect('/login')
+						}, 2000)
+					}
 				}
 			};
-
-			fetchPayRuns();
 			const timeout = setTimeout(() => {
 				console.log(payruns);
 			})
+			fetchPayRuns();
 			timeout
 		}, []);
 

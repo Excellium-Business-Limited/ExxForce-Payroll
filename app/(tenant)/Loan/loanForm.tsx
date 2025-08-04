@@ -204,7 +204,7 @@ export default function LoanForm({ className }: { className?: string }) {
 								<SelectTrigger className='w-[180px]'>
 									<SelectValue placeholder='Repayment Duration' />
 								</SelectTrigger>
-								<SelectContent position='popper'>
+								<SelectContent position='popper' className='grid grid-cols-1 w-fit gap-2 '>
 									<SelectItem value='1 Month'>6 Month</SelectItem>
 									<SelectItem value='2 Months'>12 Months</SelectItem>
 									<SelectItem value='3 Months'>2 Months</SelectItem>
@@ -215,7 +215,7 @@ export default function LoanForm({ className }: { className?: string }) {
 							<Label
 								htmlFor='MonthDed'
 								className='mb-2'>
-								Monthly Deductiond
+								Monthly Deduction
 							</Label>
 							<Input
 								className='w-[200px]'

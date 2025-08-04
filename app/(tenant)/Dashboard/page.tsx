@@ -16,7 +16,7 @@ import { Bar } from 'recharts';
 import Piechrt from './_components/Piechart';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
-import { getTenant } from '@/lib/auth';
+import { getAccessToken, getTenant } from '@/lib/auth';
 import { fetchEmployees } from '@/lib/api';
 import  { useGlobal } from '@/app/Context/page';
 
@@ -36,10 +36,11 @@ const Dashboard = () => {
 		return formattedSalary;
 	}
 	const tenant = getTenant();
+	const accessToken = getAccessToken();
 
 	useEffect(() => {
 		if (tenant) {
-			updateGlobalState({ tenant : tenant });
+			updateGlobalState({ tenant : tenant, accessToken: accessToken });
 			fetchEmployees(tenant).then((data) => {
 				setEmployees(data);
 				// updateGlobalState({ employees: data });

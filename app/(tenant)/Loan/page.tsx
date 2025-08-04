@@ -40,6 +40,8 @@ import Import from '../components/Import';
 import UpdateRepay from '../components/updateRepay';
 import { Card } from '@/components/ui/card';
 import { getTenant } from '@/lib/auth';
+import { set } from 'date-fns';
+import { redirect } from 'next/navigation';
 
 interface Loan {
   monthly_deduction: ReactNode;
@@ -64,49 +66,60 @@ export default function Home() {
   const router = useRouter();
   const tenant = getTenant()
   const baseURL = `http://${tenant}.localhost:8000`;
-  const [isloan, setisLoan] = React.useState(true);
+  const [isloan, setisLoan] = React.useState<boolean>(false);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-	useEffect(() => {
-    const fetchLoans = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        if (!token) throw new Error("No access token");
+	const fetchLoans = async () => {
+		try {
+			const token = localStorage.getItem('access_token');
+			if (!token) throw new Error('No access token');
 
-        const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/list`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setLoans(res.data);
-		console.log("Loans fetched successfully", loans);
-      } catch (err: any) {
-        console.error("Error fetching loans", err);
-        setError(err.message || "Failed to fetch loans");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLoans();
-	timeout
-  }, [tenant]);
-  const timeout = setTimeout(() => {
+			const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/list`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			setLoans(res.data);
+			setLoading(false);
+			if (res.status !== 200) setisLoan(false);
+		} catch (err: any) {
+			console.error('Error fetching loans', err);
+			setError(err.message || 'Failed to fetch loans');
+			if (err.response?.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					redirect('/login');
+				}, 2000);
+			}
+		} finally {
+			setLoading(false);
+		}
+	};	
+	 
+	const timeout = setTimeout(() => {
+		setLoading(true);
+		fetchLoans();
+	}, 2000);
+  useEffect(() => {
+		fetchLoans();
 		console.log(loans);
 		console.log(loans[0]);
-	}, 2000);
+		setisLoan(true);
+		return () => clearTimeout(timeout);
+}, [tenant]);
 
   const handleCreate = () => {
     router.push(`/${tenant}/loans/create`);
   };
 
   const goToDetail = (loanId: number) => {
-    router.push(`/${tenant}/loans/${loanId}`);
+    router.push(`/Loan/${loanId}`);
   };
 
-  if (loading) return <p>Loading loans…</p>;
+//   if (loading) return <p>Loading loans…</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
-	if (!isloan) {
+	if (isloan === false) {
 		return (
 			<div className='h-[680px] m-7 gap-4 '>
 				<div className='flex flex-row items-center justify-between w-full'>
@@ -116,23 +129,30 @@ export default function Home() {
 					</span>
 					<span className='items-end self-end justify-between flex gap-4'>
 						<Sheet>
-							<Button
-								variant={'outline'}
-								className='bg-[#3D56A8] text-white'
-								asChild>
-								<SheetTrigger>Add Loan</SheetTrigger>
-							</Button>
+							<SheetTrigger>
+								<Button
+									variant={'outline'}
+									className='bg-[#3D56A8] text-white'
+									asChild>
+									Add Loan
+								</Button>
+							</SheetTrigger>
 							<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 								<SheetTitle className='hidden'></SheetTitle>
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>
-							<Import title='Loans' isOpen={false} onClose={function (): void {
-								throw new Error('Function not implemented.');
-							} } onSubmit={function (importData: any): Promise<void> {
-								throw new Error('Function not implemented.');
-							} } />
+							<Import
+								title='Loans'
+								isOpen={false}
+								onClose={function (): void {
+									throw new Error('Function not implemented.');
+								}}
+								onSubmit={function (importData: any): Promise<void> {
+									throw new Error('Function not implemented.');
+								}}
+							/>
 						</Dialogs>
 					</span>
 				</div>
@@ -165,11 +185,16 @@ export default function Home() {
 							</SheetContent>
 						</Sheet>
 						<Dialogs title={'Import'}>
-							<Import title='Loans' isOpen={false} onClose={function (): void {
-								throw new Error('Function not implemented.');
-							} } onSubmit={function (importData: any): Promise<void> {
-								throw new Error('Function not implemented.');
-							} } />
+							<Import
+								title='Loans'
+								isOpen={false}
+								onClose={function (): void {
+									throw new Error('Function not implemented.');
+								}}
+								onSubmit={function (importData: any): Promise<void> {
+									throw new Error('Function not implemented.');
+								}}
+							/>
 						</Dialogs>
 					</div>
 				</div>
@@ -271,13 +296,14 @@ export default function Home() {
 										</TableCell>
 										<TableCell>
 											<Link href={`/Loan/${loan.loan_number}`}>
+											</Link>
 												<Image
 													width={25}
 													height={25}
 													src='/iconamoon_eye-light.png'
 													alt=''
+													onClick={() => goToDetail(loan.id)}
 												/>
-											</Link>
 										</TableCell>
 									</TableRow>
 								);

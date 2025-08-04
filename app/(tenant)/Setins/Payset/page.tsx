@@ -49,12 +49,12 @@ const page = () => {
 							<TabsTrigger
 								value='payComp'
 								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Pay Component
+								Pay Schedule
 							</TabsTrigger>
 							<TabsTrigger
 								value='payFreq'
 								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Pay Frequency
+								Leave
 							</TabsTrigger>
 						</div>
 					</TabsList>

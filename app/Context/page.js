@@ -4,10 +4,11 @@ import { createContext, useContext, useState, } from 'react';
 
 export const Global = createContext()
 export const GlobalProvider = ({ children }) => {
+    const [employees, setEmployees] = useState([]);
     const [globalState, setGlobalState] = useState({
         tenant: '',
         tenantName: '',
-        tenantLogo: '',
+        accessToken: '',
     });
 
     const updateGlobalState = (newState) => {
@@ -25,6 +26,7 @@ export const GlobalProvider = ({ children }) => {
                     });
                 }
     }
+
     const tenant = getTenant()
 
     return (

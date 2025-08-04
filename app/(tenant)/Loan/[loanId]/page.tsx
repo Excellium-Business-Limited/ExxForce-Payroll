@@ -41,7 +41,7 @@ export default function LoanDetails({ params }: { params: Promise<{ loanId: stri
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("No access token");
 
-        const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/list`, {
+        const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/${loanId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLoans(res.data);

@@ -12,6 +12,9 @@ import {
 import React from 'react';
 
 const updateRepay = () => {
+	const handleSubmit = () => {
+		console.log('Update repayment details');
+	}
 	return (
 		<div className='bg-white'>
 			<form action=''>
@@ -50,7 +53,7 @@ const updateRepay = () => {
 					</DialogClose>
 					<Button
 						className='m-3 bg-[#3D56A8] text-white '
-						variant='outline'>
+						variant='outline' onSubmit={handleSubmit}>
 						{' '}
 						Update{' '}
 					</Button>

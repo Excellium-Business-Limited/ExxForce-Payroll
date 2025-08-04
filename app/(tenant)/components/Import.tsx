@@ -68,7 +68,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
 			<div className="mb-6">
 				<h2 className="text-xl font-semibold text-gray-900">{title}</h2>
 				<p className="text-sm text-gray-600 mt-1">
-					Upload a CSV or Excel file containing employee data
+					{`Upload a CSV or Excel file containing ${title} data`}
 				</p>
 			</div>
 
@@ -116,7 +116,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
 					<Button
 						type="button"
 						variant="outline"
-						onClick={onClose}
+						onClick={() => onClose}
 						disabled={isUploading}
 					>
 						Cancel
