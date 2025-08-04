@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Edit2, Trash2, Clock } from 'lucide-react';
+import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
 
 interface Employee {
   id?: number;
@@ -117,6 +117,260 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     <div className={fullWidth ? 'col-span-3' : ''}>
       <dt className="text-sm font-medium text-gray-500">{label}</dt>
       <dd className="mt-1 text-sm text-gray-900">{value || '--'}</dd>
+    </div>
+  );
+
+  // Empty State Components
+  const PayrollEmptyState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="mb-8">
+        <div className="relative">
+          {/* Payroll illustration */}
+          <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="text-xs text-gray-400">Payroll</div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-2 bg-green-200 rounded w-full"></div>
+              <div className="h-2 bg-green-100 rounded w-3/4"></div>
+              <div className="h-2 bg-green-100 rounded w-1/2"></div>
+            </div>
+          </div>
+          
+          {/* Plus icon */}
+          <div className="absolute -bottom-3 -right-3">
+            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">No payroll records</h3>
+      <p className="text-gray-600 max-w-md mb-6 leading-relaxed">
+        Payroll records for {employee.first_name} {employee.last_name} will appear here once they are processed.
+      </p>
+
+      <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+        <DollarSign className="w-4 h-4" />
+        Process Payroll
+      </button>
+    </div>
+  );
+
+  const DocumentEmptyState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="mb-8">
+        <div className="relative">
+          {/* Document illustration */}
+          <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="text-xs text-gray-400">Documents</div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-50 rounded border flex items-center justify-center">
+                  <FileText className="w-3 h-3 text-blue-400" />
+                </div>
+                <div className="h-2 bg-blue-100 rounded flex-1"></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-50 rounded border flex items-center justify-center">
+                  <FileText className="w-3 h-3 text-blue-400" />
+                </div>
+                <div className="h-2 bg-blue-100 rounded w-2/3"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Upload icon */}
+          <div className="absolute -bottom-3 -right-3">
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <Upload className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">No documents uploaded</h3>
+      <p className="text-gray-600 max-w-md mb-6 leading-relaxed">
+        Upload important documents for {employee.first_name} {employee.last_name} such as contracts, ID copies, or certificates.
+      </p>
+
+      <div className="flex gap-3">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+          <Upload className="w-4 h-4" />
+          Upload Document
+        </button>
+        <button className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors">
+          View Templates
+        </button>
+      </div>
+    </div>
+  );
+
+  const LoanEmptyState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="mb-8">
+        <div className="relative">
+          {/* Loan illustration */}
+          <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-orange-600" />
+              </div>
+              <div className="text-xs text-gray-400">Loans</div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="h-2 bg-orange-200 rounded w-1/3"></div>
+                <div className="text-xs text-gray-400">₦0</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-2 bg-orange-100 rounded w-1/4"></div>
+                <div className="text-xs text-gray-400">₦0</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Plus icon */}
+          <div className="absolute -bottom-3 -right-3">
+            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">No loan records</h3>
+      <p className="text-gray-600 max-w-md mb-6 leading-relaxed">
+        Track and manage loans for {employee.first_name} {employee.last_name}. Set up salary advances or employee loans here.
+      </p>
+
+      <button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+        <CreditCard className="w-4 h-4" />
+        Create Loan
+      </button>
+    </div>
+  );
+
+  const LeaveEmptyState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="mb-8">
+        <div className="relative">
+          {/* Leave illustration */}
+          <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-purple-600" />
+              </div>
+              <div className="text-xs text-gray-400">Leave</div>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-7 gap-1">
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className="w-4 h-4 bg-purple-50 rounded-sm"></div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className={`w-4 h-4 rounded-sm ${i === 2 || i === 3 ? 'bg-purple-200' : 'bg-purple-50'}`}></div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Plus icon */}
+          <div className="absolute -bottom-3 -right-3">
+            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">No leave records</h3>
+      <p className="text-gray-600 max-w-md mb-6 leading-relaxed">
+        Manage leave requests and track time off for {employee.first_name} {employee.last_name}. Annual leave, sick days, and other leave types will appear here.
+      </p>
+
+      <div className="flex gap-3">
+        <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+          <Calendar className="w-4 h-4" />
+          Request Leave
+        </button>
+        <button className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors">
+          View Policy
+        </button>
+      </div>
+    </div>
+  );
+
+  const PaymentHistoryEmptyState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="mb-8">
+        <div className="relative">
+          {/* Payment history illustration */}
+          <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="text-xs text-gray-400">Payments</div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="h-2 bg-indigo-200 rounded w-2/3"></div>
+                <div className="text-xs text-gray-400">₦0</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-2 bg-indigo-100 rounded w-1/2"></div>
+                <div className="text-xs text-gray-400">₦0</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-2 bg-indigo-100 rounded w-3/4"></div>
+                <div className="text-xs text-gray-400">₦0</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* History icon */}
+          <div className="absolute -bottom-3 -right-3">
+            <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">No payment history</h3>
+      <p className="text-gray-600 max-w-md mb-6 leading-relaxed">
+        Payment history for {employee.first_name} {employee.last_name} will appear here once salary payments are processed.
+      </p>
+
+      <div className="flex gap-3">
+        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+          <DollarSign className="w-4 h-4" />
+          Process Payment
+        </button>
+        <button className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors">
+          View Reports
+        </button>
+      </div>
     </div>
   );
 
@@ -255,35 +509,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             </div>
           )}
 
-          {activeTab === 'payroll' && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500">Payroll information will be displayed here</p>
-            </div>
-          )}
-
-          {activeTab === 'document' && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500">Document information will be displayed here</p>
-            </div>
-          )}
-
-          {activeTab === 'loan' && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500">Loan information will be displayed here</p>
-            </div>
-          )}
-
-          {activeTab === 'leave' && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500">Leave information will be displayed here</p>
-            </div>
-          )}
-
-          {activeTab === 'payment-history' && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500">Payment history will be displayed here</p>
-            </div>
-          )}
+          {activeTab === 'payroll' && <PayrollEmptyState />}
+          {activeTab === 'document' && <DocumentEmptyState />}
+          {activeTab === 'loan' && <LoanEmptyState />}
+          {activeTab === 'leave' && <LeaveEmptyState />}
+          {activeTab === 'payment-history' && <PaymentHistoryEmptyState />}
         </div>
       </div>
     </div>
