@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
-import EmployeeDetails from '../components/EmployeeDetails'; // Add this line
-import { Dialog, DialogContent } from '@/components/ui/dialog'; // Add this import
+import EmployeeDetails from '../components/EmployeeDetails';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -106,9 +106,7 @@ const EmployeePage: React.FC = () => {
   const handleEndEmployment = async (employee: Employee): Promise<void> => {
     try {
       console.log('Ending employment for:', employee.employee_id);
-      // TODO: Add actual API call for ending employment
       
-      // Show confirmation dialog first
       if (window.confirm(`Are you sure you want to end employment for ${employee.first_name} ${employee.last_name}?`)) {
         // API call here
         await fetchEmployees(); // Refresh the list
@@ -117,37 +115,30 @@ const EmployeePage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error ending employment:', error);
-      // TODO: Add proper error handling/notification
     }
   };
 
   const handleEmployeeSubmit = async (employeeFormData: any): Promise<void> => {
     try {
       if (isEdit) {
-        // Update employee logic
         console.log('Updating employee:', employeeFormData);
-        // TODO: Add actual API call for updating employee
       } else {
-        // Create new employee logic
         console.log('Creating new employee:', employeeFormData);
-        // TODO: Add actual API call for creating employee
       }
       
       // Refresh the employee list after successful submission
       await fetchEmployees();
       
-      // Close the form
-      handleCloseEmployeeForm();
+      // Note: Don't close the form here - let the EmployeeForm handle the flow
+      // The form will either close itself or show the salary form
     } catch (error) {
       console.error('Error submitting employee:', error);
-      // TODO: Add proper error handling/notification
     }
   };
 
   const handleImportSubmit = async (importData: any): Promise<void> => {
     try {
       console.log('Importing employees:', importData);
-      // TODO: Add actual API call for importing employees
       
       // Refresh the employee list after successful import
       await fetchEmployees();
@@ -156,7 +147,6 @@ const EmployeePage: React.FC = () => {
       handleCloseImportModal();
     } catch (error) {
       console.error('Error importing employees:', error);
-      // TODO: Add proper error handling/notification
     }
   };
 
@@ -446,7 +436,6 @@ const EmployeePage: React.FC = () => {
             onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
           >
             <option value="All">Department: All</option>
-            {/* TODO: Add dynamic department options */}
           </select>
           <select 
             className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm"
@@ -454,7 +443,6 @@ const EmployeePage: React.FC = () => {
             onChange={(e) => setFilters(prev => ({ ...prev, designation: e.target.value }))}
           >
             <option value="All">Designation: All</option>
-            {/* TODO: Add dynamic designation options */}
           </select>
           <select 
             className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm"
@@ -462,7 +450,6 @@ const EmployeePage: React.FC = () => {
             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
           >
             <option value="All">Status: All</option>
-            {/* TODO: Add dynamic status options */}
           </select>
           <button className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm flex items-center gap-2">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -617,9 +604,9 @@ const EmployeePage: React.FC = () => {
         </main>
       )}
 
-      {/* Employee Form Dialog - Using proper Dialog component */}
-      <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      {/* Employee Form Dialog - Single Dialog that handles both forms */}
+      <Dialog open={showEmployeeForm} onOpenChange={handleCloseEmployeeForm}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0">
           <EmployeeForm
             isOpen={showEmployeeForm}
             isEdit={isEdit}
@@ -630,8 +617,8 @@ const EmployeePage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Import Modal Dialog - Using proper Dialog component */}
-      <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
+      {/* Import Modal Dialog */}
+      <Dialog open={showImportModal} onOpenChange={handleCloseImportModal}>
         <DialogContent className="sm:max-w-[500px]">
           <ImportModal
             isOpen={showImportModal}
