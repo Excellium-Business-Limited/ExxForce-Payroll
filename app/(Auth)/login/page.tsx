@@ -5,10 +5,12 @@ import { LoginForm } from './components/login-form';
 import Image from 'next/image';
 import image from './components/resources/login.svg';
 import { useRouter } from 'next/navigation';
+import { useGlobal } from '@/app/Context/page';
 import { login } from '@/lib/api';
 import { setTenant, saveTokens } from '@/lib/auth';
 
 const LoginPage = () => {
+	const { globalState, updateGlobalState } = useGlobal();
 	const router = useRouter();
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -24,13 +26,11 @@ const LoginPage = () => {
 			console.log(response);
 			const { access, refresh, redirect, tenant } = response;
 			saveTokens(access, refresh);
-			const redirectPath = new URL(redirect).pathname
-			const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);
+			// const redirectPath = new URL(redirect).pathname
+			// const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);bl
 			setTenant(tenant);
-			// console.log(address);
-			// 	? new URL(redirect).pathname
-			// 	: `/${tenant}/Dashboard`;
-			router.push(address);
+			updateGlobalState({ tenant: tenant, access : access, refresh: refresh });
+			// router.push(address);
 		} catch (err: any) {
 			setError(err.message || 'Invalid credentials. Please try again.');
 			setIsLoading(false);

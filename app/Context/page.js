@@ -1,6 +1,7 @@
  'use client';
 import { getTenant } from '@/lib/auth';
 import { createContext, useContext, useState, } from 'react';
+import { fetchEmployees } from '@/lib/api';
 
 export const Global = createContext()
 export const GlobalProvider = ({ children }) => {

@@ -242,7 +242,7 @@ const salStruc = () => {
 											</TableRow>
 											<TableRow>
 												<TableCell>
-													<Select required>
+													<Select>
 														<SelectTrigger className='w-[200px] z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
 															<SelectValue placeholder='Transport Allowance' />
 														</SelectTrigger>
