@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
@@ -41,6 +41,13 @@ interface Filters {
   status: string;
 }
 
+interface PaginationInfo {
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
 const EmployeePage: React.FC = () => {
   // State with proper TypeScript types
   const [isEdit, setIsEdit] = useState<boolean>(false);
@@ -57,6 +64,93 @@ const EmployeePage: React.FC = () => {
     designation: 'All',
     status: 'All'
   });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+
+  // Pagination calculations
+  const paginationInfo: PaginationInfo = useMemo(() => {
+    const totalItems = employees.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    return {
+      currentPage,
+      itemsPerPage,
+      totalItems,
+      totalPages
+    };
+  }, [employees.length, currentPage, itemsPerPage]);
+
+  // Get current page data
+  const currentEmployees = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return employees.slice(startIndex, endIndex);
+  }, [employees, currentPage, itemsPerPage]);
+
+  // Pagination handlers
+  const handlePageChange = (page: number): void => {
+    if (page >= 1 && page <= paginationInfo.totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number): void => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const handleNextPage = (): void => {
+    if (currentPage < paginationInfo.totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = (): void => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = (): (number | string)[] => {
+    const { totalPages } = paginationInfo;
+    const pages: (number | string)[] = [];
+    
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first page
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+      
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+      
+      // Show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   // Event handlers with proper types
   const handleEditClick = (employee: Employee): void => {
@@ -297,6 +391,12 @@ const EmployeePage: React.FC = () => {
       
       setEmployees(response.data || []);
       setError(null);
+      
+      // Reset to first page if current page is beyond the new total pages
+      const newTotalPages = Math.ceil((response.data?.length || 0) / itemsPerPage);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(1);
+      }
     } catch (err) {
       console.error('Error fetching employees:', err);
       setError('Failed to fetch employees');
@@ -463,6 +563,28 @@ const EmployeePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Items per page selector */}
+      <div className="px-6 py-3 border-b bg-gray-50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Show</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+            className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span className="text-sm text-gray-600">entries per page</span>
+        </div>
+        <div className="text-sm text-gray-600">
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, employees.length)} of {employees.length} entries
+        </div>
+      </div>
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -483,92 +605,155 @@ const EmployeePage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {employees.map((employee, index) => (
-              <tr 
-                key={employee.employee_id || employee.id || index} 
-                className="hover:bg-gray-50 cursor-pointer"
-                onClick={() => handleViewEmployee(employee)}
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input type="checkbox" className="rounded" />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {String(index + 1).padStart(2, '0')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
-                  {employee.employee_id}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {`${employee.first_name} ${employee.last_name}`}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {employee.job_title}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getEmployeeType(employee.employment_type)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formatCurrency(employee.custom_salary)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {employee.start_date ? (
-                    <span className="text-gray-900">{formatDate(employee.start_date)}</span>
-                  ) : (
-                    <span className="text-gray-400 italic">Not set</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    getEmployeeStatus(employee) === 'Active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {getEmployeeStatus(employee)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent row click when clicking edit
-                      handleEditClick(employee);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                    aria-label="Edit employee"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="currentColor"/>
-                      <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" fill="currentColor"/>
-                      <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {currentEmployees.map((employee, index) => {
+              // Calculate global index for S/N column
+              const globalIndex = (currentPage - 1) * itemsPerPage + index;
+              
+              return (
+                <tr 
+                  key={employee.employee_id || employee.id || index} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleViewEmployee(employee)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input type="checkbox" className="rounded" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {String(globalIndex + 1).padStart(2, '0')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                    {employee.employee_id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {`${employee.first_name} ${employee.last_name}`}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {employee.job_title}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {getEmployeeType(employee.employment_type)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatCurrency(employee.custom_salary)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {employee.start_date ? (
+                      <span className="text-gray-900">{formatDate(employee.start_date)}</span>
+                    ) : (
+                      <span className="text-gray-400 italic">Not set</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                      getEmployeeStatus(employee) === 'Active'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getEmployeeStatus(employee)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent row click when clicking edit
+                        handleEditClick(employee);
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Edit employee"
+                    >
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="currentColor"/>
+                        <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" fill="currentColor"/>
+                        <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          Total: {employees.length} entries
+      {/* Enhanced Pagination */}
+      <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-sm text-gray-600">
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, employees.length)} of {employees.length} entries
         </div>
+        
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded border border-gray-300 hover:bg-gray-50" aria-label="Previous page">
+          {/* Previous button */}
+          <button 
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className={`p-2 rounded border transition-colors ${
+              currentPage === 1 
+                ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+            }`}
+            aria-label="Previous page"
+          >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
               <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <span className="px-3 py-1 bg-blue-600 text-white rounded text-sm">1</span>
-          <span className="px-3 py-1 text-gray-600 text-sm">2</span>
-          <span className="px-3 py-1 text-gray-600 text-sm">3</span>
-          <span className="text-gray-500">...</span>
-          <span className="px-3 py-1 text-gray-600 text-sm">32</span>
-          <button className="p-2 rounded border border-gray-300 hover:bg-gray-50" aria-label="Next page">
+
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map((page, index) => (
+              <React.Fragment key={index}>
+                {page === '...' ? (
+                  <span className="px-3 py-1 text-gray-500 text-sm">...</span>
+                ) : (
+                  <button
+                    onClick={() => handlePageChange(page as number)}
+                    className={`px-3 py-1 text-sm rounded transition-colors ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Next button */}
+          <button 
+            onClick={handleNextPage}
+            disabled={currentPage === paginationInfo.totalPages}
+            className={`p-2 rounded border transition-colors ${
+              currentPage === paginationInfo.totalPages 
+                ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+            }`}
+            aria-label="Next page"
+          >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
               <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+        </div>
+
+        {/* Go to page input */}
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-gray-600">Go to page:</span>
+          <input
+            type="number"
+            min="1"
+            max={paginationInfo.totalPages}
+            value={currentPage}
+            onChange={(e) => {
+              const page = parseInt(e.target.value);
+              if (page >= 1 && page <= paginationInfo.totalPages) {
+                handlePageChange(page);
+              }
+            }}
+            className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+          />
+          <span className="text-gray-600">of {paginationInfo.totalPages}</span>
         </div>
       </div>
     </div>
@@ -604,9 +789,9 @@ const EmployeePage: React.FC = () => {
         </main>
       )}
 
-      {/* Employee Form Dialog - Single Dialog that handles both forms */}
+      {/* FIXED: Employee Form Dialog - Recommended Solution (Option 1: Remove height constraints) */}
       <Dialog open={showEmployeeForm} onOpenChange={handleCloseEmployeeForm}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="sm:max-w-[900px] w-[95vw] p-0 gap-0">
           <EmployeeForm
             isOpen={showEmployeeForm}
             isEdit={isEdit}
@@ -616,6 +801,23 @@ const EmployeePage: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Alternative Solution (Option 2: Proper Flexbox Layout) - Uncomment if Option 1 doesn't work */}
+      {/*
+      <Dialog open={showEmployeeForm} onOpenChange={handleCloseEmployeeForm}>
+        <DialogContent className="sm:max-w-[900px] max-h-[95vh] p-0 flex flex-col gap-0">
+          <div className="flex-1 overflow-y-auto">
+            <EmployeeForm
+              isOpen={showEmployeeForm}
+              isEdit={isEdit}
+              employeeData={employeeData}
+              onClose={handleCloseEmployeeForm}
+              onSubmit={handleEmployeeSubmit}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+      */}
 
       {/* Import Modal Dialog */}
       <Dialog open={showImportModal} onOpenChange={handleCloseImportModal}>

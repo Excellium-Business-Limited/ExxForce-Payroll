@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
 
+// Import your forms - adjust paths according to your project structure
+import EmployeeForm from './EmployeeForm';
+import SalarySetupForm from './SalarySetupForm';
+
 interface Employee {
   id?: number;
   employee_id: string;
@@ -31,17 +35,19 @@ interface Employee {
 interface EmployeeDetailsProps {
   employee: Employee;
   onClose: () => void;
-  onEdit: (employee: Employee) => void;
+  onEmployeeUpdated?: (updatedEmployee: Employee) => void;
   onEndEmployment?: (employee: Employee) => void;
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   employee,
   onClose,
-  onEdit,
+  onEmployeeUpdated,
   onEndEmployment
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'payroll' | 'document' | 'loan' | 'leave' | 'payment-history'>('general');
+  const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false);
+  const [isSalaryFormOpen, setIsSalaryFormOpen] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -98,6 +104,96 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       default:
         return frequency;
     }
+  };
+
+  const handleEmployeeFormSave = async (updatedEmployeeData: any) => {
+    try {
+      // Convert the form data back to Employee format
+      const updatedEmployee: Employee = {
+        ...employee,
+        employee_id: updatedEmployeeData.employee_id,
+        first_name: updatedEmployeeData.first_name,
+        last_name: updatedEmployeeData.last_name,
+        email: updatedEmployeeData.email,
+        phone_number: updatedEmployeeData.phone_number,
+        gender: updatedEmployeeData.gender,
+        date_of_birth: updatedEmployeeData.date_of_birth,
+        address: updatedEmployeeData.address,
+        employment_type: updatedEmployeeData.employment_type,
+        start_date: updatedEmployeeData.start_date,
+        tax_start_date: updatedEmployeeData.tax_start_date,
+        job_title: updatedEmployeeData.job_title,
+        department_name: updatedEmployeeData.department_name
+      };
+
+      // Call parent's update handler
+      onEmployeeUpdated?.(updatedEmployee);
+      setIsEmployeeFormOpen(false);
+    } catch (error) {
+      console.error('Error handling employee form save:', error);
+    }
+  };
+
+  const handleSalaryFormSave = async (updatedSalaryData: any) => {
+    try {
+      // Convert the salary form data back to Employee format
+      const updatedEmployee: Employee = {
+        ...employee,
+        pay_grade_name: updatedSalaryData.pay_grade_name,
+        custom_salary: updatedSalaryData.custom_salary,
+        bank_name: updatedSalaryData.bank_name,
+        account_number: updatedSalaryData.account_number,
+        account_name: updatedSalaryData.account_name,
+        pay_frequency: updatedSalaryData.pay_frequency,
+        is_paye_applicable: updatedSalaryData.is_paye_applicable,
+        is_pension_applicable: updatedSalaryData.is_pension_applicable,
+        is_nhf_applicable: updatedSalaryData.is_nhf_applicable,
+        is_nsitf_applicable: updatedSalaryData.is_nsitf_applicable
+      };
+
+      // Call parent's update handler
+      onEmployeeUpdated?.(updatedEmployee);
+      setIsSalaryFormOpen(false);
+    } catch (error) {
+      console.error('Error handling salary form save:', error);
+    }
+  };
+
+  // Modal Component for forms
+  const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ 
+    isOpen, 
+    onClose, 
+    title, 
+    children 
+  }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={onClose}></div>
+          </div>
+
+          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+          <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mt-4">
+              {children}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const tabs = [
@@ -440,7 +536,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900">Basic Details</h3>
                   <button
-                    onClick={() => onEdit(employee)}
+                    onClick={() => setIsEmployeeFormOpen(true)}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <Edit2 className="w-4 h-4 mr-1" />
@@ -465,7 +561,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900">Employment Details</h3>
                   <button
-                    onClick={() => onEdit(employee)}
+                    onClick={() => setIsEmployeeFormOpen(true)}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <Edit2 className="w-4 h-4 mr-1" />
@@ -489,7 +585,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900">Salary & Payment Details</h3>
                   <button
-                    onClick={() => onEdit(employee)}
+                    onClick={() => setIsSalaryFormOpen(true)}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <Edit2 className="w-4 h-4 mr-1" />
@@ -506,6 +602,77 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                   </dl>
                 </div>
               </div>
+
+              {/* Statutory Deduction */}
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">Statutory Deduction</h3>
+                  <button
+                    onClick={() => setIsSalaryFormOpen(true)}
+                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    Edit
+                  </button>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-8">
+                    {/* Deductions Column */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-4">Deductions</h4>
+                      <dl className="space-y-3">
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">PAYE (Tax)</dt>
+                          <dd className="text-sm text-gray-900 font-medium">
+                            {employee.is_paye_applicable ? 'Yes' : 'No'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">Pension</dt>
+                          <dd className="text-sm text-gray-900 font-medium">
+                            {employee.is_pension_applicable ? 'Yes' : 'No'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">NHSIF</dt>
+                          <dd className="text-sm text-gray-900 font-medium">
+                            {employee.is_nhf_applicable ? 'Yes' : 'No'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">NTF</dt>
+                          <dd className="text-sm text-gray-900 font-medium">
+                            {employee.is_nsitf_applicable ? 'Yes' : 'No'}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    {/* Benefits Column */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-4">Benefits</h4>
+                      <dl className="space-y-3">
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">Housing Allowance</dt>
+                          <dd className="text-sm text-gray-900 font-medium">Yes</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">NHIS</dt>
+                          <dd className="text-sm text-gray-900 font-medium">No</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">NHIS</dt>
+                          <dd className="text-sm text-gray-900 font-medium">Yes</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-sm text-gray-600">NHIS</dt>
+                          <dd className="text-sm text-gray-900 font-medium">Yes</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -516,6 +683,34 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           {activeTab === 'payment-history' && <PaymentHistoryEmptyState />}
         </div>
       </div>
+
+      {/* Modals */}
+      <Modal 
+        isOpen={isEmployeeFormOpen} 
+        onClose={() => setIsEmployeeFormOpen(false)}
+        title="Edit Employee Details"
+      >
+        <EmployeeForm
+          isOpen={isEmployeeFormOpen}
+          isEdit={true}
+          employeeData={employee}
+          onClose={() => setIsEmployeeFormOpen(false)}
+          onSubmit={handleEmployeeFormSave}
+        />
+      </Modal>
+
+      <Modal 
+        isOpen={isSalaryFormOpen} 
+        onClose={() => setIsSalaryFormOpen(false)}
+        title="Edit Salary Details"
+      >
+        <SalarySetupForm
+          employeeData={employee}
+          onClose={() => setIsSalaryFormOpen(false)}
+          onSubmit={handleSalaryFormSave}
+          onBack={() => setIsSalaryFormOpen(false)}
+        />
+      </Modal>
     </div>
   );
 };
