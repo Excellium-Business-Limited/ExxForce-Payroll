@@ -129,11 +129,10 @@ export default function Home() {
 					</span>
 					<span className='items-end self-end justify-between flex gap-4'>
 						<Sheet>
-							<SheetTrigger>
+							<SheetTrigger asChild>
 								<Button
 									variant={'outline'}
-									className='bg-[#3D56A8] text-white'
-									asChild>
+									className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 									Add Loan
 								</Button>
 							</SheetTrigger>
@@ -172,10 +171,10 @@ export default function Home() {
 					</pre>
 					<div className='flex flex-col sm:flex-row gap-4 justify-center'>
 						<Sheet>
-							<SheetTrigger>
+							<SheetTrigger asChild>
 								<Button
 									variant={'outline'}
-									className='bg-[#3D56A8] text-white'>
+									className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 									Add Loan
 								</Button>
 							</SheetTrigger>
@@ -215,7 +214,7 @@ export default function Home() {
 							<SheetTrigger asChild>
 								<Button
 									variant={'outline'}
-									className='bg-[#3D56A8] text-white'>
+									className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 									Add Loan
 								</Button>
 							</SheetTrigger>
@@ -224,12 +223,17 @@ export default function Home() {
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-						<Dialogs title={'Import'}>
-							<Import title='Loans' isOpen={false} onClose={function (): void {
-								throw new Error('Function not implemented.');
-							} } onSubmit={function (importData: any): Promise<void> {
-								throw new Error('Function not implemented.');
-							} } />
+						<Dialogs title={'Import'} >
+							<Import
+								title='Loans'
+								isOpen={false}
+								onClose={function (): void {
+									throw new Error('Function not implemented.');
+								}}
+								onSubmit={function (importData: any): Promise<void> {
+									throw new Error('Function not implemented.');
+								}}
+							/>
 						</Dialogs>
 					</span>
 				</div>
@@ -241,7 +245,7 @@ export default function Home() {
 						<span className='items-end self-end justify-between flex gap-4'>
 							<Button
 								variant={'outline'}
-								className='bg-[#3D56A8] text-white'>
+								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 								Export
 							</Button>
 							<Select>
@@ -257,7 +261,7 @@ export default function Home() {
 							</Select>
 							<Button
 								variant={'outline'}
-								className='bg-[#3D56A8] text-white'>
+								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 								Filter
 							</Button>
 						</span>
@@ -265,18 +269,16 @@ export default function Home() {
 					<Table border={4}>
 						<TableHeader>
 							<TableRow>
-								<TableHead className='text-[#3D56A8]'>Loan Number</TableHead>
-								<TableHead className='text-[#3D56A8]'>
-									Employee Name
-								</TableHead>
-								<TableHead className='text-[#3D56A8]'>Loan Name</TableHead>
-								<TableHead className='text-[#3D56A8]'>Loan Amount</TableHead>
-								<TableHead className='text-[#3D56A8]'>Deduction</TableHead>
-								<TableHead className='text-[#3D56A8]'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Loan Number</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Employee Name</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Loan Name</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Loan Amount</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Deduction</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Balance Remaining
 								</TableHead>
-								<TableHead className='text-[#3D56A8]'>Status</TableHead>
-								<TableHead className='text-[#3D56A8]'>View</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Status</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>View</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -290,13 +292,13 @@ export default function Home() {
 										<TableCell>{loan.monthly_deduction}</TableCell>
 										<TableCell>{loan.balance}</TableCell>
 										<TableCell>
-											<h4 className='border justify-center flex rounded-4xl bg-[#dee7f6] p-1'>
+											<h4
+												className={`border justify-center flex rounded-4xl bg-[#dee7f6] p-1 ${loan.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
 												{loan.status}
 											</h4>
 										</TableCell>
 										<TableCell>
 											<Link href={`/Loan/${loan.loan_number}`}>
-											</Link>
 												<Image
 													width={25}
 													height={25}
@@ -304,6 +306,7 @@ export default function Home() {
 													alt=''
 													onClick={() => goToDetail(loan.id)}
 												/>
+											</Link>
 										</TableCell>
 									</TableRow>
 								);

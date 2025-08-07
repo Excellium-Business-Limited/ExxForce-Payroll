@@ -10,6 +10,7 @@ export const GlobalProvider = ({ children }) => {
         tenant: '',
         tenantName: '',
         accessToken: '',
+        refreshToken: '',
     });
 
     const updateGlobalState = (newState) => {

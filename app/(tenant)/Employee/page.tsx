@@ -4,8 +4,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
+import { useGlobal } from '@/app/Context/page';
 import EmployeeDetails from '../components/EmployeeDetails';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { getAccessToken } from '@/lib/auth';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -64,6 +66,9 @@ const EmployeePage: React.FC = () => {
     designation: 'All',
     status: 'All'
   });
+
+  //Tenant retrival
+  const {tenant} = useGlobal()
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -374,7 +379,14 @@ const EmployeePage: React.FC = () => {
   // Extracted fetch function for reusability
   const fetchEmployees = async (): Promise<void> => {
     try {
-      const response = await axios.get<Employee[]>(`http://excellium.localhost:8000/tenant/employee/list`);
+      const response = await axios.get<Employee[]>(
+				`http://${tenant}.localhost:8000/tenant/employee/list`,
+				{
+					headers: {
+						Authorization: `Bearer ${getAccessToken()}`,
+					},
+				}
+			);
       
       // Log raw data to understand the date format from backend
       console.log('Raw employee data from API:', response.data);

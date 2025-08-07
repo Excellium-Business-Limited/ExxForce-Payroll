@@ -98,7 +98,7 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 						/>
 						<Button
 							variant={'secondary'}
-							className='p-4 bg-[#3d56a8] text-white  w-[90px]'>
+							className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 							Filter
 						</Button>
 					</article>
@@ -107,25 +107,25 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									PAY FREQUENCY
 								</TableHead>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									CREATED BY
 								</TableHead>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									TOTAL EMPLOYEES
 								</TableHead>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									LAST UPDATED
 								</TableHead>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									PAY PERIOD
 								</TableHead>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									STATUS
 								</TableHead>
-								<TableHead className='text-[#3d56a8] font-semibold'>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									MORE
 								</TableHead>
 							</TableRow>
@@ -145,7 +145,12 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 												<PopoverTrigger>
 													<EllipsisVertical />
 												</PopoverTrigger>
-												<PopoverContent className='grid grid-cols-1  !m-0 w-fit'>
+												<PopoverContent
+													className={`grid grid-cols-1  !m-0 w-fit ${
+														payrun.STATUS === 'Approved'
+															? 'bg-green-100 text-green-800'
+															: 'bg-gray-100 text-gray-800'
+													}`}>
 													{payrun.STATUS !== 'Approved' ? (
 														<Button
 															variant={'default'}
@@ -197,7 +202,7 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 																		</Button>
 																		<Button
 																			variant={'default'}
-																			className='bg-[#3a56d8] text-white hover:bg-[#20b49f]'>
+																			className='bg-blue-600 text-white hover:bg-[#20b49f]'>
 																			<Check className='text-white' />
 																			Approve Payrun
 																		</Button>

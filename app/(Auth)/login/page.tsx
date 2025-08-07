@@ -26,11 +26,11 @@ const LoginPage = () => {
 			console.log(response);
 			const { access, refresh, redirect, tenant } = response;
 			saveTokens(access, refresh);
-			// const redirectPath = new URL(redirect).pathname
-			// const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);bl
+			const redirectPath = new URL(redirect).pathname
+			// const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);
 			setTenant(tenant);
 			updateGlobalState({ tenant: tenant, access : access, refresh: refresh });
-			// router.push(address);
+			router.push(redirectPath);
 		} catch (err: any) {
 			setError(err.message || 'Invalid credentials. Please try again.');
 			setIsLoading(false);
