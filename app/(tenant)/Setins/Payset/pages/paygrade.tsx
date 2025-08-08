@@ -1,15 +1,44 @@
 import { Card } from '@/components/ui/card';
 import Dialogs from '@/app/(tenant)/components/dialog';
 import DeleteMod from '@/app/(tenant)/components/deleteMod';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	Dialog,
 	DialogContent,
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
+import axios from 'axios';
+import { useGlobal } from '@/app/Context/page';
 
 const paygrade = () => {
+	const [payGrades, setPayGrades] = useState<any[]>([]);
+	const [error, setError] = useState('');
+	const [isLoading, setIsLoading] = useState(true);
+	const tenant = useGlobal();
+
+	useEffect(() => {
+		const fetchPayGrades = async () => {
+			try {
+				const res = await axios.get(
+					`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades`,
+					{
+						headers: {
+							Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+						},
+					}
+				);
+				setPayGrades(res.data);
+			} catch (err) {
+				console.error(err);
+				setError('Failed to load pay grades');
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchPayGrades();
+	}, [tenant]);
 	const data = [
 		{
 			Level: 'Entry Level',

@@ -14,13 +14,13 @@ const custfreq = () => {
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead className='pr-4 text-[#3b54a4]'>
+						<TableHead className='pr-4 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Frequency Name
 						</TableHead>
-						<TableHead className=' text-[#3b54a4]'>Pay Circle</TableHead>
-						<TableHead className=' text-[#3b54a4]'>Start Date</TableHead>
-						<TableHead className=' text-[#3b54a4]'>Tax Year</TableHead>
-						<TableHead className=' text-[#3b54a4]'>Action</TableHead>
+						<TableHead className=' px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Pay Circle</TableHead>
+						<TableHead className=' px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Start Date</TableHead>
+						<TableHead className=' px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Tax Year</TableHead>
+						<TableHead className=' px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Action</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
