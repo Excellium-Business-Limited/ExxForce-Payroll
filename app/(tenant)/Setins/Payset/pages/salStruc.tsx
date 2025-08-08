@@ -1,4 +1,5 @@
 'use client';
+import { useGlobal } from '@/app/Context/page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,13 +23,39 @@ import {
 import { set } from 'date-fns';
 
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect, useState }  from 'react';
 
 const salStruc = () => {
 	const [isOpen, setIsOpen] = React.useState(false);
 	const [add, setAdd] = React.useState(true);
 	const [value, setValue] = React.useState('');
+	const {tenant} = useGlobal()
 
+	useEffect(() => {
+		const fetchComponents = async () => {
+			try {
+				const res = await fetch(
+					`http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components`,
+					{
+						headers: {
+							Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+						},
+					}
+				);
+
+				if (!res.ok) throw new Error('Failed to load salary components');
+
+				const data = await res.json();
+				setComponents(data);
+			} catch (err: any) {
+				console.error(err);
+				setError(err.message || 'Something went wrong');
+			}
+		};
+
+		fetchComponents();
+	}, [tenant]);
+	
 
 	const ShowAdd = () => {
 		setAdd(true);
@@ -56,7 +83,7 @@ const salStruc = () => {
 									setAdd(true);
 								}}
 								variant={'outline'}
-								className='bg-[#3D56A8] text-white'>
+								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 								+ Create Salary Structure
 							</Button>
 						</div>
@@ -78,7 +105,7 @@ const salStruc = () => {
 									setAdd(true);
 								}}
 								variant={'outline'}
-								className='bg-[#3D56A8] text-white'>
+								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
 								+ Create Salary Structure
 							</Button>
 						</div>
@@ -135,30 +162,30 @@ const salStruc = () => {
 										</h6>
 										<Button
 											variant={'outline'}
-											className='bg-[#3D56A8] text-white'
+											className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'
 											onClick={() => ShowAdd}>
 											+ Add Salary Component
 										</Button>
 									</div>
 									<Table className='p-3 m-3 w-fit gap-5'>
 										<TableHeader>
-											<TableRow className='text-[#3D56A8]'>
-												<TableHead className='text-[#3D56A8] px-6'>
+											<TableRow className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 													COMPONENT NAME
 												</TableHead>
-												<TableHead className='text-[#3D56A8] px-6'>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 													CALCULATION TYPE
 												</TableHead>
-												<TableHead className='text-[#3D56A8] px-6'>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 													VALUE
 												</TableHead>
-												<TableHead className='text-[#3D56A8] px-6'>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 													TAXABLE
 												</TableHead>
-												<TableHead className='text-[#3D56A8] px-6'>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 													RECURRING
 												</TableHead>
-												<TableHead className='text-[#3D56A8] px-6'>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 													ACTIONS
 												</TableHead>
 											</TableRow>

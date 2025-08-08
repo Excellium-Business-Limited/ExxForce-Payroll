@@ -153,22 +153,22 @@ const wrkSched = () => {
 							<Dialogs
 								title={' Add Holiday'}
 								sim='+'
-								className='bg-[#3d56a8] text-white'>
+								className='bg-blue-600 text-white px-4 py-2 rounded-lg text-sm'>
 								<HolidayForm />
 							</Dialogs>
 						</article>
 						<Table>
 							<TableHeader>
 								<TableRow>
-									<TableHead className='text-[#3d56a8] text-lg'>
+									<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 										Holiday Name
 									</TableHead>
-									<TableHead className='text-[#3d56a8] text-lg'>Date</TableHead>
-									<TableHead className='text-[#3d56a8] text-lg'>Type</TableHead>
-									<TableHead className='text-[#3d56a8] text-lg'>
+									<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Date</TableHead>
+									<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Type</TableHead>
+									<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 										Recuring
 									</TableHead>
-									<TableHead className='text-[#3d56a8] text-lg'>
+									<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider '>
 										Actions
 									</TableHead>
 								</TableRow>

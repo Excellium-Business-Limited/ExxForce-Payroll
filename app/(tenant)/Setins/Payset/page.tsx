@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import React from 'react';
-import SalStruc from './_components/salStruc';
+import SalStruc from './pages/salStruc';
 import {
 	Table,
 	TableBody,
@@ -10,11 +10,11 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
-import Stanfreq from './_components/stanfreq';
+import Stanfreq from './pages/stanfreq';
 import { Button } from '@/components/ui/button';
-import Custfreq from './_components/custfreq';
-import Paygrade from './_components/paygrade';
-import WrkSched from './_components/wrkSched';
+import Custfreq from './pages/custfreq';
+import Paygrade from './pages/paygrade';
+import WrkSched from './pages/wrkSched';
 
 const page = () => {
 	return (

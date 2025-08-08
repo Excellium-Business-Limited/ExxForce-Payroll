@@ -77,7 +77,7 @@ const Dashboard = () => {
 					</div>
 				</div>
 				<div className='grid grid-cols-4 gap-6 m-8 '>
-					<Card className='m-1 p-3 w-[250px] h-fit'>
+					<Card className='m-1 p-3 w-[245px] h-fit'>
 						<article className='flex gap-2 content-center items-center'>
 							<span className='bg-[#dee7f6] rounded-4xl p-2 '>
 								<img
