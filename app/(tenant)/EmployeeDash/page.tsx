@@ -98,7 +98,7 @@ const EmployeePage: React.FC = () => {
 
   const handleItemsPerPageChange = (newItemsPerPage: number): void => {
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
+    setCurrentPage(1);
   };
 
   const handleNextPage = (): void => {
@@ -119,19 +119,16 @@ const EmployeePage: React.FC = () => {
     const pages: (number | string)[] = [];
     
     if (totalPages <= 7) {
-      // Show all pages if 7 or fewer
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Show first page
       pages.push(1);
       
       if (currentPage > 3) {
         pages.push('...');
       }
       
-      // Show pages around current page
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
       
@@ -143,7 +140,6 @@ const EmployeePage: React.FC = () => {
         pages.push('...');
       }
       
-      // Show last page
       if (totalPages > 1) {
         pages.push(totalPages);
       }
@@ -202,8 +198,7 @@ const EmployeePage: React.FC = () => {
       console.log('Ending employment for:', employee.employee_id);
       
       if (window.confirm(`Are you sure you want to end employment for ${employee.first_name} ${employee.last_name}?`)) {
-        // API call here
-        await fetchEmployees(); // Refresh the list
+        await fetchEmployees();
         setShowEmployeeDetails(false);
         setSelectedEmployee(null);
       }
@@ -220,11 +215,7 @@ const EmployeePage: React.FC = () => {
         console.log('Creating new employee:', employeeFormData);
       }
       
-      // Refresh the employee list after successful submission
       await fetchEmployees();
-      
-      // Note: Don't close the form here - let the EmployeeForm handle the flow
-      // The form will either close itself or show the salary form
     } catch (error) {
       console.error('Error submitting employee:', error);
     }
@@ -233,18 +224,14 @@ const EmployeePage: React.FC = () => {
   const handleImportSubmit = async (importData: any): Promise<void> => {
     try {
       console.log('Importing employees:', importData);
-      
-      // Refresh the employee list after successful import
       await fetchEmployees();
-      
-      // Close the modal
       handleCloseImportModal();
     } catch (error) {
       console.error('Error importing employees:', error);
     }
   };
 
-  // Utility functions with proper types
+  // Utility functions
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -253,34 +240,27 @@ const EmployeePage: React.FC = () => {
     }).format(amount);
   };
 
-  // Enhanced date formatting function with better null handling
   const formatDate = (dateString: string | null | undefined): string => {
-    // Handle null, undefined, or empty strings
     if (!dateString || 
         dateString === 'null' || 
         dateString === 'undefined' || 
         dateString.trim() === '') {
-      return '--'; // Use '--' instead of 'N/A' for better UI
+      return '--';
     }
     
     try {
       let date: Date;
       const dateStr = String(dateString).trim();
       
-      // Handle ISO format (most common from APIs)
       if (dateStr.includes('T') || dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         date = new Date(dateStr);
-      }
-      // Handle DD/MM/YYYY or MM/DD/YYYY format
-      else if (dateStr.includes('/')) {
+      } else if (dateStr.includes('/')) {
         const parts = dateStr.split('/');
         if (parts.length === 3) {
-          // Assume DD/MM/YYYY format (common in many regions)
           const day = parseInt(parts[0]);
           const month = parseInt(parts[1]);
           const year = parseInt(parts[2]);
           
-          // Validate the parts make sense
           if (day > 31 || month > 12 || year < 1900) {
             return '--';
           }
@@ -289,9 +269,7 @@ const EmployeePage: React.FC = () => {
         } else {
           return '--';
         }
-      }
-      // Handle DD-MM-YYYY format
-      else if (dateStr.includes('-') && !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      } else if (dateStr.includes('-') && !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const parts = dateStr.split('-');
         if (parts.length === 3 && parts[0].length <= 2) {
           const day = parseInt(parts[0]);
@@ -306,17 +284,14 @@ const EmployeePage: React.FC = () => {
         } else {
           date = new Date(dateStr);
         }
-      }
-      else {
+      } else {
         date = new Date(dateStr);
       }
 
-      // Validate the resulting date
       if (isNaN(date.getTime())) {
         return '--';
       }
 
-      // Format to MM-DD-YYYY
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const year = date.getFullYear();
@@ -329,30 +304,7 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  // Alternative date formatting function with different display format
-  const formatDateLong = (dateString: string): string => {
-    if (!dateString) return '';
-    
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
-
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric'
-      });
-    } catch (error) {
-      console.error('Error formatting date (long):', dateString, error);
-      return dateString;
-    }
-  };
-
   const getEmployeeStatus = (employee: Employee): string => {
-    // Add logic here to determine status based on employee data
-    // For now, assuming active employees
     return 'Active';
   };
 
@@ -371,15 +323,12 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  // Extracted fetch function for reusability
   const fetchEmployees = async (): Promise<void> => {
     try {
       const response = await axios.get<Employee[]>(`http://excellium.localhost:8000/tenant/employee/list`);
       
-      // Log raw data to understand the date format from backend
       console.log('Raw employee data from API:', response.data);
       
-      // Log individual employee date fields for debugging
       if (response.data && response.data.length > 0) {
         const firstEmployee = response.data[0];
         console.log('First employee date fields:', {
@@ -392,7 +341,6 @@ const EmployeePage: React.FC = () => {
       setEmployees(response.data || []);
       setError(null);
       
-      // Reset to first page if current page is beyond the new total pages
       const newTotalPages = Math.ceil((response.data?.length || 0) / itemsPerPage);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(1);
@@ -404,7 +352,6 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  // Initial data fetching
   useEffect(() => {
     const loadEmployees = async (): Promise<void> => {
       setLoading(true);
@@ -420,10 +367,8 @@ const EmployeePage: React.FC = () => {
   // Empty state component
   const EmptyEmployeeState: React.FC = () => (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-      {/* Employee illustration */}
       <div className="mb-8">
         <div className="relative">
-          {/* Browser window mockup */}
           <div className="bg-white rounded-lg shadow-lg p-4 w-48 h-32 border">
             <div className="flex gap-1 mb-3">
               <div className="w-2 h-2 bg-red-400 rounded-full"></div>
@@ -437,7 +382,6 @@ const EmployeePage: React.FC = () => {
             </div>
           </div>
           
-          {/* Employee avatar with plus icon */}
           <div className="absolute -bottom-4 -right-4">
             <div className="relative">
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
@@ -457,13 +401,11 @@ const EmployeePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Text content */}
       <h2 className="text-xl font-semibold text-gray-800 mb-3">Add employees</h2>
       <p className="text-gray-600 max-w-md mb-8 leading-relaxed">
         Add employees and contractors you want to pay. Once added, you can assign them to pay grade and process their payments in batches.
       </p>
 
-      {/* Action buttons */}
       <div className="flex gap-3">
         <button 
           onClick={handleAddEmployee}
@@ -487,7 +429,6 @@ const EmployeePage: React.FC = () => {
   // Employee table component
   const EmployeeTable: React.FC = () => (
     <div className="bg-white rounded-lg shadow-sm">
-      {/* Stats card */}
       <div className="p-6 border-b">
         <div className="bg-blue-50 rounded-lg p-4 flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -505,7 +446,6 @@ const EmployeePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters and actions */}
       <div className="p-6 border-b">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-lg font-medium text-gray-900">Employees List</h2>
@@ -528,7 +468,6 @@ const EmployeePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filter dropdowns */}
         <div className="flex flex-wrap gap-4 mt-4">
           <select 
             className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm"
@@ -563,7 +502,6 @@ const EmployeePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Items per page selector */}
       <div className="px-6 py-3 border-b bg-gray-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Show</span>
@@ -585,7 +523,6 @@ const EmployeePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -606,7 +543,6 @@ const EmployeePage: React.FC = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {currentEmployees.map((employee, index) => {
-              // Calculate global index for S/N column
               const globalIndex = (currentPage - 1) * itemsPerPage + index;
               
               return (
@@ -655,7 +591,7 @@ const EmployeePage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevent row click when clicking edit
+                        e.stopPropagation();
                         handleEditClick(employee);
                       }}
                       className="text-gray-400 hover:text-gray-600"
@@ -675,14 +611,12 @@ const EmployeePage: React.FC = () => {
         </table>
       </div>
 
-      {/* Enhanced Pagination */}
       <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-sm text-gray-600">
           Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, employees.length)} of {employees.length} entries
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Previous button */}
           <button 
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
@@ -698,7 +632,6 @@ const EmployeePage: React.FC = () => {
             </svg>
           </button>
 
-          {/* Page numbers */}
           <div className="flex items-center gap-1">
             {getPageNumbers().map((page, index) => (
               <React.Fragment key={index}>
@@ -720,7 +653,6 @@ const EmployeePage: React.FC = () => {
             ))}
           </div>
 
-          {/* Next button */}
           <button 
             onClick={handleNextPage}
             disabled={currentPage === paginationInfo.totalPages}
@@ -737,7 +669,6 @@ const EmployeePage: React.FC = () => {
           </button>
         </div>
 
-        {/* Go to page input */}
         <div className="flex items-center gap-2 text-sm">
           <span className="text-gray-600">Go to page:</span>
           <input
@@ -760,8 +691,8 @@ const EmployeePage: React.FC = () => {
   );
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-auto">
-      {/* Show Employee Details Full Screen or Main Content */}
+    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+      {/* Show Employee Details Full Screen */}
       {showEmployeeDetails && selectedEmployee ? (
         <div className="flex-1 bg-white overflow-auto">
           <EmployeeDetails
@@ -772,54 +703,60 @@ const EmployeePage: React.FC = () => {
           />
         </div>
       ) : (
-        <main className="flex-1 bg-[#EFF5FF] p-6 md:p-8 overflow-auto">
-          {loading ? (
-            <div className="flex items-center justify-center min-h-[400px]">
-              <div className="text-gray-600">Loading...</div>
+        /* Main Content + Overlay Layout */
+        <div className="flex-1 relative overflow-hidden">
+          {/* Main Content Area - Always Full Width */}
+          <div className="w-full h-full overflow-auto bg-[#EFF5FF] p-6 md:p-8">
+            {loading ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-gray-600">Loading...</div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-red-600">{error}</div>
+              </div>
+            ) : hasEmployees ? (
+              <EmployeeTable />
+            ) : (
+              <EmptyEmployeeState />
+            )}
+          </div>
+
+          {/* Right Side Form Panel - Overlay */}
+          {showEmployeeForm && (
+            <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+              {/* Form Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {isEdit ? 'Edit Employee' : 'Add New Employee'}
+                </h2>
+                <button
+                  onClick={handleCloseEmployeeForm}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close form"
+                >
+                  <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <div className="flex-1 overflow-auto">
+                <EmployeeForm
+                  isOpen={showEmployeeForm}
+                  isEdit={isEdit}
+                  employeeData={employeeData}
+                  onClose={handleCloseEmployeeForm}
+                  onSubmit={handleEmployeeSubmit}
+                />
+              </div>
             </div>
-          ) : error ? (
-            <div className="flex items-center justify-center min-h-[400px]">
-              <div className="text-red-600">{error}</div>
-            </div>
-          ) : hasEmployees ? (
-            <EmployeeTable />
-          ) : (
-            <EmptyEmployeeState />
           )}
-        </main>
+        </div>
       )}
 
-      {/* FIXED: Employee Form Dialog - Recommended Solution (Option 1: Remove height constraints) */}
-      <Dialog open={showEmployeeForm} onOpenChange={handleCloseEmployeeForm}>
-        <DialogContent className="sm:max-w-[900px] w-[95vw] p-0 gap-0">
-          <EmployeeForm
-            isOpen={showEmployeeForm}
-            isEdit={isEdit}
-            employeeData={employeeData}
-            onClose={handleCloseEmployeeForm}
-            onSubmit={handleEmployeeSubmit}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Alternative Solution (Option 2: Proper Flexbox Layout) - Uncomment if Option 1 doesn't work */}
-      {/*
-      <Dialog open={showEmployeeForm} onOpenChange={handleCloseEmployeeForm}>
-        <DialogContent className="sm:max-w-[900px] max-h-[95vh] p-0 flex flex-col gap-0">
-          <div className="flex-1 overflow-y-auto">
-            <EmployeeForm
-              isOpen={showEmployeeForm}
-              isEdit={isEdit}
-              employeeData={employeeData}
-              onClose={handleCloseEmployeeForm}
-              onSubmit={handleEmployeeSubmit}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-      */}
-
-      {/* Import Modal Dialog */}
+      {/* Import Modal Dialog - Keep as modal since it's simpler */}
       <Dialog open={showImportModal} onOpenChange={handleCloseImportModal}>
         <DialogContent className="sm:max-w-[500px]">
           <ImportModal
