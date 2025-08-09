@@ -1,3 +1,4 @@
+'use client';
 import { Card } from '@/components/ui/card';
 import Dialogs from '@/app/(tenant)/components/dialog';
 import DeleteMod from '@/app/(tenant)/components/deleteMod';
