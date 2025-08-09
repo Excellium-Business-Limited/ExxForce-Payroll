@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
+import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
 
 interface Employee {
   id?: number;
@@ -33,7 +34,7 @@ interface Employee {
 interface EmployeeDetailsProps {
   employee: Employee;
   onClose: () => void;
-  onEdit: (employee: Employee) => void; // For basic employee details
+  onEdit: (employee: Employee, editType?: 'general' | 'salary') => void;
   onSalaryEdit: (employee: Employee) => void; // For salary details
   onEndEmployment?: (employee: Employee) => void;
 }
@@ -46,6 +47,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   onEndEmployment
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'payroll' | 'document' | 'loan' | 'leave' | 'payment-history'>('general');
+  
+  // New state for inline editing
+  const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
+  const [editType, setEditType] = useState<'general' | 'salary'>('general');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -105,14 +110,34 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   };
 
   // Handler for Basic Details and Employment Details edit
-  const handleEmployeeEdit = (e : any) => {
-    e.preventDefault()
-    onEdit(employee);
+  const handleEmployeeEdit = (e: any) => {
+    e.preventDefault();
+    setEditType('general');
+    setShowEmployeeForm(true);
   };
 
   // Handler for Salary & Payment Details edit
   const handleSalaryEdit = () => {
-    onSalaryEdit(employee);
+    setEditType('salary');
+    setShowEmployeeForm(true);
+  };
+
+  // Handler for closing the inline form
+  const handleCloseEmployeeForm = () => {
+    setShowEmployeeForm(false);
+  };
+
+  // Handler for form submission
+  const handleEmployeeSubmit = async (employeeFormData: any) => {
+    try {
+      console.log('Updating employee:', employeeFormData);
+      // Call the parent's onEdit handler to update the employee
+      onEdit(employee, editType);
+      // Close the form after successful submission
+      setShowEmployeeForm(false);
+    } catch (error) {
+      console.error('Error submitting employee:', error);
+    }
   };
 
   const tabs = [
@@ -435,162 +460,198 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-gray-50">
-        <div className="max-w-7xl mx-auto p-6">
-          {activeTab === 'general' && (
-            <div className="space-y-6">
-              {/* Basic Details */}
-              <div className="bg-white rounded-lg shadow-sm">
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Basic Details</h3>
-                  <button
-                    onClick={handleEmployeeEdit}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </button>
+      {/* Content with Form Overlay */}
+      <div className="flex-1 overflow-hidden relative">
+        {/* Main Content */}
+        <div className={`${showEmployeeForm ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
+          <div className="max-w-7xl mx-auto p-6">
+            {activeTab === 'general' && (
+              <div className="space-y-6">
+                {/* Basic Details */}
+                <div className="bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">Basic Details</h3>
+                    <button
+                      onClick={handleEmployeeEdit}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Edit2 className="w-4 h-4 mr-1" />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
+                      <DetailField label="First Name" value={employee.first_name} />
+                      <DetailField label="Last Name" value={employee.last_name} />
+                      <DetailField label="Gender" value={employee.gender === 'MALE' ? 'M' : 'F'} />
+                      <DetailField label="Phone number" value={employee.phone_number} />
+                      <DetailField label="Email Address" value={employee.email} />
+                      <DetailField label="Date of Birth" value={formatDate(employee.date_of_birth)} />
+                      <DetailField label="Address" value={employee.address} fullWidth />
+                    </dl>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-                    <DetailField label="First Name" value={employee.first_name} />
-                    <DetailField label="Last Name" value={employee.last_name} />
-                    <DetailField label="Gender" value={employee.gender === 'MALE' ? 'M' : 'F'} />
-                    <DetailField label="Phone number" value={employee.phone_number} />
-                    <DetailField label="Email Address" value={employee.email} />
-                    <DetailField label="Date of Birth" value={formatDate(employee.date_of_birth)} />
-                    <DetailField label="Address" value={employee.address} fullWidth />
-                  </dl>
-                </div>
-              </div>
 
-              {/* Employment Details */}
-              <div className="bg-white rounded-lg shadow-sm">
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Employment Details</h3>
-                  <button
-                    onClick={handleEmployeeEdit}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </button>
+                {/* Employment Details */}
+                <div className="bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">Employment Details</h3>
+                    <button
+                      onClick={handleEmployeeEdit}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Edit2 className="w-4 h-4 mr-1" />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
+                      <DetailField label="Employee ID" value={employee.employee_id} />
+                      <DetailField label="Job Title" value={employee.job_title} />
+                      <DetailField label="Department" value={employee.department_name} />
+                      <DetailField label="Employee Type" value={getEmployeeType(employee.employment_type)} />
+                      <DetailField label="Start Date" value={formatDate(employee.start_date)} />
+                      <DetailField label="Tax Start Date" value={formatDate(employee.tax_start_date)} />
+                    </dl>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-                    <DetailField label="Employee ID" value={employee.employee_id} />
-                    <DetailField label="Job Title" value={employee.job_title} />
-                    <DetailField label="Department" value={employee.department_name} />
-                    <DetailField label="Employee Type" value={getEmployeeType(employee.employment_type)} />
-                    <DetailField label="Start Date" value={formatDate(employee.start_date)} />
-                    <DetailField label="Tax Start Date" value={formatDate(employee.tax_start_date)} />
-                  </dl>
-                </div>
-              </div>
 
-              {/* Salary & Payment Details */}
-              <div className="bg-white rounded-lg shadow-sm">
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Salary & Payment Details</h3>
-                  <button
-                    onClick={handleSalaryEdit}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </button>
+                {/* Salary & Payment Details */}
+                <div className="bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">Salary & Payment Details</h3>
+                    <button
+                      onClick={handleSalaryEdit}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Edit2 className="w-4 h-4 mr-1" />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
+                      <DetailField label="Account Number" value={employee.account_number} />
+                      <DetailField label="Bank Name" value={employee.bank_name} />
+                      <DetailField label="Account Name" value={employee.account_name} />
+                      <DetailField label="Salary Amount (NGN)" value={formatCurrency(employee.custom_salary)} />
+                      <DetailField label="Pay Frequency" value={getPayFrequency(employee.pay_frequency)} />
+                    </dl>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-                    <DetailField label="Account Number" value={employee.account_number} />
-                    <DetailField label="Bank Name" value={employee.bank_name} />
-                    <DetailField label="Account Name" value={employee.account_name} />
-                    <DetailField label="Salary Amount (NGN)" value={formatCurrency(employee.custom_salary)} />
-                    <DetailField label="Pay Frequency" value={getPayFrequency(employee.pay_frequency)} />
-                  </dl>
-                </div>
-              </div>
 
-              {/* Statutory Deduction */}
-              <div className="bg-white rounded-lg shadow-sm">
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Statutory Deduction</h3>
-                  <button
-                    onClick={handleSalaryEdit}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </button>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-8">
-                    {/* Deductions Column */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-4">Deductions</h4>
-                      <dl className="space-y-3">
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">PAYE (Tax)</dt>
-                          <dd className="text-sm text-gray-900 font-medium">
-                            {employee.is_paye_applicable ? 'Yes' : 'No'}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">Pension</dt>
-                          <dd className="text-sm text-gray-900 font-medium">
-                            {employee.is_pension_applicable ? 'Yes' : 'No'}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">NHSIF</dt>
-                          <dd className="text-sm text-gray-900 font-medium">
-                            {employee.is_nhf_applicable ? 'Yes' : 'No'}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">NTF</dt>
-                          <dd className="text-sm text-gray-900 font-medium">
-                            {employee.is_nsitf_applicable ? 'Yes' : 'No'}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
+                {/* Statutory Deduction */}
+                <div className="bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">Statutory Deduction</h3>
+                    <button
+                      onClick={handleSalaryEdit}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Edit2 className="w-4 h-4 mr-1" />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-2 gap-8">
+                      {/* Deductions Column */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-4">Deductions</h4>
+                        <dl className="space-y-3">
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">PAYE (Tax)</dt>
+                            <dd className="text-sm text-gray-900 font-medium">
+                              {employee.is_paye_applicable ? 'Yes' : 'No'}
+                            </dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">Pension</dt>
+                            <dd className="text-sm text-gray-900 font-medium">
+                              {employee.is_pension_applicable ? 'Yes' : 'No'}
+                            </dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">NHSIF</dt>
+                            <dd className="text-sm text-gray-900 font-medium">
+                              {employee.is_nhf_applicable ? 'Yes' : 'No'}
+                            </dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">NTF</dt>
+                            <dd className="text-sm text-gray-900 font-medium">
+                              {employee.is_nsitf_applicable ? 'Yes' : 'No'}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
 
-                    {/* Benefits Column */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-4">Benefits</h4>
-                      <dl className="space-y-3">
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">Housing Allowance</dt>
-                          <dd className="text-sm text-gray-900 font-medium">Yes</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">NHIS</dt>
-                          <dd className="text-sm text-gray-900 font-medium">No</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">NHIS</dt>
-                          <dd className="text-sm text-gray-900 font-medium">Yes</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-sm text-gray-600">NHIS</dt>
-                          <dd className="text-sm text-gray-900 font-medium">Yes</dd>
-                        </div>
-                      </dl>
+                      {/* Benefits Column */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-4">Benefits</h4>
+                        <dl className="space-y-3">
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">Housing Allowance</dt>
+                            <dd className="text-sm text-gray-900 font-medium">Yes</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">NHIS</dt>
+                            <dd className="text-sm text-gray-900 font-medium">No</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">NHIS</dt>
+                            <dd className="text-sm text-gray-900 font-medium">Yes</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="text-sm text-gray-600">NHIS</dt>
+                            <dd className="text-sm text-gray-900 font-medium">Yes</dd>
+                          </div>
+                        </dl>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'payroll' && <PayrollEmptyState />}
-          {activeTab === 'document' && <DocumentEmptyState />}
-          {activeTab === 'loan' && <LoanEmptyState />}
-          {activeTab === 'leave' && <LeaveEmptyState />}
-          {activeTab === 'payment-history' && <PaymentHistoryEmptyState />}
+            {activeTab === 'payroll' && <PayrollEmptyState />}
+            {activeTab === 'document' && <DocumentEmptyState />}
+            {activeTab === 'loan' && <LoanEmptyState />}
+            {activeTab === 'leave' && <LeaveEmptyState />}
+            {activeTab === 'payment-history' && <PaymentHistoryEmptyState />}
+          </div>
         </div>
+
+        {/* Right Side Form Panel - Overlay */}
+        {showEmployeeForm && (
+          <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+            {/* Form Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Edit Employee - {editType === 'general' ? 'General Information' : 'Salary & Payment'}
+              </h2>
+              <button
+                onClick={handleCloseEmployeeForm}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close form"
+              >
+                <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-auto">
+              <EmployeeForm
+                isOpen={showEmployeeForm}
+                isEdit={true}
+                employeeData={employee}
+                editType={editType}
+                onClose={handleCloseEmployeeForm}
+                onSubmit={handleEmployeeSubmit}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -50,6 +50,7 @@ interface PaginationInfo {
 
 const EmployeePage: React.FC = () => {
   // State with proper TypeScript types
+  const [editType, setEditType] = useState<'general' | 'salary'>('general');
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [employeeData, setEmployeeData] = useState<Employee | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -185,13 +186,16 @@ const EmployeePage: React.FC = () => {
     setSelectedEmployee(null);
   };
 
-  const handleEditFromDetails = (employee: Employee): void => {
-    setSelectedEmployee(employee);
-    setIsEdit(true);
-    setEmployeeData(employee);
-    setShowEmployeeDetails(false);
-    setShowEmployeeForm(true);
-  };
+ const handleEditFromDetails = (employee: Employee, editType?: 'general' | 'salary'): void => {
+  setSelectedEmployee(employee);
+  setIsEdit(true);
+  setEmployeeData(employee);
+  setShowEmployeeDetails(false);
+  setShowEmployeeForm(true);
+  
+  // You can store the editType in state if you need to pass it to EmployeeForm
+  // For example: setEditType(editType || 'general');
+};
 
   const handleEndEmployment = async (employee: Employee): Promise<void> => {
     try {
@@ -747,6 +751,7 @@ const EmployeePage: React.FC = () => {
                   isOpen={showEmployeeForm}
                   isEdit={isEdit}
                   employeeData={employeeData}
+                  editType={editType}
                   onClose={handleCloseEmployeeForm}
                   onSubmit={handleEmployeeSubmit}
                 />
