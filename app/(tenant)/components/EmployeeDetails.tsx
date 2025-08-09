@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
 import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
+import SalarySetupForm from '../components/SalarySetupForm'; // Import the SalarySetupForm
 
 interface Employee {
   id?: number;
@@ -50,6 +51,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   
   // New state for inline editing
   const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
+  const [showSalaryForm, setShowSalaryForm] = useState<boolean>(false);
   const [editType, setEditType] = useState<'general' | 'salary'>('general');
 
   const formatCurrency = (amount: number) => {
@@ -114,17 +116,22 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     e.preventDefault();
     setEditType('general');
     setShowEmployeeForm(true);
+    setShowSalaryForm(false); // Close salary form if open
   };
 
   // Handler for Salary & Payment Details edit
   const handleSalaryEdit = () => {
-    setEditType('salary');
-    setShowEmployeeForm(true);
+    setShowSalaryForm(true);
+    setShowEmployeeForm(false); // Close employee form if open
   };
 
-  // Handler for closing the inline form
+  // Handler for closing the inline forms
   const handleCloseEmployeeForm = () => {
     setShowEmployeeForm(false);
+  };
+
+  const handleCloseSalaryForm = () => {
+    setShowSalaryForm(false);
   };
 
   // Handler for form submission
@@ -137,6 +144,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       setShowEmployeeForm(false);
     } catch (error) {
       console.error('Error submitting employee:', error);
+    }
+  };
+
+  // Handler for salary form submission
+  const handleSalarySubmit = async (salaryFormData: any) => {
+    try {
+      console.log('Updating salary:', salaryFormData);
+      // Call the parent's onEdit handler to update the salary
+      onEdit(employee, 'salary');
+      // Close the form after successful submission
+      setShowSalaryForm(false);
+    } catch (error) {
+      console.error('Error submitting salary:', error);
     }
   };
 
@@ -463,7 +483,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       {/* Content with Form Overlay */}
       <div className="flex-1 overflow-hidden relative">
         {/* Main Content */}
-        <div className={`${showEmployeeForm ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
+        <div className={`${showEmployeeForm || showSalaryForm ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
           <div className="max-w-7xl mx-auto p-6">
             {activeTab === 'general' && (
               <div className="space-y-6">
@@ -620,13 +640,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           </div>
         </div>
 
-        {/* Right Side Form Panel - Overlay */}
+        {/* Right Side Form Panel - Employee Form Overlay */}
         {showEmployeeForm && (
           <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
             {/* Form Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
               <h2 className="text-lg font-semibold text-gray-900">
-                Edit Employee - {editType === 'general' ? 'General Information' : 'Salary & Payment'}
+                Edit Employee - General Information
               </h2>
               <button
                 onClick={handleCloseEmployeeForm}
@@ -648,6 +668,38 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 editType={editType}
                 onClose={handleCloseEmployeeForm}
                 onSubmit={handleEmployeeSubmit}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Right Side Form Panel - Salary Form Overlay */}
+        {showSalaryForm && (
+          <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+            {/* Form Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Edit Salary & Payment Details
+              </h2>
+              <button
+                onClick={handleCloseSalaryForm}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close form"
+              >
+                <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-auto">
+              <SalarySetupForm
+                isOpen={showSalaryForm}
+                isEdit={true}
+                employeeData={employee}
+                onClose={handleCloseSalaryForm}
+                onSubmit={handleSalarySubmit}
               />
             </div>
           </div>
