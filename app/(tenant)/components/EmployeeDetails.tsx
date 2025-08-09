@@ -1,3 +1,6 @@
+
+'use client'
+
 import React, { useState } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
 
