@@ -11,14 +11,25 @@ import {
 } from '@/components/ui/dialog';
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/page';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 const paygrade = () => {
 	const [payGrades, setPayGrades] = useState<any[]>([]);
 	const [error, setError] = useState('');
 	const [isLoading, setIsLoading] = useState(true);
-	const tenant = useGlobal();
+
+	const { tenant } = useGlobal();
 
 	useEffect(() => {
+		console.log(`Fetching pay grades for tenant: ${tenant}`);
 		const fetchPayGrades = async () => {
 			try {
 				const res = await axios.get(
@@ -30,6 +41,7 @@ const paygrade = () => {
 					}
 				);
 				setPayGrades(res.data);
+				console.log(res.data), payGrades;
 			} catch (err) {
 				console.error(err);
 				setError('Failed to load pay grades');
@@ -40,119 +52,110 @@ const paygrade = () => {
 
 		fetchPayGrades();
 	}, [tenant]);
-	const data = [
-		{
-			Level: 'Entry Level',
-			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
-			Description: 'Entry level position with basic responsibilities',
-			Employees: '10',
-		},
-		{
-			Level: 'Entry Level',
-			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
-			Description: 'Entry level position with basic responsibilities',
-			Employees: '12',
-		},
-		{
-			Level: 'Entry Level',
-			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
-			Description: 'Entry level position with basic responsibilities',
-			Employees: '10',
-		},
-		{
-			Level: 'Entry Level',
-			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
-			Description: 'Entry level position with basic responsibilities',
-			Employees: '5',
-		},
-		{
-			Level: 'Entry Level',
-			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
-			Description: 'Entry level position with basic responsibilities',
-			Employees: '20',
-		},
-		{
-			Level: 'Entry Level',
-			Salary: '₦200,000',
-			Components: ['Basic Salary', 'Allowance', 'Bonuses'],
-			Description: 'Entry level position with basic responsibilities',
-			Employees: '40',
-		},
-	];
+	if (isLoading) {
+		return <div>Loading...</div>;
+	}
 	return (
 		<div>
-			<section className='grid grid-cols-3 grid-rows-3'>
-				{data.map((item, index) => {
-					item = {
-						Level: item.Level,
-						Salary: item.Salary,
-						Components: item.Components,
-						Description: item.Description,
-						Employees: item.Employees,
-					};
-					return (
-						<Card
-							key={index}
-							className='m-2 p-4 '>
-							<div className='flex justify-between'>
-								<h3 className='text-lg font-semibold'>{item.Level}</h3>
-								<span className='grid-cols-2 grid-rows-1 grid'>
-									<img
-										src='/icons/mage_edit.png'
-										alt='#'
-									/>
-									<Dialog>
-										<DialogTrigger className=''>
-											<img
-												src='/icons/delete-icon.png'
-												alt=''
-											/>
-										</DialogTrigger>
-										<DialogContent className='bg-white'>
-											<DialogTitle className='hidden '></DialogTitle>
-											<DeleteMod emp={item.Employees} />
-										</DialogContent>
-									</Dialog>
-								</span>
-							</div>
-							<section className='grid-rows-2'>
-								<h5 className='text-sm text-gray-600'>Salary</h5>
-								<p className='text-muted-foreground'>{item.Salary}</p>
-							</section>
-							<span className='text-sm flex flex-col'>
-								<h5 className='text-sm text-gray-600'>Components: </h5>
-								<span className='flex flex-row mt-2'>
-									{item.Components.map((comp, index) => {
-										return (
-											<p
-												key={index}
-												className='bg-[#dee7f6] text-[#3D56A8] rounded-lg mx-2 px-2 text-xs'>
-												{comp}
-											</p>
-										);
-									})}
-								</span>
-							</span>
-							<section className='grid-rows-2'>
-								<h5 className='text-sm text-gray-600'>Description:</h5>
-								<p>{item.Description}</p>
-							</section>
-							<h5 className='text-sm text-gray-600 flex'>
-								<img
-									src='/icons/employee-line.png'
-									alt=''
-								/>
-								{`${item.Employees} employees`}
-							</h5>
-						</Card>
-					);
-				})}
-			</section>
+			<Card className='m-3 p-4'>
+				<div className='flex justify-between items-center mb-4'>
+					<h1 className='text-2xl font-medium mb-2'>Pay Grades List</h1>
+					<Dialog>
+						<Button
+							className='font-extralight bg-blue-600 hover:bg-blue-700 text-white'
+							asChild>
+							<DialogTrigger className='font-extralight bg-blue-600 hover:bg-blue-700 text-white'>
+								Create Pay Grade
+							</DialogTrigger>
+						</Button>
+						<DialogContent className='bg-white'>
+							<DialogTitle className='hidden '></DialogTitle>
+							<form>
+								<div className='grid gap-4'>
+									<label className='block'>
+										<span className='text-gray-700'>Pay Grade Name</span>
+										<input
+											type='text'
+											className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+											required
+										/>
+									</label>
+									<label className='block'>
+										<span className='text-gray-700'>Description</span>
+										<textarea
+											className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+											rows={3}
+											required></textarea>
+									</label>
+								</div>
+								<div className='mt-4 flex justify-end'>
+									<button
+										type='submit'
+										className='bg-[#3D56A8] text-white px-4 py-2 rounded'>
+										Create
+									</button>
+								</div>
+							</form>
+						</DialogContent>
+					</Dialog>
+				</div>
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								PAYGRADE NAME
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								NO OF EMPLOYEES
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								COMPONENTS
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								ACTIONS
+							</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{payGrades.map((payGrade) => (
+							<TableRow key={payGrade.id}>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									{payGrade.name}
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									{payGrade.employee_count}
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									{payGrade.component_count}
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									<span className='grid-cols-2 grid'>
+										<img
+											src='/icons/mage_edit.png'
+											alt='#'
+										/>
+										<Dialog>
+											<DialogTrigger className=''>
+												<img
+													src='/icons/delete-icon.png'
+													alt=''
+												/>
+											</DialogTrigger>
+											<DialogContent className='bg-white'>
+												<DialogTitle className='hidden '></DialogTitle>
+												<DeleteMod
+													emp={`This will unassign ${payGrade.employee_count} employees from this pay grade `}
+													title='Pay Grade'
+												/>
+											</DialogContent>
+										</Dialog>
+									</span>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</Card>
 		</div>
 	);
 };

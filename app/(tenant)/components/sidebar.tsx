@@ -40,10 +40,10 @@ const sidebar = ({ className }: { className?: string }) => {
 				<div className='mt-8 justify-between content-between gap-5'>
 					<SidebarMenu className=' content-center overflow-visible'>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'/Dashboard'}>
+							<Link href={'/dashboard'}>
 								<div
 									className={`${
-										pathname === '/Dashboard'
+										pathname === '/dashboard'
 											? 'bg-[#3D56A8] rounded p-1 mx-1'
 											: ''
 									} flex gap-1`}>

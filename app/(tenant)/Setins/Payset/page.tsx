@@ -28,7 +28,7 @@ const page = () => {
 			<div className=' bg-white rounded-lg m-5'>
 				<Tabs
 					className='self-center h-[1080px]'
-					defaultValue='salaryst'>
+					defaultValue='payG'>
 					<TabsList className='no-design'>
 						<div className='m-2'>
 							<TabsTrigger

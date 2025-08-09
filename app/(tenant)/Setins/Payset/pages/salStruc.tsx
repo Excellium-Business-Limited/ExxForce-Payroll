@@ -29,6 +29,8 @@ const salStruc = () => {
 	const [isOpen, setIsOpen] = React.useState(false);
 	const [add, setAdd] = React.useState(true);
 	const [value, setValue] = React.useState('');
+	const [components, setComponents] = useState<any[]>([]);
+	const [error, setError] = useState('');
 	const {tenant} = useGlobal()
 
 	useEffect(() => {
@@ -47,6 +49,7 @@ const salStruc = () => {
 
 				const data = await res.json();
 				setComponents(data);
+				console.log(components);
 			} catch (err: any) {
 				console.error(err);
 				setError(err.message || 'Something went wrong');
@@ -57,7 +60,8 @@ const salStruc = () => {
 	}, [tenant]);
 	
 
-	const ShowAdd = () => {
+	const ShowAdd = (e: React.FormEvent) => {
+		e.preventDefault();
 		setAdd(true);
 		if (add) {
 			return (
@@ -116,7 +120,7 @@ const salStruc = () => {
 							<h5 className='text-2xl font-bold mb-4'>
 								Create Salary Structure
 							</h5>
-							<form action='submit'>
+							<form>
 								<div className='flex justify-between m-5'>
 									<span>
 										<Label htmlFor='Structure'>Structure name</Label>
