@@ -20,6 +20,9 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Trash2 } from 'lucide-react';
 
 const paygrade = () => {
 	const [payGrades, setPayGrades] = useState<any[]>([]);
@@ -55,6 +58,10 @@ const paygrade = () => {
 	if (isLoading) {
 		return <div>Loading...</div>;
 	}
+	function deleteComponent(id: any): void {
+		throw new Error('Function not implemented.');
+	}
+
 	return (
 		<div>
 			<Card className='m-3 p-4'>
@@ -68,26 +75,136 @@ const paygrade = () => {
 								Create Pay Grade
 							</DialogTrigger>
 						</Button>
-						<DialogContent className='bg-white'>
+						<DialogContent className='bg-white '>
 							<DialogTitle className='hidden '></DialogTitle>
-							<form>
+							<form className='space-y-4 w-[450px]'>
 								<div className='grid gap-4'>
-									<label className='block'>
-										<span className='text-gray-700'>Pay Grade Name</span>
+									<span className='block'>
+										<Label className='text-gray-700'>Pay Grade name</Label>
 										<input
 											type='text'
-											className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+											className='mt-1 block border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 											required
 										/>
-									</label>
-									<label className='block'>
-										<span className='text-gray-700'>Description</span>
-										<textarea
-											className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
-											rows={3}
-											required></textarea>
-									</label>
+									</span>
+									<span className='block'>
+										<Label className='text-gray-700'>Gross Salary</Label>
+										<input
+											type='text'
+											className='mt-1 block border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+											required
+										/>
+									</span>
 								</div>
+								<div>
+									<h4>PayGrade Components</h4>
+									<Table className='max-w-[120px]'>
+										<TableHeader>
+											<TableRow>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+													Component Name
+												</TableHead>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+													Fixed Value
+												</TableHead>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+													Percentage Value
+												</TableHead>
+												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+													Action
+												</TableHead>
+											</TableRow>
+										</TableHeader>
+										<TableBody>
+											<TableRow>
+												<TableCell>
+													<select
+														name='component'
+														id=''
+														className='border rounded-md p-2'>
+														<option value=''>Select Component</option>
+														<option value='component1'>Car Allowance</option>
+														<option value='component2'>
+															Housing Allowance
+														</option>
+													</select>
+												</TableCell>
+												<TableCell>
+													<Label htmlFor='fixedValue'>Fixed Value</Label>
+													<Input
+														type='number'
+														id='fixedValue'
+														className='w-full my-3'
+													/>
+												</TableCell>
+												<TableCell>
+													<Label htmlFor='percentageValue'>
+														Percentage Value
+													</Label>
+													<Input
+														type='number'
+														id='percentageValue'
+														className='w-full my-3'
+													/>
+												</TableCell>
+												<TableCell>
+													<Button
+														variant='outline'
+														className=''
+														onClick={() => deleteComponent('component-id')}>
+														<Trash2 className='cursor-pointer text-red-600' />
+													</Button>
+												</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell>
+													<select
+														name='component'
+														id=''>
+														<option value=''>Select Component</option>
+														<option value='component1'>Car Allowance</option>
+														<option value='component2'>
+															Housing Allowance
+														</option>
+													</select>
+												</TableCell>
+												<TableCell>
+													<Label htmlFor='fixedValue'>Fixed Value</Label>
+													<Input
+														type='number'
+														id='fixedValue'
+														className='w-full my-3'
+													/>
+												</TableCell>
+												<TableCell>
+													<Label htmlFor='percentageValue'>
+														Percentage Value
+													</Label>
+													<Input
+														type='number'
+														id='percentageValue'
+														className='w-full my-3'
+													/>
+												</TableCell>
+												<TableCell>
+													<Button
+														variant='outline'
+														className=''
+														onClick={() => deleteComponent('component-id')}>
+														<Trash2 className='cursor-pointer text-red-600' />
+													</Button>
+												</TableCell>
+											</TableRow>
+										</TableBody>
+									</Table>
+								</div>
+								<label className='block'>
+									<span className='text-gray-700'>Description</span>
+									<textarea
+										className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+										rows={3}
+										required></textarea>
+								</label>
 								<div className='mt-4 flex justify-end'>
 									<button
 										type='submit'

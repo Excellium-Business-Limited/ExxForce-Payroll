@@ -2,6 +2,13 @@
 import { useGlobal } from '@/app/Context/page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+	DialogClose,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,18 +27,19 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { set } from 'date-fns';
 
 import Image from 'next/image';
-import React, { useEffect, useState }  from 'react';
+import React, { useEffect, useState } from 'react';
 
 const salStruc = () => {
-	const [isOpen, setIsOpen] = React.useState(false);
-	const [add, setAdd] = React.useState(true);
+	const [isEmpty, setIsEmpty] = React.useState(true);
+	const [add, setAdd] = React.useState(false);
 	const [value, setValue] = React.useState('');
 	const [components, setComponents] = useState<any[]>([]);
 	const [error, setError] = useState('');
-	const {tenant} = useGlobal()
+	const { tenant } = useGlobal();
 
 	useEffect(() => {
 		const fetchComponents = async () => {
@@ -49,7 +57,7 @@ const salStruc = () => {
 
 				const data = await res.json();
 				setComponents(data);
-				console.log(components);
+				setIsEmpty(false);
 			} catch (err: any) {
 				console.error(err);
 				setError(err.message || 'Something went wrong');
@@ -58,7 +66,6 @@ const salStruc = () => {
 
 		fetchComponents();
 	}, [tenant]);
-	
 
 	const ShowAdd = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -71,281 +78,198 @@ const salStruc = () => {
 				</div>
 			);
 		}
-		setIsOpen(false);
+		setIsEmpty(false);
 	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+	};
+	if (isEmpty) {
+		return (
+			<div>
+				<div className='flex flex-row items-center justify-between h-full'>
+					<h1 className='text-2xl font-bold mb-4'>Salary Structure</h1>
+					<Button
+						onClick={() => {
+							setIsEmpty(false);
+							setAdd(true);
+						}}
+						variant={'outline'}
+						className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
+						+ Create Salary Structure
+					</Button>
+				</div>
+				<div className='text-center max-w-2xl mx-auto mt-[120px]'>
+					<img
+						src='/Salary-img.jpg'
+						alt='Team Illustration'
+						className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
+					/>
+					<h2 className='text-2xl md:text-3xl  mb-4'>
+						No Salary Structure Yet
+					</h2>
+					<pre className='text-base text-muted-foreground mb-8'>
+						Create and Manage reusable salary structure <br /> templates.
+					</pre>
+					<Button
+						onClick={() => {
+							setIsEmpty(false);
+							setAdd(true);
+						}}
+						variant={'outline'}
+						className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
+						+ Create Salary Structure
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div>
 			<Card className='border-none shadow-none m-3 p-4'>
-				{isOpen ? (
-					<div>
-						<div className='flex flex-row items-center justify-between h-full'>
-							<h1 className='text-2xl font-bold mb-4'>Salary Structure</h1>
-							<Button
-								onClick={() => {
-									setIsOpen(false);
-									setAdd(true);
-								}}
-								variant={'outline'}
-								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-								+ Create Salary Structure
+				<div>
+					<h1>Salary Components</h1>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button className='bg-blue-600 text-white rounded-md px-4 py-2'>
+								+ Add New Component
 							</Button>
-						</div>
-						<div className='text-center max-w-2xl mx-auto mt-[120px]'>
-							<img
-								src='/Salary-img.jpg'
-								alt='Team Illustration'
-								className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
-							/>
-							<h2 className='text-2xl md:text-3xl  mb-4'>
-								No Salary Structure Yet
-							</h2>
-							<pre className='text-base text-muted-foreground mb-8'>
-								Create and Manage reusable salary structure <br /> templates.
-							</pre>
-							<Button
-								onClick={() => {
-									setIsOpen(false);
-									setAdd(true);
-								}}
-								variant={'outline'}
-								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-								+ Create Salary Structure
-							</Button>
-						</div>
-					</div>
-				) : (
-					add && (
-						<div className='flex flex-col items-center justify-center h-full'>
-							<h5 className='text-2xl font-bold mb-4'>
-								Create Salary Structure
-							</h5>
-							<form>
-								<div className='flex justify-between m-5'>
+						</DialogTrigger>
+						<form onSubmit={handleSubmit}>
+							<DialogContent className=' bg-white'>
+								<DialogHeader>
+									<DialogTitle>Add New Salary Component</DialogTitle>
+								</DialogHeader>
+								<section>
 									<span>
-										<Label htmlFor='Structure'>Structure name</Label>
+										<Label htmlFor='componentName'>Component Name</Label>
 										<Input
 											type='text'
-											id='Structure'
-											placeholder='Structure name'
-											className='w-[200px] my-3'
+											id='componentName'
+											placeholder='Enter component name'
+											className='w-full my-3'
 										/>
 									</span>
 									<span>
-										<Label htmlFor='Currency'>Currency</Label>
+										<Label htmlFor='payslipName'>Name in Payslip</Label>
 										<Input
-											id='currency'
 											type='text'
-											list='currencies'
-											placeholder='Nigerian Naira(NGN)'
-											className='w-[200px] my-3'
+											id='payslipName'
+											placeholder='Enter name in payslip'
+											className='w-full my-3'
 										/>
-										<datalist id='currencies'>
-											<option value='USD' />
-											<option value='EUR' />
-											<option value='GBP' />
-											<option value='NGN' />
-										</datalist>
+									</span>
+								</section>
+								<section>
+									<span>
+										<Label htmlFor='calculationType'>Calculation Type</Label>
+										<Select>
+											<SelectTrigger className='w-full my-3'>
+												<SelectValue placeholder='Select calculation type' />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value='fixed'>Fixed</SelectItem>
+												<SelectItem value='percentage'>
+													Percentage Based
+												</SelectItem>
+											</SelectContent>
+										</Select>
 									</span>
 									<span>
-										<Label htmlFor='Description'>Description(Optional)</Label>
+										<Label htmlFor='value'>Value</Label>
 										<Input
-											id='Description'
-											type='text'
-											placeholder='Enter Structure Description'
-											className='w-[200px] my-3'
+											type='number'
+											id='value'
+											placeholder='Enter value'
+											className='w-full my-3'
 										/>
 									</span>
-								</div>
-								<Card>
-									<div
-										className='flex items-center mx-5 justify-between
-									'>
-										<h6 className='text-md font-bold mb-4 flex text-center items-center mt-3.5'>
-											Salary Component
-										</h6>
+								</section>
+								<section>
+									<span>
+										<Checkbox id='isTaxable' />
+										<Label htmlFor='isTaxable'>Taxable</Label>
+										<p className='text-sm text-gray-500'>
+											Select if this component is taxable
+										</p>
+									</span>
+									<span>
+										<Checkbox id='isPensionable' />
+										<Label htmlFor='isPensionable'>Pensionable</Label>
+										<p className='text-sm text-gray-500'>
+											Select if this component is pensionable
+										</p>
+									</span>
+								</section>
+								<DialogFooter>
+									<div>
+										<DialogClose>
+											<Button
+												type='button'
+												variant='outline'
+												className='m-2 bg-white text-gray-700 rounded-md px-4 py-2'
+												onClick={() => setAdd(false)}>
+												Cancel
+											</Button>
+										</DialogClose>
 										<Button
-											variant={'outline'}
-											className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'
-											onClick={() => ShowAdd}>
-											+ Add Salary Component
+											type='submit'
+											className='bg-blue-600 text-white text-sm rounded-md px-4 py-2'>
+											Save
 										</Button>
 									</div>
-									<Table className='p-3 m-3 w-fit gap-5'>
-										<TableHeader>
-											<TableRow className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-													COMPONENT NAME
-												</TableHead>
-												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-													CALCULATION TYPE
-												</TableHead>
-												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-													VALUE
-												</TableHead>
-												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-													TAXABLE
-												</TableHead>
-												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-													RECURRING
-												</TableHead>
-												<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-													ACTIONS
-												</TableHead>
-											</TableRow>
-										</TableHeader>
-										<TableBody>
-											<TableRow>
-												<TableCell>
-													<div className='text-center items-center justify-center flex'>
-														<Select>
-															<SelectTrigger className='w-[200px] z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-																<SelectValue placeholder='Housing Allowance' />
-															</SelectTrigger>
-															<SelectContent
-																position='popper'
-																className='z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'
-																defaultValue={'allow-1'}>
-																<SelectItem
-																	value='allow-1'
-																	className='z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-																	Housing Allowance
-																</SelectItem>
-																<SelectSeparator />
-																<SelectItem
-																	value='allow-2'
-																	className='z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-																	Transport Allowance
-																</SelectItem>
-																<SelectItem
-																	value='allow-3'
-																	className='z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-																	Medical Allowance
-																</SelectItem>
-															</SelectContent>
-														</Select>
-													</div>
-												</TableCell>
-												<TableCell className='flex justify-center'>
-													<div className=' bg-[#FAFAFA] border-[#A8A8A8] text-[#393939] w-[60px] flex justify-center border-solid border-1 rounded-md p-1'>
-														<h5 className='text-center self-center'>Fixed</h5>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='w-[80px] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-														<Input
-															type='number'
-															placeholder='20000'
-															defaultValue={20000}
-															className=''
-														/>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='text-center items-center justify-center  flex'>
-														<Input
-															type='checkbox'
-															className='w-4 h-4'
-														/>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='text-center items-center justify-center  flex'>
-														<Input
-															type='checkbox'
-															className='w-4 h-4'
-														/>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='text-center items-center justify-center flex'>
-														<button>
-															<Image
-																src='/icons/delete-icon.png'
-																className='self-center'
-																alt='Delete Icon'
-																width={20}
-																height={20}
-															/>
-														</button>
-													</div>
-												</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell>
-													<Select>
-														<SelectTrigger className='w-[200px] z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-															<SelectValue placeholder='Transport Allowance' />
-														</SelectTrigger>
-														<SelectContent
-															position='popper'
-															className='z-[1050] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'
-															defaultValue={'allow-2'}>
-															<SelectItem
-																value='allow-1'
-																className=''>
-																Housing Allowance
-															</SelectItem>
-															<SelectSeparator />
-															<SelectItem value='allow-2'>
-																Transport Allowance
-															</SelectItem>
-															<SelectItem value='allow-3'>
-																Medical Allowance
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												</TableCell>
-												<TableCell className='flex justify-center'>
-													<div className=' bg-[#FAFAFA] border-[#A8A8A8] text-[#393939] w-[60px] flex justify-center border-solid border-1 rounded-md p-1'>
-														<h5 className='text-center self-center'>Fixed</h5>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className=' w-[80px] bg-[#FAFAFA] border-[#A8A8A8] text-[#393939]'>
-														<Input
-															type='number'
-															placeholder='20000'
-															defaultValue={20000}
-														/>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='text-center items-center justify-center flex'>
-														<Input
-															type='checkbox'
-															className='w-4 h-4'
-														/>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='text-center items-center justify-center  flex'>
-														<Input
-															type='checkbox'
-															className='w-4 h-4'
-														/>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='text-center items-center justify-center flex'>
-														<button>
-															<Image
-																src='/icons/delete-icon.png'
-																alt='Delete Icon'
-																width={20}
-																height={20}
-															/>
-														</button>
-													</div>
-												</TableCell>
-											</TableRow>
-										</TableBody>
-									</Table>
-								</Card>
-							</form>
-						</div>
-					)
-				)}
+								</DialogFooter>
+							</DialogContent>
+						</form>
+					</Dialog>
+				</div>
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								NAME
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								CALCULATION TYPE
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								TAXABLE
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								PENSIONABLE
+							</TableHead>
+							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								STATUS
+							</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{components.map((component) => {
+							return (
+								<TableRow key={component.id}>
+									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
+										{component.name}
+									</TableCell>
+									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
+										{component.calculation_type}
+									</TableCell>
+									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
+										{component.is_taxable ? 'Taxable' : 'Not Taxable'}
+									</TableCell>
+									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
+										{component.is_pensionable
+											? 'Pensionable'
+											: 'Not Pensionable'}
+									</TableCell>
+									<TableCell className={`text-center text-[#47aa9c]`}>
+										<p className='bg-[#e6f6f4] rounded-2xl p-1'>Active</p>
+									</TableCell>
+								</TableRow>
+							);
+						})}
+					</TableBody>
+				</Table>
 			</Card>
 		</div>
 	);

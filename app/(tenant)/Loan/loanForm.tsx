@@ -7,11 +7,10 @@ import { Label } from '@/components/ui/label';
 import {
 	Select,
 	SelectContent,
-	SelectSeparator,
+	SelectItem,
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { SelectItem } from '@radix-ui/react-select';
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
 import React, { useState, useEffect } from 'react';
@@ -21,7 +20,6 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import axios from 'axios';
 import { getAccessToken, getTenant } from '@/lib/auth';
-import { get } from 'http';
 
 interface LoanType {
 	id: number;
@@ -52,6 +50,7 @@ export default function LoanForm({ className }: { className?: string }) {
 		repayment_months: '',
 		start_date: '',
 		reason: '',
+		monthly_deduction: '',
 	});
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
@@ -59,7 +58,6 @@ export default function LoanForm({ className }: { className?: string }) {
 
 	useEffect(() => {
 		const loadData = async () => {
-			const access = getAccessToken();
 			try {
 				const token = getAccessToken();
 				if (!token) throw new Error('No access token');
@@ -79,16 +77,69 @@ export default function LoanForm({ className }: { className?: string }) {
 				console.error(err);
 				setError('Failed loading loan types or employees.');
 			} finally {
+				console.log(employees)
 				setLoading(false);
 			}
 		};
 		loadData();
 	}, [tenant]);
-	console.log(loanTypes, employees);
-	useEffect(() =>{
 
-		console.log(form);
+	// Update start_date in form when startDate changes
+	useEffect(() => {
+		if (startDate) {
+			setForm((prev) => ({
+				...prev,
+				start_date: startDate.toISOString().split('T')[0],
+			}));
+		}
+	}, [startDate]);
+
+	useEffect(() => {
+		console.log('Form state:', form);
 	}, [form]);
+
+
+	const handleSubmit = async () => {
+		const token = localStorage.getItem('access_token');
+
+		if (
+			!form.loan_type_id ||
+			!form.employee_id ||
+			!form.amount ||
+			!form.repayment_months ||
+			!form.start_date
+		) {
+			setError('Please fill in all required fields');
+			return;
+		}
+
+		try {
+			const response = await axios.post(
+				`${baseURL}/tenant/loans/create`,
+				{
+					loan_type_id: parseInt(form.loan_type_id),
+					employee_id: form.employee_id,
+					amount: Number(form.amount),
+					repayment_months: parseInt(form.repayment_months),
+					start_date: form.start_date,
+					reason: form.reason || null,
+				},
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+
+			alert('Loan created!');
+			router.push(`/${tenant}/loans`);
+		} catch (err: any) {
+			console.error(err);
+			const details = err.response?.data?.detail;
+			const message = Array.isArray(details)
+				? details.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join(', ')
+				: details || 'Failed to create loan';
+			setError(message);
+		}
+	};
 
 	return (
 		<div className={`bg-white ${className}`}>
@@ -98,83 +149,62 @@ export default function LoanForm({ className }: { className?: string }) {
 					<p className='text-xs'>Add Loan details</p>
 				</div>
 				<form
-					action=''
+					onSubmit={handleSubmit}
 					className=''>
 					<div className='grid grid-cols-2 gap-6 m-4'>
-						{/* <span>
-							<Label
-								htmlFor='loanNum'
-								className='mb-2'>
-								Loan Number
-							</Label>
-							<Input
-								className='w-[200px]'
-								type='text'
-								id='loanNum'
-								required
-							/>
-						</span> */}
 						<span>
 							<Label
 								htmlFor='LoanName'
 								className='mb-2'>
 								Loan Name
 							</Label>
-							<Select required>
+							<Select
+								value={form.loan_type_id}
+								onValueChange={(value) => {
+									console.log('Selected loan type ID:', value);
+									setForm({ ...form, loan_type_id: value });
+								}}
+								required>
 								<SelectTrigger className='w-[200px]'>
-									<SelectValue placeholder='Select Loan Name'>
-										{form.loan_type_id}
-									</SelectValue>
+									<SelectValue placeholder='Select Loan Name' />
 								</SelectTrigger>
-								<SelectContent
-									position='popper'
-									className=''>
-									{loanTypes.map((type) => {
-										return (
-											<SelectItem
-												key={type.id}
-												value={type.id.toString()}
-												onClick={() =>
-													setForm({ ...form, loan_type_id: type.id.toString() })
-												}>
-												{type.name}
-											</SelectItem>
-										);
-									})}
-									<SelectItem value='Loan-9'>
-										<Button>+ Add New Loan</Button>
+								<SelectContent>
+									{loanTypes.map((type) => (
+										<SelectItem
+											key={type.id}
+											value={type.id.toString()}>
+											{type.name}
+										</SelectItem>
+									))}
+									<SelectItem value='new-loan'>
+										<Button type='button'>+ Add New Loan</Button>
 									</SelectItem>
 								</SelectContent>
 							</Select>
 						</span>
-					</div>
-					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
 							<Label
 								htmlFor='SelectEmp'
 								className='mb-2'>
 								Select Employee
 							</Label>
-							<Select>
+							<Select
+								value={form.employee_id}
+								onValueChange={(value) => {
+									console.log('Selected employee ID:', value);
+									setForm({ ...form, employee_id: value });
+								}}>
 								<SelectTrigger className='w-[200px]'>
 									<SelectValue placeholder='Select Employee' />
 								</SelectTrigger>
-								<SelectContent position='popper'>
-									{employees.map((employee) => {
-										return (
-											<SelectItem
-												key={employee.id}
-												value={employee.id.toString()}
-												onClick={() =>
-													setForm({
-														...form,
-														employee_id: employee.id.toString(),
-													})
-												}>
-												{`${employee.first_name} ${employee.last_name}`}
-											</SelectItem>
-										);
-									})}
+								<SelectContent>
+									{employees.map((employee) => (
+										<SelectItem
+											key={employee.employee_id}
+											value={String(employee.employee_id)}>
+											{`${employee.first_name} ${employee.last_name}`}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</span>
@@ -187,27 +217,32 @@ export default function LoanForm({ className }: { className?: string }) {
 							<Input
 								className='w-[200px]'
 								placeholder='Enter Loan Amount'
-								type='text'
+								type='number'
 								id='LoanAmt'
+								value={form.amount}
+								onChange={(e) => setForm({ ...form, amount: e.target.value })}
 								required
 							/>
 						</span>
-					</div>
-					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
 							<Label
 								htmlFor='Repay'
 								className='mb-2'>
 								Repayment Duration
 							</Label>
-							<Select>
+							<Select
+								value={form.repayment_months}
+								onValueChange={(value) => {
+									console.log('Selected repayment months:', value);
+									setForm({ ...form, repayment_months: value });
+								}}>
 								<SelectTrigger className='w-[180px]'>
 									<SelectValue placeholder='Repayment Duration' />
 								</SelectTrigger>
-								<SelectContent position='popper' className='grid grid-cols-1 w-fit gap-2 '>
-									<SelectItem value='1 Month'>6 Month</SelectItem>
-									<SelectItem value='2 Months'>12 Months</SelectItem>
-									<SelectItem value='3 Months'>2 Months</SelectItem>
+								<SelectContent>
+									<SelectItem value='6'>6 Months</SelectItem>
+									<SelectItem value='12'>12 Months</SelectItem>
+									<SelectItem value='24'>24 Months</SelectItem>
 								</SelectContent>
 							</Select>
 						</span>
@@ -219,16 +254,14 @@ export default function LoanForm({ className }: { className?: string }) {
 							</Label>
 							<Input
 								className='w-[200px]'
-								type='text'
+								type='number'
 								placeholder='Enter Monthly Deduction'
 								id='MonthDed'
-								required
+								value={form.monthly_deduction}
 								onChange={(e) =>
-									setForm({
-										...form,
-										employee_id: e.target.value.toString(),
-									})
+									setForm({ ...form, monthly_deduction: e.target.value })
 								}
+								required
 							/>
 						</span>
 					</div>
@@ -252,6 +285,8 @@ export default function LoanForm({ className }: { className?: string }) {
 							<Textarea
 								className='h-24 mb-4 pl-3 pr-8 border'
 								id='Reason'
+								value={form.reason}
+								onChange={(e) => setForm({ ...form, reason: e.target.value })}
 							/>
 						</span>
 					</div>
@@ -260,17 +295,17 @@ export default function LoanForm({ className }: { className?: string }) {
 					<DialogClose asChild>
 						<Button
 							className='m-3 text-muted-foreground'
-							variant='outline'>
-							{' '}
-							Close{' '}
+							variant='outline'
+							type='button'>
+							Close
 						</Button>
 					</DialogClose>
 					<Button
-						className='m-3 bg-[#3D56A8] text-white '
+						className='m-3 bg-[#3D56A8] text-white'
 						variant='outline'
-						type='submit'>
-						{' '}
-						Save{' '}
+						type='submit'
+						onClick={handleSubmit}>
+						Save
 					</Button>
 				</div>
 			</Card>
