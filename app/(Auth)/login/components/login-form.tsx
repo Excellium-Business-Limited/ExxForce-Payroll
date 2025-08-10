@@ -8,10 +8,11 @@ import Image from 'next/image';
 
 export function LoginForm({
 	className,
-	...props
-}: React.ComponentProps<'div'>) {
+	setEmail,
+	setPassword,
+}: {className?:string, setEmail: (email: string) => void, setPassword: (password: string) => void	}) {
 	return (
-		<div {...props}>
+		<div className={cn('flex flex-col gap-4', className)}>
 			<div className='h-auto p-0 overflow-hidden mt-0 self-center sm:w-[50%] w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
 				<CardContent className='grid min-h-svh p-0 lg:grid-cols-2'>
 					<div className='relative h-full xl:h-[100%] bg-muted md:block'>
@@ -36,6 +37,7 @@ export function LoginForm({
 									type='email'
 									placeholder='m@example.com'
 									required
+									onChange={(e) => setEmail(e.target.value)}
 								/>
 							</div>
 							<div className='grid gap-2'>
@@ -51,6 +53,7 @@ export function LoginForm({
 									id='password'
 									type='password'
 									required
+									onChange={(e) => setPassword(e.target.value)}
 								/>
 							</div>
 							<Button
