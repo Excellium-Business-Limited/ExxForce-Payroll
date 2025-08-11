@@ -106,9 +106,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	const [loadingDepartments, setLoadingDepartments] = useState(false);
 	const [departmentError, setDepartmentError] = useState<string>('');
 
-	// State for form flow
+	// State for form flow - modified to handle two different flows
 	const [showSalaryForm, setShowSalaryForm] = useState(false);
-	const [savedEmployeeData, setSavedEmployeeData] = useState<any>(null);
+	const [pendingEmployeeData, setPendingEmployeeData] = useState<any>(null); // Store unsaved employee data
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Helper function to format date for input (YYYY-MM-DD) using date-fns
@@ -221,7 +221,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	useEffect(() => {
 		if (!isOpen) {
 			setShowSalaryForm(false);
-			setSavedEmployeeData(null);
+			setPendingEmployeeData(null);
 		}
 	}, [isOpen]);
 
@@ -274,25 +274,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		setFormData((prev) => ({ ...prev, [key]: value }));
 	};
 
-	const handleSaveEmployee = async (showSalaryNext: boolean = false) => {
-		console.log('Form submission started...');
-		console.log('Form data:', formData);
-
-		// Basic form validation
-		const requiredFields = [
-			'employeeId', 'jobTitle', 'department', 'employmentType', 
-			'startDate', 'taxStartDate', 'firstName', 'lastName', 
-			'phone', 'email', 'dob', 'address1'
-		];
-
-		const missingFields = requiredFields.filter(field => !formData[field as keyof FormData]);
-		
-		if (missingFields.length > 0) {
-			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
-			console.log('Missing required fields:', missingFields);
-			return false;
-		}
-
+	// Function to prepare API data from form data
+	const prepareApiData = () => {
 		// Enhanced date formatting function to ensure YYYY-MM-DD format for API
 		const formatDateForAPI = (dateString: string): string => {
 			if (!dateString) return '';
@@ -328,7 +311,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			}
 		};
 
-		const apiData = {
+		return {
 			employee_id: formData.employeeId,
 			job_title: formData.jobTitle,
 			department_name: formData.department,
@@ -343,15 +326,39 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			date_of_birth: formatDateForAPI(formData.dob),
 			address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}`,
 		};
+	};
 
+	// Validate form data
+	const validateForm = (): string[] => {
+		const requiredFields = [
+			'employeeId', 'jobTitle', 'department', 'employmentType', 
+			'startDate', 'taxStartDate', 'firstName', 'lastName', 
+			'phone', 'email', 'dob', 'address1'
+		];
+
+		return requiredFields.filter(field => !formData[field as keyof FormData]);
+	};
+
+	// Handle direct save (without salary setup)
+	const handleSaveEmployee = async () => {
+		console.log('Direct save - Form submission started...');
+
+		const missingFields = validateForm();
+		if (missingFields.length > 0) {
+			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+			return false;
+		}
+
+		const apiData = prepareApiData();
 		setIsSubmitting(true);
 
 		try {
-			console.log('Starting API call...');
+			console.log('Starting API call for direct save...');
 			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
 
 			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
 			let response;
+			
 			if (isEdit && employeeData?.id) {
 				console.log('Updating employee with ID:', employeeData.id);
 				response = await axios.put(
@@ -370,24 +377,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				console.log('Employee created:', response.data);
 			}
 
-			// Store saved employee data for salary form
-			setSavedEmployeeData({ ...apiData, id: response.data.id || employeeData?.id });
-
 			// Call the parent's onSubmit handler
 			console.log('Calling parent onSubmit...');
 			await onSubmit(apiData);
 			
-			console.log('Success! Employee saved.');
-			
-			if (showSalaryNext && !isEdit) {
-				// Show salary form for new employees
-				setShowSalaryForm(true);
-			} else {
-				// Regular save - show success message and close
-				alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
-				onClose();
-			}
-
+			alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
+			onClose();
 			return true;
 			
 		} catch (error) {
@@ -412,56 +407,105 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		}
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		await handleSaveEmployee(false);
+	// Handle save and next (prepare for salary setup)
+	const handleSaveAndNext = async () => {
+		console.log('Save and Next - Validating form...');
+
+		const missingFields = validateForm();
+		if (missingFields.length > 0) {
+			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+			return false;
+		}
+
+		// Store the employee data without saving to API
+		const apiData = prepareApiData();
+		setPendingEmployeeData(apiData);
+		
+		console.log('Employee data prepared for salary setup:', apiData);
+		
+		// Show salary form
+		setShowSalaryForm(true);
+		return true;
 	};
 
-	const handleSaveAndNext = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		await handleSaveEmployee(true);
+		await handleSaveEmployee();
+	};
+
+	const handleSaveAndNextSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		await handleSaveAndNext();
 	};
 
 	const handleSalaryFormClose = () => {
 		setShowSalaryForm(false);
+		setPendingEmployeeData(null);
 		onClose();
 	};
 
+	// Modified to handle combined submission
 	const handleSalaryFormSubmit = async (salaryData: any) => {
-		// The salary form will handle its own submission
-		// After successful submission, close the entire modal
-		setShowSalaryForm(false);
-		onClose();
+		console.log('Combined submission - Employee + Salary data');
+		console.log('Pending Employee Data:', pendingEmployeeData);
+		console.log('Salary Data:', salaryData);
+
+		// Combine employee and salary data
+		const combinedData = {
+			...pendingEmployeeData,
+			...salaryData
+		};
+
+		try {
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+			
+			// Create employee with both personal and salary data
+			const response = await axios.post(
+				`${baseUrl}/tenant/employee/create`,
+				combinedData,
+				{ headers: { 'Content-Type': 'application/json' } }
+			);
+
+			console.log('Combined employee + salary created:', response.data);
+
+			// Call parent's onSubmit with combined data
+			await onSubmit(combinedData);
+
+			alert('Employee and salary setup completed successfully!');
+			
+			// Clean up and close
+			setShowSalaryForm(false);
+			setPendingEmployeeData(null);
+			onClose();
+
+		} catch (error) {
+			console.error('Error saving combined employee + salary data:', error);
+			
+			if (axios.isAxiosError(error)) {
+				console.error('Combined request that failed:', JSON.stringify(combinedData, null, 2));
+				console.error('Response status:', error.response?.status);
+				console.error('Response data:', error.response?.data);
+				
+				if (error.response?.status === 422) {
+					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+				} else {
+					alert(`Failed to save employee and salary data: ${error.response?.data?.message || error.message}`);
+				}
+			} else {
+				alert('Failed to save employee and salary data: Unknown error');
+			}
+			throw error; // Let SalarySetupForm handle the error state
+		}
 	};
 
 	const handleBackToEmployee = () => {
 		setShowSalaryForm(false);
+		// Keep pendingEmployeeData so user can continue editing
 	};
 
-	// If showing salary form, render it in a separate dialog
+	// If showing salary form, don't render employee form
 	if (showSalaryForm) {
-		return (
-			<>
-				{/* Keep the employee form dialog open but hidden */}
-				<div style={{ display: 'none' }}>
-					<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
-						{/* Employee form content hidden */}
-					</div>
-				</div>
-				
-				{/* Render salary form in its own dialog */}
-				<Dialog open={showSalaryForm} onOpenChange={setShowSalaryForm}>
-					<DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0">
-						<SalarySetupForm
-							employeeData={savedEmployeeData}
-							onClose={handleSalaryFormClose}
-							onSubmit={handleSalaryFormSubmit}
-							onBack={handleBackToEmployee}
-						/>
-					</DialogContent>
-				</Dialog>
-			</>
-		);
+		return null; // This will be handled by the parent component
 	}
 
 	return (
@@ -712,15 +756,28 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							</Button>
 							<Button
 								type='button'
-								onClick={handleSaveAndNext}
+								onClick={handleSaveAndNextSubmit}
 								disabled={isSubmitting}
 								className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-								{isSubmitting ? 'Saving...' : 'Save and Next'}
+								{isSubmitting ? 'Proceeding...' : 'Save and Next'}
 							</Button>
 						</>
 					)}
 				</div>
 			</form>
+
+			{/* Render Salary Form as overlay when needed */}
+			{showSalaryForm && pendingEmployeeData && (
+				<div className='absolute inset-0 bg-white z-10'>
+					<SalarySetupForm
+						employeeData={pendingEmployeeData}
+						onClose={handleSalaryFormClose}
+						onSubmit={handleSalaryFormSubmit}
+						onBack={handleBackToEmployee}
+						isNewEmployee={true} // New prop to indicate this is part of new employee flow
+					/>
+				</div>
+			)}
 		</div>
 	);
 };

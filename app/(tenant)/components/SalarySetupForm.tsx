@@ -19,6 +19,7 @@ interface SalarySetupFormProps {
     onClose: () => void;
     onSubmit: (salaryData: any) => Promise<void>;
     onBack: () => void;
+    isNewEmployee?: boolean; // New prop to indicate if this is part of new employee creation flow
 }
 
 interface SalaryFormData {
@@ -38,7 +39,8 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     employeeData,
     onClose,
     onSubmit,
-    onBack
+    onBack,
+    isNewEmployee = false
 }) => {
     const [formData, setFormData] = useState<SalaryFormData>({
         payGradeName: 'Entry Level Staff',
@@ -172,8 +174,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
         setIsSubmitting(true);
 
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
-            
             // Prepare salary data for API
             const salaryData = {
                 pay_grade_name: formData.payGradeName,
@@ -190,20 +190,28 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 
             console.log('Submitting salary data:', salaryData);
 
-            // Update the employee with salary information
-            const response = await axios.put(
-                `${baseUrl}/tenant/employee/update/${employeeData.id}`,
-                salaryData,
-                { headers: { 'Content-Type': 'application/json' } }
-            );
+            if (isNewEmployee) {
+                // For new employee flow, let parent handle the combined submission
+                console.log('New employee flow - passing salary data to parent for combined submission');
+                await onSubmit(salaryData);
+            } else {
+                // For existing employee (salary edit flow), update employee directly
+                console.log('Existing employee flow - updating salary data directly');
+                
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+                const response = await axios.put(
+                    `${baseUrl}/tenant/employee/update/${employeeData.id}`,
+                    salaryData,
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
 
-            console.log('Salary data saved:', response.data);
+                console.log('Salary data updated:', response.data);
 
-            // Call parent's onSubmit
-            await onSubmit(salaryData);
-
-            alert('Salary setup completed successfully!');
-            onClose();
+                // Call parent's onSubmit
+                await onSubmit(salaryData);
+                alert('Salary setup updated successfully!');
+                onClose();
+            }
 
         } catch (error) {
             console.error('Error saving salary data:', error);
@@ -243,6 +251,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                         <h1 className='text-2xl font-bold'>Salary Setup</h1>
                         <p className='text-sm text-muted-foreground'>
                             Configure salary and bank details for {employeeData?.first_name} {employeeData?.last_name}
+                            {isNewEmployee && " (New Employee)"}
                         </p>
                     </div>
                 </div>
@@ -399,6 +408,13 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                     <p><span className='font-medium'>Deductions</span>: {getDeductionsText()}</p>
                     <p><span className='font-medium'>Bank</span>: {formData.bankName}</p>
                     <p><span className='font-medium'>Account</span>: {formData.accountNumber} - {formData.accountName}</p>
+                    {isNewEmployee && (
+                        <div className='mt-2 p-2 bg-green-100 rounded border-l-4 border-green-500'>
+                            <p className='text-green-700 text-xs'>
+                                <strong>Note:</strong> This will create a new employee with both personal and salary information.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div className='flex justify-end gap-4 pt-4'>
@@ -416,7 +432,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                         disabled={isSubmitting}
                         className='bg-[#3D56A8] hover:bg-[#2E4299]'
                     >
-                        {isSubmitting ? 'Saving...' : 'Save'}
+                        {isSubmitting ? 'Saving...' : isNewEmployee ? 'Create Employee' : 'Save'}
                     </Button>
                 </div>
             </form>
