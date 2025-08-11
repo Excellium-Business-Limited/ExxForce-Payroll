@@ -14,6 +14,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import axios from 'axios';
 import { format, parseISO, isValid } from 'date-fns';
+import { useGlobal } from '@/app/Context/page';
 import SalarySetupForm from './SalarySetupForm';
 
 // Define the Employee interface to match your API
@@ -24,7 +25,7 @@ interface Employee {
 	last_name: string;
 	email: string;
 	phone_number: string;
-	gender: 'MALE' | 'FEMALE' | 'OTHER' ;
+	gender: 'MALE' | 'FEMALE' | 'OTHER';
 	date_of_birth: string;
 	address: string;
 	employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
@@ -82,7 +83,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	isEdit,
 	employeeData,
 	onClose,
-	onSubmit
+	onSubmit,
 }) => {
 	const [formData, setFormData] = useState<FormData>({
 		employeeId: '',
@@ -102,6 +103,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	});
 
 	// State for departments
+	const { globalState, tenant } = useGlobal();
 	const [departments, setDepartments] = useState<Department[]>([]);
 	const [loadingDepartments, setLoadingDepartments] = useState(false);
 	const [departmentError, setDepartmentError] = useState<string>('');
@@ -114,36 +116,44 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	// Helper function to format date for input (YYYY-MM-DD) using date-fns
 	const formatDateForInput = (dateString: string): string => {
 		if (!dateString) return '';
-		
+
 		try {
 			// Try parsing as ISO string first
 			let date = parseISO(dateString);
-			
+
 			// If parseISO fails, try creating a new Date object
 			if (!isValid(date)) {
 				date = new Date(dateString);
 			}
-			
+
 			// If still invalid, try manual parsing for different formats
 			if (!isValid(date)) {
 				const parts = dateString.split(/[-\/]/);
 				if (parts.length === 3) {
 					// Try YYYY-MM-DD or YYYY/MM/DD
 					if (parts[0].length === 4) {
-						date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+						date = new Date(
+							parseInt(parts[0]),
+							parseInt(parts[1]) - 1,
+							parseInt(parts[2])
+						);
 					}
 					// Try MM/DD/YYYY or DD/MM/YYYY formats
 					else if (parts[2].length === 4) {
 						// Assume MM/DD/YYYY format (can be adjusted based on your data)
-						date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+						date = new Date(
+							parseInt(parts[2]),
+							parseInt(parts[0]) - 1,
+							parseInt(parts[1])
+						);
 					}
 				}
 			}
-			
+
 			if (isValid(date)) {
 				return format(date, 'yyyy-MM-dd');
 			}
-			
+
 			return '';
 		} catch (error) {
 			console.warn('Error formatting date for input:', dateString, error);
@@ -154,7 +164,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	// Helper function to format date for display in YYYY-MM-DD format
 	const formatDateForDisplay = (dateString: string): string => {
 		if (!dateString) return '';
-		
+
 		try {
 			const date = parseISO(dateString);
 			if (isValid(date)) {
@@ -175,37 +185,47 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	const fetchDepartments = async () => {
 		setLoadingDepartments(true);
 		setDepartmentError('');
-		
+
 		try {
-			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
-			const response = await axios.get(`${baseUrl}/tenant/employee/departments`);
-			
+			const baseUrl =
+				process.env.NEXT_PUBLIC_API_URL || `http://${tenant}.localhost:8000`;
+			const response = await axios.get(
+				`${baseUrl}/tenant/employee/departments`,
+				{
+					headers: {
+						Authorization: `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
+
 			console.log('Departments fetched:', response.data);
-			
+
 			if (Array.isArray(response.data)) {
 				setDepartments(response.data);
-			}
-			else if (response.data.data && Array.isArray(response.data.data)) {
+			} else if (response.data.data && Array.isArray(response.data.data)) {
 				setDepartments(response.data.data);
-			}
-			else if (response.data.departments && Array.isArray(response.data.departments)) {
+			} else if (
+				response.data.departments &&
+				Array.isArray(response.data.departments)
+			) {
 				setDepartments(response.data.departments);
-			}
-			else {
-				console.warn('Unexpected departments API response structure:', response.data);
+			} else {
+				console.warn(
+					'Unexpected departments API response structure:',
+					response.data
+				);
 				setDepartmentError('Unexpected response format');
 			}
-			
 		} catch (error) {
 			console.error('Error fetching departments:', error);
 			setDepartmentError('Failed to load departments');
-			
+
 			// Fallback to hardcoded departments in case of API failure
 			setDepartments([
 				{ id: 'hr', name: 'Human Resources' },
 				{ id: 'finance', name: 'Finance' },
 				{ id: 'engineering', name: 'Engineering' },
-				{ id: 'marketing', name: 'Marketing' }
+				{ id: 'marketing', name: 'Marketing' },
 			]);
 		} finally {
 			setLoadingDepartments(false);
@@ -279,26 +299,33 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		// Enhanced date formatting function to ensure YYYY-MM-DD format for API
 		const formatDateForAPI = (dateString: string): string => {
 			if (!dateString) return '';
-			
+
 			try {
 				let date = parseISO(dateString);
-				
+
 				if (!isValid(date)) {
 					date = new Date(dateString);
 				}
-				
+
 				if (!isValid(date)) {
 					const parts = dateString.split(/[-\/]/);
 					if (parts.length === 3) {
 						if (parts[0].length === 4) {
-							date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-						}
-						else if (parts[2].length === 4) {
-							date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+							date = new Date(
+								parseInt(parts[0]),
+								parseInt(parts[1]) - 1,
+								parseInt(parts[2])
+							);
+						} else if (parts[2].length === 4) {
+							date = new Date(
+								parseInt(parts[2]),
+								parseInt(parts[0]) - 1,
+								parseInt(parts[1])
+							);
 						}
 					}
 				}
-				
+
 				if (isValid(date)) {
 					return format(date, 'yyyy-MM-dd');
 				} else {
@@ -324,19 +351,30 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			email: formData.email,
 			gender: formData.gender || 'PREFER_NOT_TO_SAY',
 			date_of_birth: formatDateForAPI(formData.dob),
-			address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}`,
+			address: `${formData.address1}${
+				formData.address2 ? ', ' + formData.address2 : ''
+			}`,
 		};
 	};
 
 	// Validate form data
 	const validateForm = (): string[] => {
 		const requiredFields = [
-			'employeeId', 'jobTitle', 'department', 'employmentType', 
-			'startDate', 'taxStartDate', 'firstName', 'lastName', 
-			'phone', 'email', 'dob', 'address1'
+			'employeeId',
+			'jobTitle',
+			'department',
+			'employmentType',
+			'startDate',
+			'taxStartDate',
+			'firstName',
+			'lastName',
+			'phone',
+			'email',
+			'dob',
+			'address1',
 		];
 
-		return requiredFields.filter(field => !formData[field as keyof FormData]);
+		return requiredFields.filter((field) => !formData[field as keyof FormData]);
 	};
 
 	// Handle direct save (without salary setup)
@@ -345,7 +383,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 		const missingFields = validateForm();
 		if (missingFields.length > 0) {
-			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+			alert(
+				`Please fill in the following required fields: ${missingFields.join(
+					', '
+				)}`
+			);
 			return false;
 		}
 
@@ -356,9 +398,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			console.log('Starting API call for direct save...');
 			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
 
-			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+			const baseUrl =
+				process.env.NEXT_PUBLIC_API_URL || `http://${tenant}.localhost:8000`;
 			let response;
-			
+
 			if (isEdit && employeeData?.id) {
 				console.log('Updating employee with ID:', employeeData.id);
 				response = await axios.put(
@@ -380,23 +423,32 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			// Call the parent's onSubmit handler
 			console.log('Calling parent onSubmit...');
 			await onSubmit(apiData);
-			
-			alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
+
+			alert(
+				isEdit
+					? 'Employee updated successfully!'
+					: 'Employee created successfully!'
+			);
 			onClose();
 			return true;
-			
 		} catch (error) {
 			console.error('Error saving employee:', error);
-			
+
 			if (axios.isAxiosError(error)) {
 				console.error('Request that failed:', JSON.stringify(apiData, null, 2));
 				console.error('Response status:', error.response?.status);
 				console.error('Response data:', error.response?.data);
-				
+
 				if (error.response?.status === 422) {
-					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+					alert(
+						`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`
+					);
 				} else {
-					alert(`Failed to save employee: ${error.response?.data?.message || error.message}`);
+					alert(
+						`Failed to save employee: ${
+							error.response?.data?.message || error.message
+						}`
+					);
 				}
 			} else {
 				alert('Failed to save employee: Unknown error');
@@ -413,16 +465,20 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 		const missingFields = validateForm();
 		if (missingFields.length > 0) {
-			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+			alert(
+				`Please fill in the following required fields: ${missingFields.join(
+					', '
+				)}`
+			);
 			return false;
 		}
 
 		// Store the employee data without saving to API
 		const apiData = prepareApiData();
 		setPendingEmployeeData(apiData);
-		
+
 		console.log('Employee data prepared for salary setup:', apiData);
-		
+
 		// Show salary form
 		setShowSalaryForm(true);
 		return true;
@@ -453,12 +509,13 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		// Combine employee and salary data
 		const combinedData = {
 			...pendingEmployeeData,
-			...salaryData
+			...salaryData,
 		};
 
 		try {
-			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
-			
+			const baseUrl =
+				process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+
 			// Create employee with both personal and salary data
 			const response = await axios.post(
 				`${baseUrl}/tenant/employee/create`,
@@ -472,24 +529,32 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			await onSubmit(combinedData);
 
 			alert('Employee and salary setup completed successfully!');
-			
+
 			// Clean up and close
 			setShowSalaryForm(false);
 			setPendingEmployeeData(null);
 			onClose();
-
 		} catch (error) {
 			console.error('Error saving combined employee + salary data:', error);
-			
+
 			if (axios.isAxiosError(error)) {
-				console.error('Combined request that failed:', JSON.stringify(combinedData, null, 2));
+				console.error(
+					'Combined request that failed:',
+					JSON.stringify(combinedData, null, 2)
+				);
 				console.error('Response status:', error.response?.status);
 				console.error('Response data:', error.response?.data);
-				
+
 				if (error.response?.status === 422) {
-					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+					alert(
+						`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`
+					);
 				} else {
-					alert(`Failed to save employee and salary data: ${error.response?.data?.message || error.message}`);
+					alert(
+						`Failed to save employee and salary data: ${
+							error.response?.data?.message || error.message
+						}`
+					);
 				}
 			} else {
 				alert('Failed to save employee and salary data: Unknown error');
@@ -525,58 +590,57 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 						<div className='space-y-2'>
 							<Label htmlFor='employeeId'>Employee ID</Label>
-							<Input 
-								id='employeeId' 
+							<Input
+								id='employeeId'
 								value={formData.employeeId}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='jobTitle'>Job Title</Label>
-							<Input 
-								id='jobTitle' 
+							<Input
+								id='jobTitle'
 								value={formData.jobTitle}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2'>
 							<Label>Department</Label>
-							<Select 
+							<Select
 								value={formData.department}
-								onValueChange={(val) => handleSelectChange('department', val)} 
+								onValueChange={(val) => handleSelectChange('department', val)}
 								required
-								disabled={loadingDepartments}
-							>
+								disabled={loadingDepartments}>
 								<SelectTrigger>
-									<SelectValue placeholder={
-										loadingDepartments 
-											? 'Loading departments...' 
-											: departmentError 
-												? 'Error loading departments' 
+									<SelectValue
+										placeholder={
+											loadingDepartments
+												? 'Loading departments...'
+												: departmentError
+												? 'Error loading departments'
 												: 'Select department'
-									} />
+										}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{departments.map((dept) => (
-										<SelectItem 
-											key={dept.id} 
-											value={typeof dept.id === 'string' ? dept.id : dept.name}
-										>
+										<SelectItem
+											key={dept.id}
+											value={typeof dept.id === 'string' ? dept.id : dept.name}>
 											{dept.name}
 										</SelectItem>
 									))}
 								</SelectContent>
 							</Select>
 							{departmentError && (
-								<p className="text-xs text-red-500 mt-1">
+								<p className='text-xs text-red-500 mt-1'>
 									{departmentError}
-									<button 
-										type="button"
+									<button
+										type='button'
 										onClick={fetchDepartments}
-										className="ml-2 text-blue-500 underline hover:no-underline"
-									>
+										className='ml-2 text-blue-500 underline hover:no-underline'>
 										Retry
 									</button>
 								</p>
@@ -584,11 +648,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 						</div>
 						<div className='space-y-2'>
 							<Label>Employment Type</Label>
-							<Select 
+							<Select
 								value={formData.employmentType}
-								onValueChange={(val) => handleSelectChange('employmentType', val)} 
-								required
-							>
+								onValueChange={(val) =>
+									handleSelectChange('employmentType', val)
+								}
+								required>
 								<SelectTrigger>
 									<SelectValue placeholder='Select type' />
 								</SelectTrigger>
@@ -602,34 +667,36 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='startDate'>Start Date</Label>
-							<Input 
-								id='startDate' 
-								type='date' 
+							<Input
+								id='startDate'
+								type='date'
 								value={formData.startDate}
-								max="2099-12-31"
-								min="1900-01-01"
-								required 
+								max='2099-12-31'
+								min='1900-01-01'
+								required
 								onChange={handleChange}
-								className="block w-full"
+								className='block w-full'
 							/>
-							<p className="text-xs text-gray-500">
-								{formData.startDate && `Format: ${formatDateForDisplay(formData.startDate)}`}
+							<p className='text-xs text-gray-500'>
+								{formData.startDate &&
+									`Format: ${formatDateForDisplay(formData.startDate)}`}
 							</p>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='taxStartDate'>Tax Start Date</Label>
-							<Input 
-								id='taxStartDate' 
-								type='date' 
+							<Input
+								id='taxStartDate'
+								type='date'
 								value={formData.taxStartDate}
-								max="2099-12-31"
-								min="1900-01-01"
-								required 
+								max='2099-12-31'
+								min='1900-01-01'
+								required
 								onChange={handleChange}
-								className="block w-full"
+								className='block w-full'
 							/>
-							<p className="text-xs text-gray-500">
-								{formData.taxStartDate && `Format: ${formatDateForDisplay(formData.taxStartDate)}`}
+							<p className='text-xs text-gray-500'>
+								{formData.taxStartDate &&
+									`Format: ${formatDateForDisplay(formData.taxStartDate)}`}
 							</p>
 						</div>
 					</div>
@@ -640,48 +707,47 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 						<div className='space-y-2'>
 							<Label htmlFor='firstName'>First Name</Label>
-							<Input 
-								id='firstName' 
+							<Input
+								id='firstName'
 								value={formData.firstName}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='lastName'>Last Name</Label>
-							<Input 
-								id='lastName' 
+							<Input
+								id='lastName'
 								value={formData.lastName}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='phone'>Phone Number</Label>
-							<Input 
-								id='phone' 
-								type='tel' 
+							<Input
+								id='phone'
+								type='tel'
 								value={formData.phone}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='email'>Work Email</Label>
-							<Input 
-								id='email' 
-								type='email' 
+							<Input
+								id='email'
+								type='email'
 								value={formData.email}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2'>
 							<Label>Gender</Label>
-							<Select 
+							<Select
 								value={formData.gender}
-								onValueChange={(val) => handleSelectChange('gender', val)}
-							>
+								onValueChange={(val) => handleSelectChange('gender', val)}>
 								<SelectTrigger>
 									<SelectValue placeholder='Select gender' />
 								</SelectTrigger>
@@ -689,41 +755,44 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 									<SelectItem value='MALE'>Male</SelectItem>
 									<SelectItem value='FEMALE'>Female</SelectItem>
 									<SelectItem value='OTHER'>Other</SelectItem>
-									<SelectItem value='PREFER_NOT_TO_SAY'>Prefer not to say</SelectItem>
+									<SelectItem value='PREFER_NOT_TO_SAY'>
+										Prefer not to say
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='dob'>Date of Birth</Label>
-							<Input 
-								id='dob' 
-								type='date' 
+							<Input
+								id='dob'
+								type='date'
 								value={formData.dob}
 								max={getTodayFormatted()}
-								min="1900-01-01"
-								required 
+								min='1900-01-01'
+								required
 								onChange={handleChange}
-								className="block w-full"
+								className='block w-full'
 							/>
-							<p className="text-xs text-gray-500">
-								{formData.dob && `Format: ${formatDateForDisplay(formData.dob)}`}
+							<p className='text-xs text-gray-500'>
+								{formData.dob &&
+									`Format: ${formatDateForDisplay(formData.dob)}`}
 							</p>
 						</div>
 						<div className='space-y-2 md:col-span-2'>
 							<Label htmlFor='address1'>Address Line 1</Label>
-							<Input 
-								id='address1' 
+							<Input
+								id='address1'
 								value={formData.address1}
-								required 
-								onChange={handleChange} 
+								required
+								onChange={handleChange}
 							/>
 						</div>
 						<div className='space-y-2 md:col-span-2'>
 							<Label htmlFor='address2'>Address Line 2</Label>
-							<Input 
-								id='address2' 
+							<Input
+								id='address2'
 								value={formData.address2}
-								onChange={handleChange} 
+								onChange={handleChange}
 							/>
 						</div>
 					</div>
