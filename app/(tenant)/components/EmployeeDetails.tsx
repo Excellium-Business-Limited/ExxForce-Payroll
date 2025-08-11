@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
 import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
 import SalarySetupForm from '../components/SalarySetupForm'; // Import the SalarySetupForm
+import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import the SalaryComponentSetup
 
 interface Employee {
   id?: number;
@@ -52,6 +53,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   // New state for inline editing
   const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
   const [showSalaryForm, setShowSalaryForm] = useState<boolean>(false);
+  const [showSalaryComponentSetup, setShowSalaryComponentSetup] = useState<boolean>(false);
   const [editType, setEditType] = useState<'general' | 'salary'>('general');
 
   const formatCurrency = (amount: number) => {
@@ -117,12 +119,21 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setEditType('general');
     setShowEmployeeForm(true);
     setShowSalaryForm(false); // Close salary form if open
+    setShowSalaryComponentSetup(false); // Close salary component setup if open
   };
 
   // Handler for Salary & Payment Details edit
   const handleSalaryEdit = () => {
     setShowSalaryForm(true);
     setShowEmployeeForm(false); // Close employee form if open
+    setShowSalaryComponentSetup(false); // Close salary component setup if open
+  };
+
+  // Handler for Process Payroll button
+  const handleProcessPayroll = () => {
+    setShowSalaryComponentSetup(true);
+    setShowEmployeeForm(false); // Close employee form if open
+    setShowSalaryForm(false); // Close salary form if open
   };
 
   // Handler for closing the inline forms
@@ -132,6 +143,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   const handleCloseSalaryForm = () => {
     setShowSalaryForm(false);
+  };
+
+  const handleCloseSalaryComponentSetup = () => {
+    setShowSalaryComponentSetup(false);
   };
 
   // Handler for form submission
@@ -160,6 +175,17 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     }
   };
 
+  // Handler for salary component setup submission
+  const handleSalaryComponentSubmit = async (salaryComponentData: any) => {
+    try {
+      console.log('Updating salary component:', salaryComponentData);
+      // Handle salary component setup submission
+      setShowSalaryComponentSetup(false);
+    } catch (error) {
+      console.error('Error submitting salary component:', error);
+    }
+  };
+
   const tabs = [
     { id: 'general', label: 'General' },
     { id: 'payroll', label: 'Payroll' },
@@ -180,27 +206,27 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     </div>
   );
 
-  // Empty State Components (keeping all the same as before)
+  // Updated Empty State Components (all blue now)
   const PayrollEmptyState: React.FC = () => (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
       <div className="mb-8">
         <div className="relative">
           <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-green-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-blue-600" />
               </div>
               <div className="text-xs text-gray-400">Payroll</div>
             </div>
             <div className="space-y-2">
-              <div className="h-2 bg-green-200 rounded w-full"></div>
-              <div className="h-2 bg-green-100 rounded w-3/4"></div>
-              <div className="h-2 bg-green-100 rounded w-1/2"></div>
+              <div className="h-2 bg-blue-200 rounded w-full"></div>
+              <div className="h-2 bg-blue-100 rounded w-3/4"></div>
+              <div className="h-2 bg-blue-100 rounded w-1/2"></div>
             </div>
           </div>
           
           <div className="absolute -bottom-3 -right-3">
-            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
@@ -214,7 +240,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         Payroll records for {employee.first_name} {employee.last_name} will appear here once they are processed.
       </p>
 
-      <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+      <button 
+        onClick={handleProcessPayroll}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+      >
         <DollarSign className="w-4 h-4" />
         Process Payroll
       </button>
@@ -279,25 +308,25 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <div className="relative">
           <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <CreditCard className="w-4 h-4 text-orange-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-blue-600" />
               </div>
               <div className="text-xs text-gray-400">Loans</div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <div className="h-2 bg-orange-200 rounded w-1/3"></div>
+                <div className="h-2 bg-blue-200 rounded w-1/3"></div>
                 <div className="text-xs text-gray-400">₦0</div>
               </div>
               <div className="flex justify-between items-center">
-                <div className="h-2 bg-orange-100 rounded w-1/4"></div>
+                <div className="h-2 bg-blue-100 rounded w-1/4"></div>
                 <div className="text-xs text-gray-400">₦0</div>
               </div>
             </div>
           </div>
           
           <div className="absolute -bottom-3 -right-3">
-            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
@@ -311,7 +340,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         Track and manage loans for {employee.first_name} {employee.last_name}. Set up salary advances or employee loans here.
       </p>
 
-      <button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+      <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
         <CreditCard className="w-4 h-4" />
         Create Loan
       </button>
@@ -324,27 +353,27 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <div className="relative">
           <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-purple-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-blue-600" />
               </div>
               <div className="text-xs text-gray-400">Leave</div>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-7 gap-1">
                 {[...Array(7)].map((_, i) => (
-                  <div key={i} className="w-4 h-4 bg-purple-50 rounded-sm"></div>
+                  <div key={i} className="w-4 h-4 bg-blue-50 rounded-sm"></div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
                 {[...Array(7)].map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-sm ${i === 2 || i === 3 ? 'bg-purple-200' : 'bg-purple-50'}`}></div>
+                  <div key={i} className={`w-4 h-4 rounded-sm ${i === 2 || i === 3 ? 'bg-blue-200' : 'bg-blue-50'}`}></div>
                 ))}
               </div>
             </div>
           </div>
           
           <div className="absolute -bottom-3 -right-3">
-            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
@@ -359,7 +388,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </p>
 
       <div className="flex gap-3">
-        <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
           <Calendar className="w-4 h-4" />
           Request Leave
         </button>
@@ -376,8 +405,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <div className="relative">
           <div className="bg-white rounded-lg shadow-lg p-6 w-56 h-36 border">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none">
                   <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
@@ -385,22 +414,22 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <div className="h-2 bg-indigo-200 rounded w-2/3"></div>
+                <div className="h-2 bg-blue-200 rounded w-2/3"></div>
                 <div className="text-xs text-gray-400">₦0</div>
               </div>
               <div className="flex justify-between items-center">
-                <div className="h-2 bg-indigo-100 rounded w-1/2"></div>
+                <div className="h-2 bg-blue-100 rounded w-1/2"></div>
                 <div className="text-xs text-gray-400">₦0</div>
               </div>
               <div className="flex justify-between items-center">
-                <div className="h-2 bg-indigo-100 rounded w-3/4"></div>
+                <div className="h-2 bg-blue-100 rounded w-3/4"></div>
                 <div className="text-xs text-gray-400">₦0</div>
               </div>
             </div>
           </div>
           
           <div className="absolute -bottom-3 -right-3">
-            <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
               <Clock className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -413,7 +442,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </p>
 
       <div className="flex gap-3">
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
           <DollarSign className="w-4 h-4" />
           Process Payment
         </button>
@@ -483,7 +512,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       {/* Content with Form Overlay */}
       <div className="flex-1 overflow-hidden relative">
         {/* Main Content */}
-        <div className={`${showEmployeeForm || showSalaryForm ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
+        <div className={`${showEmployeeForm || showSalaryForm || showSalaryComponentSetup ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
           <div className="max-w-7xl mx-auto p-6">
             {activeTab === 'general' && (
               <div className="space-y-6">
@@ -700,6 +729,36 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 employeeData={employee}
                 onClose={handleCloseSalaryForm}
                 onSubmit={handleSalarySubmit}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Right Side Form Panel - Salary Component Setup Overlay */}
+        {showSalaryComponentSetup && (
+          <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+            {/* Form Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Process Payroll - {employee.first_name} {employee.last_name}
+              </h2>
+              <button
+                onClick={handleCloseSalaryComponentSetup}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close form"
+              >
+                <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-auto">
+              <SalaryComponentSetup
+                employee={employee}
+                onClose={handleCloseSalaryComponentSetup}
+                onSubmit={handleSalaryComponentSubmit}
               />
             </div>
           </div>
