@@ -69,7 +69,7 @@ const EmployeePage: React.FC = () => {
     designation: 'All',
     status: 'All',
   });
-  const { tenant } = useGlobal();
+  const { tenant, globalState } = useGlobal();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -375,9 +375,15 @@ const EmployeePage: React.FC = () => {
 
   const fetchEmployees = async (): Promise<void> => {
     try {
+      console.log(tenant)
       const response = await axios.get<Employee[]>(
-        `http://${tenant}.localhost:8000/tenant/employee/list`
-      );
+				`http://${tenant}.localhost:8000/tenant/employee/list`,
+				{
+					headers: {
+						Authorization: `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
 
       console.log('Raw employee data from API:', response.data);
 

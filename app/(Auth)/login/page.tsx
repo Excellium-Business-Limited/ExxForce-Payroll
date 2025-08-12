@@ -1,5 +1,6 @@
-'use client';
-import React, { useState } from 'react';
+
+'use client'
+import React from 'react';
 import axios from 'axios';
 import { LoginForm } from './components/login-form';
 import Image from 'next/image';
@@ -10,43 +11,18 @@ import { login } from '@/lib/api';
 import { setTenant, saveTokens } from '@/lib/auth';
 
 const LoginPage = () => {
-	const { globalState, updateGlobalState } = useGlobal();
-	const router = useRouter();
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [error, setError] = useState('');
-	const [isLoading, setIsLoading] = useState(false);
-	const [showPassword, setShowPassword] = useState(false);
-	const handleLogin = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setError('');
-		setIsLoading(true);
-		try{
-			const response = await login(email, password);
-			console.log(response);
-			const { access, refresh, redirect, tenant } = response;
-			saveTokens(access, refresh);
-			const redirectPath = new URL(redirect).pathname
-			// const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);
-			setTenant(tenant);
-			updateGlobalState({ tenant: tenant, access : access, refresh: refresh });
-			router.push(redirectPath);
-		} catch (err: any) {
-			setError(err.message || 'Invalid credentials. Please try again.');
-			setIsLoading(false);
-		}
-	};
+
 	return (
 		<div className='bg-white'>
-			{/* <LoginForm /> */}
-			<form action="submit">
+			<LoginForm/>
+			{/* <form action="submit">
 				<label htmlFor="email">Email</label>
 				<input type="email" onChange={(e) => setEmail(e.target.value)} />
 				<label htmlFor="password">Password</label>
 				<input type="password" onChange={(e) => setPassword(e.target.value)} />
 				<button onClick={handleLogin}>Login</button>
 				{error ? <p className="text-red-500">{error}</p> : null}
-			</form>
+			</form> */}
 		</div>
 	);
 };

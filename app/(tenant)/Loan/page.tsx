@@ -1,8 +1,8 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { ReactNode, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import axios from "axios";
+import { ReactNode, useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import axios from 'axios';
 import React from 'react';
 import {
 	Select,
@@ -44,15 +44,15 @@ import { set } from 'date-fns';
 import { redirect } from 'next/navigation';
 
 interface Loan {
-  monthly_deduction: ReactNode;
-  id: number;
-  loan_number: string;
-  loan_type: string;
-  employee_name: string;
-  amount: number;
-  balance: number;
-  status: string;
-  start_date: string;
+	monthly_deduction: ReactNode;
+	id: number;
+	loan_number: string;
+	loan_type: string;
+	employee_name: string;
+	amount: number;
+	balance: number;
+	status: string;
+	start_date: string;
 }
 
 const items = [
@@ -62,62 +62,62 @@ const items = [
 ];
 
 export default function Home() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const tenant = getTenant()
-  const baseURL = `http://${tenant}.localhost:8000`;
-  const [isloan, setisLoan] = React.useState<boolean>(false);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+	const pathname = usePathname();
+	const router = useRouter();
+	const tenant = getTenant();
+	const baseURL = `http://${tenant}.localhost:8000`;
+	const [isloan, setisLoan] = React.useState<boolean>(false);
+	const [loans, setLoans] = useState<Loan[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState('');
 
-	const fetchLoans = async () => {
-		try {
-			const token = localStorage.getItem('access_token');
-			if (!token) throw new Error('No access token');
+	useEffect(() => {
+		const fetchLoans = async () => {
+			try {
+				const token = localStorage.getItem('access_token');
+				if (!token) throw new Error('No access token');
 
-			const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/list`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			setLoans(res.data);
-			setLoading(false);
-			if (res.status !== 200) setisLoan(false);
-		} catch (err: any) {
-			console.error('Error fetching loans', err);
-			setError(err.message || 'Failed to fetch loans');
-			if (err.response?.status === 401) {
-				// Redirect to login if unauthorized
-				setTimeout(() => {
-					redirect('/login');
-				}, 2000);
+				const res = await axios.get<Loan[]>(`${baseURL}/tenant/loans/list`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				setLoans(res.data);
+				setLoading(false);
+				if (res.status !== 200) setisLoan(false);
+			} catch (err: any) {
+				console.error('Error fetching loans', err);
+				setError(err.message || 'Failed to fetch loans');
+				if (err.response?.status === 401) {
+					// Redirect to login if unauthorized
+					setTimeout(() => {
+						redirect('/login');
+					}, 2000);
+				}
+			} finally {
+				setLoading(false);
 			}
-		} finally {
-			setLoading(false);
-		}
-	};	
-	 
-	const timeout = setTimeout(() => {
-		setLoading(true);
-		fetchLoans();
-	}, 2000);
-  useEffect(() => {
+		};
+
+		const timeout = setTimeout(() => {
+			setLoading(true);
+			fetchLoans();
+		}, 2000);
 		fetchLoans();
 		console.log(loans);
 		console.log(loans[0]);
 		setisLoan(true);
 		return () => clearTimeout(timeout);
-}, [tenant]);
+	}, [tenant]);
 
-  const handleCreate = () => {
-    router.push(`/${tenant}/loans/create`);
-  };
+	const handleCreate = () => {
+		router.push(`/${tenant}/loans/create`);
+	};
 
-  const goToDetail = (loanId: number) => {
-    router.push(`/Loan/${loanId}`);
-  };
+	const goToDetail = (loanId: number) => {
+		router.push(`/Loan/${loanId}`);
+	};
 
-//   if (loading) return <p>Loading loans…</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+	//   if (loading) return <p>Loading loans…</p>;
+	if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
 	if (isloan === false) {
 		return (
@@ -223,7 +223,7 @@ export default function Home() {
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-						<Dialogs title={'Import'} >
+						<Dialogs title={'Import'}>
 							<Import
 								title='Loans'
 								isOpen={false}
@@ -269,16 +269,30 @@ export default function Home() {
 					<Table border={4}>
 						<TableHeader>
 							<TableRow>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Loan Number</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Employee Name</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Loan Name</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Loan Amount</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Deduction</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Loan Number
+								</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Employee Name
+								</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Loan Name
+								</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Loan Amount
+								</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Deduction
+								</TableHead>
 								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Balance Remaining
 								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Status</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>View</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Status
+								</TableHead>
+								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									View
+								</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -293,7 +307,11 @@ export default function Home() {
 										<TableCell>{loan.balance}</TableCell>
 										<TableCell>
 											<h4
-												className={`border justify-center flex rounded-4xl bg-[#dee7f6] p-1 ${loan.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+												className={`border justify-center flex rounded-4xl bg-[#dee7f6] p-1 ${
+													loan.status === 'approved'
+														? 'bg-green-100 text-green-800'
+														: 'bg-gray-100 text-gray-800'
+												}`}>
 												{loan.status}
 											</h4>
 										</TableCell>

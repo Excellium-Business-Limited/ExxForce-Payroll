@@ -173,7 +173,7 @@ const Dashboard = () => {
 				<div className=' grid grid-cols-2 grid-rows-2 p-5 rounded-xl shadow gap-3 bg-white w-full'>
 					<Card className='h-[123px] items-center justify-center flex flex-col'>
 						<Link
-							href='/main/Employee'
+							href='/Employee'
 							className='flex flex-col items-center gap-2'>
 							<article className='bg-[#e9eff9] rounded-4xl w-fit p-2'>
 								<img
@@ -188,7 +188,7 @@ const Dashboard = () => {
 					</Card>
 					<Card className=' h-[123px] grid place-content-center'>
 						<Link
-							href='/main/Payrun'
+							href='/Payrun'
 							className='flex flex-col items-center gap-2'>
 							<article className='bg-[#e9eff9] w-fit rounded-4xl p-2'>
 								<img
@@ -203,7 +203,7 @@ const Dashboard = () => {
 					</Card>
 					<Card className=' h-[123px] grid place-content-center'>
 						<Link
-							href='/main/Reports'
+							href='/Reports'
 							className='flex flex-col items-center gap-2'>
 							<article className='bg-[#e9eff9] w-fit rounded-4xl p-2'>
 								<BarChartBigIcon
@@ -217,7 +217,7 @@ const Dashboard = () => {
 					</Card>
 					<Card className=' h-[123px] grid place-content-center'>
 						<Link
-							href='/main/Setins/CompSet'
+							href='/Setins/CompSet'
 							className='flex flex-col items-center gap-2'>
 							<article className='bg-[#e9eff9] w-fit rounded-4xl p-2'>
 								<Settings
