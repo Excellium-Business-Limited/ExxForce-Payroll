@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
 import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
 import SalarySetupForm from '../components/SalarySetupForm'; // Import the SalarySetupForm
 import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import the SalaryComponentSetup
+import LeaveListDisplay from '../components/LeaveListDisplay'; // Import the LeaveListDisplay
+import LeaveRequestForm from '../components/LeaveRequestForm'; // Import the LeaveRequestForm
 
 interface Employee {
   id?: number;
@@ -33,6 +35,17 @@ interface Employee {
   is_nsitf_applicable: boolean;
 }
 
+interface LeaveRequest {
+  id: string;
+  leave_type: string;
+  days: number;
+  start_date: string;
+  end_date: string;
+  submitted_date: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reason: string;
+}
+
 interface EmployeeDetailsProps {
   employee: Employee;
   onClose: () => void;
@@ -55,6 +68,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const [showSalaryForm, setShowSalaryForm] = useState<boolean>(false);
   const [showSalaryComponentSetup, setShowSalaryComponentSetup] = useState<boolean>(false);
   const [editType, setEditType] = useState<'general' | 'salary'>('general');
+  
+  // Leave-related state
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [showLeaveRequestForm, setShowLeaveRequestForm] = useState<boolean>(false);
+  const [isLoadingLeaveRequests, setIsLoadingLeaveRequests] = useState<boolean>(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -113,6 +131,40 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     }
   };
 
+  // Fetch leave requests for the employee
+  const fetchLeaveRequests = async () => {
+    if (!employee.employee_id) return;
+    
+    try {
+      setIsLoadingLeaveRequests(true);
+      const response = await fetch(`/api/tenant/leave/leave-request?employee_code=${employee.employee_id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch leave requests');
+      }
+
+      const data = await response.json();
+      setLeaveRequests(data.data || []);
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+      setLeaveRequests([]);
+    } finally {
+      setIsLoadingLeaveRequests(false);
+    }
+  };
+
+  // Fetch leave requests when the leave tab is active
+  useEffect(() => {
+    if (activeTab === 'leave') {
+      fetchLeaveRequests();
+    }
+  }, [activeTab, employee.employee_id]);
+
   // Handler for Basic Details and Employment Details edit
   const handleEmployeeEdit = (e: any) => {
     e.preventDefault();
@@ -120,6 +172,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowEmployeeForm(true);
     setShowSalaryForm(false); // Close salary form if open
     setShowSalaryComponentSetup(false); // Close salary component setup if open
+    setShowLeaveRequestForm(false); // Close leave request form if open
   };
 
   // Handler for Salary & Payment Details edit
@@ -127,6 +180,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowSalaryForm(true);
     setShowEmployeeForm(false); // Close employee form if open
     setShowSalaryComponentSetup(false); // Close salary component setup if open
+    setShowLeaveRequestForm(false); // Close leave request form if open
   };
 
   // Handler for Process Payroll button
@@ -134,6 +188,15 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowSalaryComponentSetup(true);
     setShowEmployeeForm(false); // Close employee form if open
     setShowSalaryForm(false); // Close salary form if open
+    setShowLeaveRequestForm(false); // Close leave request form if open
+  };
+
+  // Handler for Leave Request button
+  const handleRequestLeave = () => {
+    setShowLeaveRequestForm(true);
+    setShowEmployeeForm(false); // Close employee form if open
+    setShowSalaryForm(false); // Close salary form if open
+    setShowSalaryComponentSetup(false); // Close salary component setup if open
   };
 
   // Handler for closing the inline forms
@@ -147,6 +210,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   const handleCloseSalaryComponentSetup = () => {
     setShowSalaryComponentSetup(false);
+  };
+
+  const handleCloseLeaveRequestForm = () => {
+    setShowLeaveRequestForm(false);
   };
 
   // Handler for form submission
@@ -183,6 +250,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       setShowSalaryComponentSetup(false);
     } catch (error) {
       console.error('Error submitting salary component:', error);
+    }
+  };
+
+  // Handler for leave request submission
+  const handleLeaveRequestSubmit = async (leaveRequestData: any) => {
+    try {
+      console.log('Leave request submitted:', leaveRequestData);
+      // Refresh the leave requests list
+      await fetchLeaveRequests();
+      // Close the form after successful submission
+      setShowLeaveRequestForm(false);
+    } catch (error) {
+      console.error('Error submitting leave request:', error);
     }
   };
 
@@ -388,7 +468,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </p>
 
       <div className="flex gap-3">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+        <button 
+          onClick={handleRequestLeave}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
           <Calendar className="w-4 h-4" />
           Request Leave
         </button>
@@ -453,6 +536,9 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     </div>
   );
 
+  // Determine if any form panel is open
+  const isAnyFormOpen = showEmployeeForm || showSalaryForm || showSalaryComponentSetup || showLeaveRequestForm;
+
   return (
     <div className="bg-white w-full h-full overflow-hidden flex flex-col">
       {/* Header */}
@@ -512,7 +598,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       {/* Content with Form Overlay */}
       <div className="flex-1 overflow-hidden relative">
         {/* Main Content */}
-        <div className={`${showEmployeeForm || showSalaryForm || showSalaryComponentSetup ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
+        <div className={`${isAnyFormOpen ? 'w-1/2' : 'w-full'} h-full overflow-y-auto bg-gray-50 transition-all duration-300`}>
           <div className="max-w-7xl mx-auto p-6">
             {activeTab === 'general' && (
               <div className="space-y-6">
@@ -664,7 +750,28 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             {activeTab === 'payroll' && <PayrollEmptyState />}
             {activeTab === 'document' && <DocumentEmptyState />}
             {activeTab === 'loan' && <LoanEmptyState />}
-            {activeTab === 'leave' && <LeaveEmptyState />}
+            {activeTab === 'leave' && (
+              <div>
+                {isLoadingLeaveRequests ? (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="flex items-center space-x-2">
+                      <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="text-gray-600">Loading leave requests...</span>
+                    </div>
+                  </div>
+                ) : leaveRequests.length > 0 ? (
+                  <LeaveListDisplay
+                    leaveRequests={leaveRequests}
+                    onRequestLeave={handleRequestLeave}
+                  />
+                ) : (
+                  <LeaveEmptyState />
+                )}
+              </div>
+            )}
             {activeTab === 'payment-history' && <PaymentHistoryEmptyState />}
           </div>
         </div>
@@ -759,6 +866,37 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 employee={employee}
                 onClose={handleCloseSalaryComponentSetup}
                 onSubmit={handleSalaryComponentSubmit}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Right Side Form Panel - Leave Request Form Overlay */}
+        {showLeaveRequestForm && (
+          <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+            {/* Form Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Apply For Leave - {employee.first_name} {employee.last_name}
+              </h2>
+              <button
+                onClick={handleCloseLeaveRequestForm}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close form"
+              >
+                <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-auto p-4">
+              <LeaveRequestForm
+                employeeId={employee.id?.toString() || ''}
+                employeeCode={employee.employee_id}
+                onClose={handleCloseLeaveRequestForm}
+                onSubmit={handleLeaveRequestSubmit}
               />
             </div>
           </div>
