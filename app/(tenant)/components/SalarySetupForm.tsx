@@ -12,6 +12,7 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useGlobal } from '@/app/Context/page';
 import axios from 'axios';
 
 interface SalarySetupFormProps {
@@ -46,6 +47,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     onBack,
     parentOnSubmit
 }) => {
+    const { tenant } = useGlobal();
     const [formData, setFormData] = useState<SalaryFormData>({
         payGradeName: 'Entry Level Staff',
         payFrequency: 'MONTHLY',
@@ -82,17 +84,52 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
         const fetchBanks = async () => {
             setLoadingBanks(true);
             try {
-                // Try to fetch from API first
-                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
-                const response = await axios.get(`${baseUrl}/tenant/banks`);
+                // Try different possible API endpoints
+                const possibleEndpoints = [
+                    `http://${tenant}.localhost:8000/tenant/banks`,
+                    `http://${tenant}.localhost:8000/api/banks`,
+                    `http://${tenant}.localhost:8000/banks`,
+                    'http://excellium.localhost:8000/tenant/banks',
+                    'http://excellium.localhost:8000/api/banks',
+                    'http://excellium.localhost:8000/banks'
+                ];
+
+                let banksData = null;
                 
-                if (response.data && Array.isArray(response.data)) {
-                    setBanks(response.data);
+                for (const endpoint of possibleEndpoints) {
+                    try {
+                        console.log('Trying banks endpoint:', endpoint);
+                        const response = await axios.get(endpoint);
+                        
+                        if (response.data && Array.isArray(response.data)) {
+                            banksData = response.data;
+                            console.log('Successfully fetched banks from:', endpoint);
+                            break;
+                        } else if (response.data?.data && Array.isArray(response.data.data)) {
+                            banksData = response.data.data;
+                            console.log('Successfully fetched banks from:', endpoint);
+                            break;
+                        } else if (response.data?.banks && Array.isArray(response.data.banks)) {
+                            banksData = response.data.banks;
+                            console.log('Successfully fetched banks from:', endpoint);
+                            break;
+                        }
+                    } catch (endpointError) {
+                        console.log('Failed to fetch from:', endpoint, endpointError.response?.status);
+                        continue; // Try next endpoint
+                    }
+                }
+                
+                if (banksData && banksData.length > 0) {
+                    setBanks(banksData);
+                    console.log('Using API banks data:', banksData.length, 'banks');
                 } else {
+                    console.log('No banks data from API, using fallback');
                     setBanks(fallbackBanks);
                 }
             } catch (error) {
                 console.error('Error fetching banks:', error);
+                console.log('Using fallback banks due to error');
                 setBanks(fallbackBanks);
             } finally {
                 setLoadingBanks(false);
@@ -178,7 +215,8 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
         setIsSubmitting(true);
 
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+            // Use tenant-based URL similar to the employee endpoints
+            const baseUrl = `http://${tenant}.localhost:8000`;
             
             // Prepare combined employee and salary data for API
             const combinedData = {
