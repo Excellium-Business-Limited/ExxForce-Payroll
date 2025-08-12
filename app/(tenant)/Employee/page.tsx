@@ -5,6 +5,7 @@ import axios from 'axios';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
 import EmployeeDetails from '../components/EmployeeDetails';
+import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/page';
 
@@ -58,12 +59,11 @@ const EmployeePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
+  const [showSalaryForm, setShowSalaryForm] = useState<boolean>(false);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null
-  );
-  const [showEmployeeDetails, setShowEmployeeDetails] =
-    useState<boolean>(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [showEmployeeDetails, setShowEmployeeDetails] = useState<boolean>(false);
+  const [pendingEmployeeData, setPendingEmployeeData] = useState<any>(null);
   const [filters, setFilters] = useState<Filters>({
     department: 'All',
     designation: 'All',
@@ -177,6 +177,11 @@ const EmployeePage: React.FC = () => {
     setEmployeeData(null);
   };
 
+  const handleCloseSalaryForm = (): void => {
+    setShowSalaryForm(false);
+    setPendingEmployeeData(null);
+  };
+
   const handleCloseImportModal = (): void => {
     setShowImportModal(false);
   };
@@ -223,6 +228,20 @@ const EmployeePage: React.FC = () => {
     }
   };
 
+  // Handle when EmployeeForm shows salary form
+  const handleShowSalaryForm = (employeeData: any): void => {
+    console.log('Showing salary form with data:', employeeData);
+    setPendingEmployeeData(employeeData);
+    setShowEmployeeForm(false); // Hide employee form
+    setShowSalaryForm(true); // Show salary form
+  };
+
+  // Handle when salary form goes back to employee form
+  const handleBackToEmployeeForm = (): void => {
+    setShowSalaryForm(false);
+    setShowEmployeeForm(true);
+  };
+
   const handleEmployeeSubmit = async (employeeFormData: any): Promise<void> => {
     try {
       if (isEdit) {
@@ -234,6 +253,17 @@ const EmployeePage: React.FC = () => {
       await fetchEmployees();
     } catch (error) {
       console.error('Error submitting employee:', error);
+    }
+  };
+
+  const handleSalarySubmit = async (salaryData: any): Promise<void> => {
+    try {
+      console.log('Salary setup completed:', salaryData);
+      await fetchEmployees();
+      setShowSalaryForm(false);
+      setPendingEmployeeData(null);
+    } catch (error) {
+      console.error('Error submitting salary:', error);
     }
   };
 
@@ -859,7 +889,7 @@ const EmployeePage: React.FC = () => {
             )}
           </div>
 
-          {/* Right Side Form Panel - Overlay */}
+          {/* Right Side Form Panel - Overlay for Employee Form */}
           {showEmployeeForm && (
             <div className='absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10'>
               {/* Form Header */}
@@ -894,6 +924,49 @@ const EmployeePage: React.FC = () => {
                   employeeData={employeeData}
                   onClose={handleCloseEmployeeForm}
                   onSubmit={handleEmployeeSubmit}
+                  onShowSalaryForm={handleShowSalaryForm}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Right Side Form Panel - Overlay for Salary Form */}
+          {showSalaryForm && pendingEmployeeData && (
+            <div className='absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10'>
+              {/* Form Header */}
+              <div className='flex items-center justify-between p-4 border-b border-gray-200 bg-white'>
+                <h2 className='text-lg font-semibold text-gray-900'>
+                  Salary Setup
+                </h2>
+                <button
+                  onClick={handleCloseSalaryForm}
+                  className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+                  aria-label='Close form'>
+                  <svg
+                    className='w-5 h-5 text-gray-500'
+                    viewBox='0 0 24 24'
+                    fill='none'>
+                    <path
+                      d='M18 6L6 18M6 6L18 18'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <div className='flex-1 overflow-auto'>
+                <SalarySetupForm
+                  employeeData={pendingEmployeeData}
+                  isEdit={isEdit}
+                  existingEmployeeId={employeeData?.id}
+                  onClose={handleCloseSalaryForm}
+                  onSubmit={handleSalarySubmit}
+                  onBack={handleBackToEmployeeForm}
+                  parentOnSubmit={handleEmployeeSubmit}
                 />
               </div>
             </div>

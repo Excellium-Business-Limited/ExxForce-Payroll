@@ -16,10 +16,12 @@ import axios from 'axios';
 
 interface SalarySetupFormProps {
     employeeData: any;
+    isEdit?: boolean;
+    existingEmployeeId?: number;
     onClose: () => void;
     onSubmit: (salaryData: any) => Promise<void>;
     onBack: () => void;
-    isNewEmployee?: boolean; // New prop to indicate if this is part of new employee creation flow
+    parentOnSubmit: (employeeFormData: any) => Promise<void>;
 }
 
 interface SalaryFormData {
@@ -37,10 +39,12 @@ interface SalaryFormData {
 
 const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     employeeData,
+    isEdit = false,
+    existingEmployeeId,
     onClose,
     onSubmit,
     onBack,
-    isNewEmployee = false
+    parentOnSubmit
 }) => {
     const [formData, setFormData] = useState<SalaryFormData>({
         payGradeName: 'Entry Level Staff',
@@ -174,8 +178,13 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
         setIsSubmitting(true);
 
         try {
-            // Prepare salary data for API
-            const salaryData = {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+            
+            // Prepare combined employee and salary data for API
+            const combinedData = {
+                // Employee data
+                ...employeeData,
+                // Salary data
                 pay_grade_name: formData.payGradeName,
                 pay_frequency: formData.payFrequency,
                 custom_salary: formData.customSalary,
@@ -188,33 +197,44 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                 is_nsitf_applicable: formData.isNsitfApplicable
             };
 
-            console.log('Submitting salary data:', salaryData);
+            console.log('Submitting combined employee and salary data:', combinedData);
 
-            if (isNewEmployee) {
-                // For new employee flow, let parent handle the combined submission
-                console.log('New employee flow - passing salary data to parent for combined submission');
-                await onSubmit(salaryData);
-            } else {
-                // For existing employee (salary edit flow), update employee directly
-                console.log('Existing employee flow - updating salary data directly');
-                
-                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
-                const response = await axios.put(
-                    `${baseUrl}/tenant/employee/update/${employeeData.id}`,
-                    salaryData,
+            let response;
+            
+            if (isEdit && existingEmployeeId) {
+                // Update existing employee with salary data
+                console.log('Updating employee with ID:', existingEmployeeId);
+                response = await axios.put(
+                    `${baseUrl}/tenant/employee/update/${existingEmployeeId}`,
+                    combinedData,
                     { headers: { 'Content-Type': 'application/json' } }
                 );
-
-                console.log('Salary data updated:', response.data);
-
-                // Call parent's onSubmit
-                await onSubmit(salaryData);
-                alert('Salary setup updated successfully!');
-                onClose();
+                console.log('Employee updated with salary data:', response.data);
+                alert('Employee updated successfully with salary information!');
+            } else {
+                // Create new employee with salary data
+                console.log('Creating new employee with salary data...');
+                response = await axios.post(
+                    `${baseUrl}/tenant/employee/create`,
+                    combinedData,
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+                console.log('Employee created with salary data:', response.data);
+                alert('Employee created successfully with salary information!');
             }
 
+            // Call parent's onSubmit handler
+            console.log('Calling parent onSubmit...');
+            await parentOnSubmit(combinedData);
+            
+            // Call the salary form's onSubmit
+            await onSubmit(combinedData);
+
+            console.log('Success! Employee and salary data saved.');
+            onClose();
+
         } catch (error) {
-            console.error('Error saving salary data:', error);
+            console.error('Error saving employee and salary data:', error);
             
             if (axios.isAxiosError(error)) {
                 console.error('Response status:', error.response?.status);
@@ -223,10 +243,10 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                 if (error.response?.status === 422) {
                     alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
                 } else {
-                    alert(`Failed to save salary data: ${error.response?.data?.message || error.message}`);
+                    alert(`Failed to save employee and salary data: ${error.response?.data?.message || error.message}`);
                 }
             } else {
-                alert('Failed to save salary data: Unknown error');
+                alert('Failed to save employee and salary data: Unknown error');
             }
         } finally {
             setIsSubmitting(false);
@@ -251,7 +271,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                         <h1 className='text-2xl font-bold'>Salary Setup</h1>
                         <p className='text-sm text-muted-foreground'>
                             Configure salary and bank details for {employeeData?.first_name} {employeeData?.last_name}
-                            {isNewEmployee && " (New Employee)"}
                         </p>
                     </div>
                 </div>
@@ -408,13 +427,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                     <p><span className='font-medium'>Deductions</span>: {getDeductionsText()}</p>
                     <p><span className='font-medium'>Bank</span>: {formData.bankName}</p>
                     <p><span className='font-medium'>Account</span>: {formData.accountNumber} - {formData.accountName}</p>
-                    {isNewEmployee && (
-                        <div className='mt-2 p-2 bg-green-100 rounded border-l-4 border-green-500'>
-                            <p className='text-green-700 text-xs'>
-                                <strong>Note:</strong> This will create a new employee with both personal and salary information.
-                            </p>
-                        </div>
-                    )}
                 </div>
 
                 <div className='flex justify-end gap-4 pt-4'>
@@ -432,7 +444,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                         disabled={isSubmitting}
                         className='bg-[#3D56A8] hover:bg-[#2E4299]'
                     >
-                        {isSubmitting ? 'Saving...' : isNewEmployee ? 'Create Employee' : 'Save'}
+                        {isSubmitting ? 'Saving...' : 'Save'}
                     </Button>
                 </div>
             </form>
