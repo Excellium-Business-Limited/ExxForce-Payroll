@@ -39,13 +39,13 @@ interface Employee {
 export default function LoanForm({ className }: { className?: string }) {
 	const pathname = usePathname();
 	const router = useRouter();
-	const tenant = getTenant();
+	const [tenant, setTenant] = useState<string | null>(null);
 	const baseURL = `http://${tenant}.localhost:8000`;
 	const [loanTypes, setLoanTypes] = useState<LoanType[]>([]);
 	const [employees, setEmployees] = useState<Employee[]>([]);
 	const [form, setForm] = useState({
 		loan_type_id: '',
-		employee_id: '',
+		employee_id: 0,
 		amount: '',
 		repayment_months: '',
 		start_date: '',
@@ -54,7 +54,7 @@ export default function LoanForm({ className }: { className?: string }) {
 	});
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
-	const [startDate, setStartDate] = React.useState<Date | null>(null);
+	const [startDate, setStartDate] = useState<Date | null>(null);
 
 	useEffect(() => {
 		const loadData = async () => {
@@ -77,12 +77,24 @@ export default function LoanForm({ className }: { className?: string }) {
 				console.error(err);
 				setError('Failed loading loan types or employees.');
 			} finally {
-				console.log(employees)
+				console.log(employees);
 				setLoading(false);
 			}
 		};
-		loadData();
+		if (tenant) {
+			loadData();
+		}
 	}, [tenant]);
+	console.log(employees);
+	useEffect(() => {
+		const tenantName = getTenant();
+		if (tenantName) {
+			setTenant(tenantName);
+		} else {
+			console.error('Tenant not found');
+		}
+	}, []);
+	console.log(loanTypes);
 
 	// Update start_date in form when startDate changes
 	useEffect(() => {
@@ -97,7 +109,6 @@ export default function LoanForm({ className }: { className?: string }) {
 	useEffect(() => {
 		console.log('Form state:', form);
 	}, [form]);
-
 
 	const handleSubmit = async () => {
 		const token = localStorage.getItem('access_token');
@@ -118,7 +129,7 @@ export default function LoanForm({ className }: { className?: string }) {
 				`${baseURL}/tenant/loans/create`,
 				{
 					loan_type_id: parseInt(form.loan_type_id),
-					employee_id: form.employee_id,
+					employee_id: (parseInt(String(form.employee_id)) - 1), // Adjusting for zero-based index
 					amount: Number(form.amount),
 					repayment_months: parseInt(form.repayment_months),
 					start_date: form.start_date,
@@ -189,19 +200,19 @@ export default function LoanForm({ className }: { className?: string }) {
 								Select Employee
 							</Label>
 							<Select
-								value={form.employee_id}
+								value={String(form.employee_id)}
 								onValueChange={(value) => {
 									console.log('Selected employee ID:', value);
-									setForm({ ...form, employee_id: value });
+									setForm({ ...form, employee_id: parseInt(value) });
 								}}>
 								<SelectTrigger className='w-[200px]'>
 									<SelectValue placeholder='Select Employee' />
 								</SelectTrigger>
 								<SelectContent>
-									{employees.map((employee) => (
+									{employees.map((employee, index) => (
 										<SelectItem
 											key={employee.employee_id}
-											value={String(employee.employee_id)}>
+											value={String(index + 1)}>
 											{`${employee.first_name} ${employee.last_name}`}
 										</SelectItem>
 									))}

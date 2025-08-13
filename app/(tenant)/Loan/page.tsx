@@ -64,14 +64,15 @@ const items = [
 export default function Home() {
 	const pathname = usePathname();
 	const router = useRouter();
-	const tenant = getTenant();
-	const baseURL = `http://${tenant}.localhost:8000`;
+	
 	const [isloan, setisLoan] = React.useState<boolean>(false);
 	const [loans, setLoans] = useState<Loan[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
 
 	useEffect(() => {
+		const tenant = getTenant();
+		const baseURL = `http://${tenant}.localhost:8000`;
 		const fetchLoans = async () => {
 			try {
 				const token = localStorage.getItem('access_token');
@@ -100,23 +101,24 @@ export default function Home() {
 		const timeout = setTimeout(() => {
 			setLoading(true);
 			fetchLoans();
+			setLoading(false);
 		}, 2000);
 		fetchLoans();
 		console.log(loans);
 		console.log(loans[0]);
 		setisLoan(true);
 		return () => clearTimeout(timeout);
-	}, [tenant]);
+	}, []);
 
-	const handleCreate = () => {
-		router.push(`/${tenant}/loans/create`);
-	};
+	// const handleCreate = () => {
+	// 	router.push(`/${tenant}/loans/create`);
+	// };
 
 	const goToDetail = (loanId: number) => {
 		router.push(`/Loan/${loanId}`);
 	};
 
-	//   if (loading) return <p>Loading loans…</p>;
+	  if (loading) return <p className='m-0 h-2 uppercase font-bold'>Loading loans…</p>;
 	if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
 	if (isloan === false) {

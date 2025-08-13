@@ -22,7 +22,7 @@ import  { useGlobal } from '@/app/Context/page';
 
 
 const Dashboard = () => {
-	const { globalState, updateGlobalState } = useGlobal();
+	const { globalState, updateGlobalState, tenant } = useGlobal();
 	const [employees, setEmployees] = React.useState<any>([]);
 	const getSalaries = () => {
 		const Salaries = employees.map((employee: any) => employee.custom_salary);
@@ -35,8 +35,8 @@ const Dashboard = () => {
 		currency: 'NGN',})	
 		return formattedSalary;
 	}
-	const tenant = getTenant();
-	const accessToken = getAccessToken();
+	
+	const accessToken = globalState.accessToken || getAccessToken();
 
 	useEffect(() => {
 		if (tenant) {
