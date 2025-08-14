@@ -7,6 +7,7 @@ import SalarySetupForm from '../components/SalarySetupForm'; // Import the Salar
 import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import the SalaryComponentSetup
 import LeaveListDisplay from '../components/LeaveListDisplay'; // Import the LeaveListDisplay
 import LeaveRequestForm from '../components/LeaveRequestForm'; // Import the LeaveRequestForm
+import PayrollBreakdown from '../components/PayrollBreakdown'; // Import the PayrollBreakdown
 
 interface Employee {
   id?: number;
@@ -74,6 +75,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const [showLeaveRequestForm, setShowLeaveRequestForm] = useState<boolean>(false);
   const [isLoadingLeaveRequests, setIsLoadingLeaveRequests] = useState<boolean>(false);
 
+  // Payroll-related state
+  const [hasPayrollData, setHasPayrollData] = useState<boolean>(false);
+  const [isLoadingPayrollData, setIsLoadingPayrollData] = useState<boolean>(false);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -131,6 +136,47 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     }
   };
 
+  // Check if employee has payroll data
+  const checkPayrollData = async () => {
+    if (!employee.employee_id) return;
+    
+    try {
+      setIsLoadingPayrollData(true);
+      
+      // Check both salary components and deduction components
+      const [salaryResponse, deductionResponse] = await Promise.all([
+        fetch('/api/tenant/payroll-settings/salary-components', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+        fetch('/api/tenant/payroll-settings/deduction-components', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      ]);
+
+      const salaryData = salaryResponse.ok ? await salaryResponse.json() : { data: [] };
+      const deductionData = deductionResponse.ok ? await deductionResponse.json() : { data: [] };
+
+      // Check if there are any salary or deduction components, or if employee has a custom salary
+      const hasSalaryComponents = salaryData.data && salaryData.data.length > 0;
+      const hasDeductionComponents = deductionData.data && deductionData.data.length > 0;
+      const hasBasicPay = employee.custom_salary > 0;
+
+      setHasPayrollData(hasSalaryComponents || hasDeductionComponents || hasBasicPay);
+    } catch (error) {
+      console.error('Error checking payroll data:', error);
+      // If there's an error, assume no payroll data
+      setHasPayrollData(false);
+    } finally {
+      setIsLoadingPayrollData(false);
+    }
+  };
+
   // Fetch leave requests for the employee
   const fetchLeaveRequests = async () => {
     if (!employee.employee_id) return;
@@ -157,6 +203,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       setIsLoadingLeaveRequests(false);
     }
   };
+
+  // Check payroll data when the payroll tab is active
+  useEffect(() => {
+    if (activeTab === 'payroll') {
+      checkPayrollData();
+    }
+  }, [activeTab, employee.employee_id]);
 
   // Fetch leave requests when the leave tab is active
   useEffect(() => {
@@ -248,6 +301,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       console.log('Updating salary component:', salaryComponentData);
       // Handle salary component setup submission
       setShowSalaryComponentSetup(false);
+      // Refresh payroll data after component setup
+      checkPayrollData();
     } catch (error) {
       console.error('Error submitting salary component:', error);
     }
@@ -264,6 +319,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     } catch (error) {
       console.error('Error submitting leave request:', error);
     }
+  };
+
+  // Handler for payslip generation
+  const handleGeneratePayslip = () => {
+    console.log('Generate payslip for employee:', employee.employee_id);
+    // You can implement payslip generation logic here
+    // For example, open a new window or download a PDF
   };
 
   const tabs = [
@@ -747,7 +809,30 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
               </div>
             )}
 
-            {activeTab === 'payroll' && <PayrollEmptyState />}
+            {activeTab === 'payroll' && (
+              <div>
+                {isLoadingPayrollData ? (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="flex items-center space-x-2">
+                      <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="text-gray-600">Loading payroll data...</span>
+                    </div>
+                  </div>
+                ) : hasPayrollData ? (
+                  <PayrollBreakdown
+                    employee={employee}
+                    onProcessPayroll={handleProcessPayroll}
+                    onGeneratePayslip={handleGeneratePayslip}
+                  />
+                ) : (
+                  <PayrollEmptyState />
+                )}
+              </div>
+            )}
+
             {activeTab === 'document' && <DocumentEmptyState />}
             {activeTab === 'loan' && <LoanEmptyState />}
             {activeTab === 'leave' && (
