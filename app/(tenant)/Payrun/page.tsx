@@ -11,7 +11,7 @@ import {payrans} from './_components/payrunData'
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import  { useGlobal } from '@/app/Context/page';
-import { getAccessToken } from '@/lib/auth';
+import { getAccessToken, getTenant } from '@/lib/auth';
 
 
 interface PayRun {
@@ -27,23 +27,29 @@ interface PayRun {
 const page = () => {
   const [isPayrun, setIsPayrun] = React.useState(true)
    const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-   const {tenant} = useGlobal();
+	const [isLoading, setIsLoading] = useState(false);
    const router = useRouter();
 		const pathname = usePathname();
-		const tenantName = tenant ? tenant : pathname.split('/')[1];
+		
+		// const tenantName = tenant ? tenant : pathname.split('/')[1];
 
 		const [payruns, setPayruns] = useState<PayRun[]>([]);
 		const [error, setError] = useState('');
-
+		
 		useEffect(() => {
+			const tenant = getTenant();
 			const fetchPayRuns = async () => {
 				try {
+					setIsLoading(true);
 					const token = getAccessToken()
 					const res = await axios.get<PayRun[]>(
-						`http://${tenantName}.localhost:8000/tenant/payrun/list`,
+						`http://${tenant}.localhost:8000/tenant/payrun/list`,
 						{ headers: { Authorization: `Bearer ${token}` } }
 					);
 					setPayruns(res.data);
+					console.log(tenant)
+					setIsLoading(false);
+					console.log(res.data);
 				} catch (err: any) {
 					console.error(err);
 					setError(err.response?.data?.detail || 'Failed to load pay runs');
@@ -55,16 +61,15 @@ const page = () => {
 					}
 				}
 			};
-			const timeout = setTimeout(() => {
-				console.log(payruns);
-			})
 			fetchPayRuns();
-			timeout
+			
 		}, []);
 
 		if (error) return <p >{error}</p>;
 
+		if (isLoading) return <div>Loading...</div>;
 
+		
 
   return (
 		<div className='h-[2000px]'>

@@ -23,13 +23,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
+import { getTenant } from '@/lib/auth';
 
 const paygrade = () => {
 	const [payGrades, setPayGrades] = useState<any[]>([]);
 	const [error, setError] = useState('');
 	const [isLoading, setIsLoading] = useState(true);
 
-	const { tenant } = useGlobal();
+	const tenant = getTenant();
 
 	useEffect(() => {
 		console.log(`Fetching pay grades for tenant: ${tenant}`);

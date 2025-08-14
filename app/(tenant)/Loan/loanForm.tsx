@@ -20,6 +20,8 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import axios from 'axios';
 import { getAccessToken, getTenant } from '@/lib/auth';
+import { Check } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface LoanType {
 	id: number;
@@ -51,6 +53,10 @@ export default function LoanForm({ className }: { className?: string }) {
 		start_date: '',
 		reason: '',
 		monthly_deduction: '',
+		status: '',
+		interest_rate: '',
+		interest_method: '',
+
 	});
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
@@ -129,11 +135,12 @@ export default function LoanForm({ className }: { className?: string }) {
 				`${baseURL}/tenant/loans/create`,
 				{
 					loan_type_id: parseInt(form.loan_type_id),
-					employee_id: (parseInt(String(form.employee_id)) - 1), // Adjusting for zero-based index
+					employee_id: (parseInt(String(form.employee_id))), // Adjusting for zero-based index
 					amount: Number(form.amount),
 					repayment_months: parseInt(form.repayment_months),
 					start_date: form.start_date,
 					reason: form.reason || null,
+					status: 'approved'
 				},
 				{
 					headers: { Authorization: `Bearer ${token}` },
@@ -166,7 +173,7 @@ export default function LoanForm({ className }: { className?: string }) {
 						<span>
 							<Label
 								htmlFor='LoanName'
-								className='mb-2'>
+								className='mb-2 font-light'>
 								Loan Name
 							</Label>
 							<Select
@@ -176,7 +183,7 @@ export default function LoanForm({ className }: { className?: string }) {
 									setForm({ ...form, loan_type_id: value });
 								}}
 								required>
-								<SelectTrigger className='w-[200px]'>
+								<SelectTrigger className='w-[200px] font-light'>
 									<SelectValue placeholder='Select Loan Name' />
 								</SelectTrigger>
 								<SelectContent>
@@ -196,7 +203,7 @@ export default function LoanForm({ className }: { className?: string }) {
 						<span>
 							<Label
 								htmlFor='SelectEmp'
-								className='mb-2'>
+								className='mb-2 font-light'>
 								Select Employee
 							</Label>
 							<Select
@@ -212,7 +219,7 @@ export default function LoanForm({ className }: { className?: string }) {
 									{employees.map((employee, index) => (
 										<SelectItem
 											key={employee.employee_id}
-											value={String(index + 1)}>
+											value={employee.id.toString()}>
 											{`${employee.first_name} ${employee.last_name}`}
 										</SelectItem>
 									))}
@@ -222,7 +229,7 @@ export default function LoanForm({ className }: { className?: string }) {
 						<span>
 							<Label
 								htmlFor='Loanamt'
-								className='mb-2'>
+								className='mb-2 font-light'>
 								Loan Amount
 							</Label>
 							<Input
@@ -238,7 +245,7 @@ export default function LoanForm({ className }: { className?: string }) {
 						<span>
 							<Label
 								htmlFor='Repay'
-								className='mb-2'>
+								className='mb-2 font-light'>
 								Repayment Duration
 							</Label>
 							<Select
@@ -260,7 +267,7 @@ export default function LoanForm({ className }: { className?: string }) {
 						<span>
 							<Label
 								htmlFor='MonthDed'
-								className='mb-2'>
+								className='mb-2 font-light'>
 								Monthly Deduction
 							</Label>
 							<Input
@@ -278,7 +285,7 @@ export default function LoanForm({ className }: { className?: string }) {
 					</div>
 					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='Start'>Start Date of Repayment</Label>
+							<Label htmlFor='Start' className='mb-2 font-light'>Start Date of Repayment</Label>
 							<DatePicker
 								id='Start'
 								required
@@ -289,6 +296,48 @@ export default function LoanForm({ className }: { className?: string }) {
 								className='h-8 mb-4 w-[200px] pl-3 pr-8 border rounded'
 							/>
 						</span>
+					</div>
+					<div className='grid grid-cols-2 gap-6 m-4'>
+						<span>
+							<Label htmlFor='intrestRate' className='mb-2 font-light'>Interest Rate</Label>
+							<Input
+								className='h-8 mb-4 w-[200px] pl-3 pr-8 border rounded'
+								type='number'
+								id='intrestRate'
+								value={form.interest_rate}
+								onChange={(e) =>
+									setForm({ ...form, interest_rate: e.target.value })
+								}
+							/>
+						</span>
+					</div>
+					<div className='grid grid-cols-2 gap-6 m-4'>
+						<span>
+							<Label htmlFor='Method' className='mb-2 font-light'>Interest Method</Label>
+							<div className='flex flex-col gap-4 mt-2'>
+								<label className='flex items-center gap-2 cursor-pointer'>
+									<Checkbox
+										id='Method1'
+										checked={form.interest_method === 'flat'}
+										onCheckedChange={() =>
+											setForm({ ...form, interest_method: 'flat' })
+										}
+									/>
+									<span className='font-light'>Flat</span>
+								</label>
+								<label className='flex items-center gap-2 cursor-pointer'>
+									<Checkbox
+										id='Method2'
+										checked={form.interest_method === 'reducing'}
+										onCheckedChange={() =>
+											setForm({ ...form, interest_method: 'reducing' })
+										}
+									/>
+									<span className='font-light'>Reducing Balance</span>
+								</label>
+							</div>
+						</span>
+						<span></span>
 					</div>
 					<div>
 						<span>

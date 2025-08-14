@@ -6,6 +6,7 @@ import { fetchEmployees } from '@/lib/api';
 export const Global = createContext()
 export const GlobalProvider = ({ children }) => {
     const [employees, setEmployees] = useState([]);
+    const [tenant, setTenant] = useState('');
     const [globalState, setGlobalState] = useState({
         tenant: '',
         tenantName: '',
@@ -29,7 +30,6 @@ export const GlobalProvider = ({ children }) => {
                 }
     }
 
-    const [tenant, setTenant] = useState('');
 
     useEffect(() => {
         const t = getTenant();
