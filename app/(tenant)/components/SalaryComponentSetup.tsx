@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2 } from "lucide-react";
+import axios from 'axios';
+import { useGlobal } from '@/app/Context/page';
 
 type ComponentType = "earning" | "deduction" | "benefit";
 
@@ -56,11 +58,11 @@ interface SalaryComponentSetupProps {
   onSubmit?: (data: any) => void;
 }
 
-const componentOptions = {
-  earning: ["Housing Allowance", "Transport Allowance", "Meal Allowance"],
-  deduction: ["PAYE", "Pension", "NTF"],
-  benefit: ["Bonus", "Medical", "Leave Allowance"],
-};
+// Define component option interface
+interface ComponentOption {
+  id: number | string;
+  name: string;
+}
 
 export default function SalaryComponentSetup({ employee, onClose, onSubmit }: SalaryComponentSetupProps) {
   const [employeeName, setEmployeeName] = useState("");
@@ -71,6 +73,20 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   const [deductionComponents, setDeductionComponents] = useState<SalaryComponent[]>([]);
   const [benefitComponents, setBenefitComponents] = useState<SalaryComponent[]>([]);
 
+  // State for component options from API
+  const [earningOptions, setEarningOptions] = useState<ComponentOption[]>([]);
+  const [deductionOptions, setDeductionOptions] = useState<ComponentOption[]>([]);
+  const [loadingEarnings, setLoadingEarnings] = useState(false);
+  const [loadingDeductions, setLoadingDeductions] = useState(false);
+  const [earningError, setEarningError] = useState<string>('');
+  const [deductionError, setDeductionError] = useState<string>('');
+
+  // Get global context for tenant and auth
+  const { tenant, globalState } = useGlobal();
+
+  // Hardcoded benefit options (since no API endpoint provided)
+  const benefitOptions = ["Bonus", "Medical", "Leave Allowance"];
+
   // Initialize form with employee data if provided
   useEffect(() => {
     if (employee) {
@@ -78,6 +94,118 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       setGrossSalary(employee.custom_salary || "");
     }
   }, [employee]);
+
+  // Add default "Basic" earning component when earning options are loaded
+  useEffect(() => {
+    if (earningOptions.length > 0 && earningComponents.length === 0) {
+      const basicComponent: SalaryComponent = {
+        id: "basic-default",
+        name: "Basic",
+        fixedValue: undefined,
+        percentageValue: undefined,
+      };
+      setEarningComponents([basicComponent]);
+    }
+  }, [earningOptions, earningComponents.length]);
+
+  // Function to fetch earning components from API
+  const fetchEarningComponents = async () => {
+    setLoadingEarnings(true);
+    setEarningError('');
+    
+    try {
+      const response = await axios.get(
+        `http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components`,
+        {
+          headers: {
+            Authorization: `Bearer ${globalState.accessToken}`,
+          },
+        }
+      );
+      
+      console.log('Earning components fetched:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setEarningOptions(response.data);
+      }
+      else if (response.data.data && Array.isArray(response.data.data)) {
+        setEarningOptions(response.data.data);
+      }
+      else if (response.data.components && Array.isArray(response.data.components)) {
+        setEarningOptions(response.data.components);
+      }
+      else {
+        console.warn('Unexpected earning components API response structure:', response.data);
+        setEarningError('Unexpected response format');
+      }
+      
+    } catch (error) {
+      console.error('Error fetching earning components:', error);
+      setEarningError('Failed to load earning components');
+      
+      // Fallback to hardcoded components in case of API failure
+      setEarningOptions([
+        { id: 'basic', name: 'Basic' },
+        { id: 'housing', name: 'Housing Allowance' },
+        { id: 'transport', name: 'Transport Allowance' },
+        { id: 'meal', name: 'Meal Allowance' }
+      ]);
+    } finally {
+      setLoadingEarnings(false);
+    }
+  };
+
+  // Function to fetch deduction components from API
+  const fetchDeductionComponents = async () => {
+    setLoadingDeductions(true);
+    setDeductionError('');
+    
+    try {
+      const response = await axios.get(
+        `http://${tenant}.localhost:8000/tenant/payroll-settings/deduction-components`,
+        {
+          headers: {
+            Authorization: `Bearer ${globalState.accessToken}`,
+          },
+        }
+      );
+      
+      console.log('Deduction components fetched:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setDeductionOptions(response.data);
+      }
+      else if (response.data.data && Array.isArray(response.data.data)) {
+        setDeductionOptions(response.data.data);
+      }
+      else if (response.data.components && Array.isArray(response.data.components)) {
+        setDeductionOptions(response.data.components);
+      }
+      else {
+        console.warn('Unexpected deduction components API response structure:', response.data);
+        setDeductionError('Unexpected response format');
+      }
+      
+    } catch (error) {
+      console.error('Error fetching deduction components:', error);
+      setDeductionError('Failed to load deduction components');
+      
+      // Fallback to hardcoded components in case of API failure
+      setDeductionOptions([
+        { id: 'paye', name: 'PAYE' },
+        { id: 'pension', name: 'Pension' },
+        { id: 'ntf', name: 'NTF' }
+      ]);
+    } finally {
+      setLoadingDeductions(false);
+    }
+  };
+
+  // Fetch components on component mount
+  useEffect(() => {
+    fetchEarningComponents();
+    fetchDeductionComponents();
+  }, []);
 
   const handleAddComponent = (type: ComponentType) => {
     const newComponent: SalaryComponent = {
@@ -113,73 +241,169 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     if (type === "benefit") setBenefitComponents(update(benefitComponents));
   };
 
-  const renderComponentRows = (type: ComponentType, components: SalaryComponent[]) => (
-    <>
-      {components.map((comp) => (
-        <div
-          key={comp.id}
-          className="grid grid-cols-12 gap-4 items-center border-b pb-4 mb-4"
-        >
-          {/* Component Name */}
-          <div className="col-span-4">
-            <Select
-              onValueChange={(value) => handleChange(type, comp.id, "name", value)}
-              value={comp.name}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Component" />
-              </SelectTrigger>
-              <SelectContent>
-                {componentOptions[type].map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+  // Get component options based on type
+  const getComponentOptions = (type: ComponentType) => {
+    switch (type) {
+      case "earning":
+        return earningOptions;
+      case "deduction":
+        return deductionOptions;
+      case "benefit":
+        return benefitOptions.map((option, index) => ({ id: index, name: option }));
+      default:
+        return [];
+    }
+  };
 
-          {/* Fixed Value */}
-          <div className="col-span-3">
-            <Input
-              type="number"
-              value={comp.fixedValue ?? ""}
-              onChange={(e) =>
-                handleChange(type, comp.id, "fixedValue", e.target.value ? parseFloat(e.target.value) : undefined)
-              }
-              placeholder="0.00"
-              className="w-full"
-            />
-          </div>
+  // Get loading state based on type
+  const getLoadingState = (type: ComponentType) => {
+    switch (type) {
+      case "earning":
+        return loadingEarnings;
+      case "deduction":
+        return loadingDeductions;
+      case "benefit":
+        return false;
+      default:
+        return false;
+    }
+  };
 
-          {/* Percentage Value */}
-          <div className="col-span-3">
-            <Input
-              type="number"
-              value={comp.percentageValue ?? ""}
-              onChange={(e) =>
-                handleChange(type, comp.id, "percentageValue", e.target.value ? parseFloat(e.target.value) : undefined)
-              }
-              placeholder="0"
-              className="w-full"
-            />
-          </div>
+  // Get error state based on type
+  const getErrorState = (type: ComponentType) => {
+    switch (type) {
+      case "earning":
+        return earningError;
+      case "deduction":
+        return deductionError;
+      case "benefit":
+        return '';
+      default:
+        return '';
+    }
+  };
 
-          {/* Delete Button */}
-          <div className="col-span-2 flex justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleRemoveComponent(type, comp.id)}
-              className="hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
+  // Get retry function based on type
+  const getRetryFunction = (type: ComponentType) => {
+    switch (type) {
+      case "earning":
+        return fetchEarningComponents;
+      case "deduction":
+        return fetchDeductionComponents;
+      default:
+        return () => {};
+    }
+  };
+
+  const renderComponentRows = (type: ComponentType, components: SalaryComponent[]) => {
+    const options = getComponentOptions(type);
+    const isLoading = getLoadingState(type);
+    const error = getErrorState(type);
+    const retryFunction = getRetryFunction(type);
+
+    return (
+      <>
+        {components.map((comp) => (
+          <div
+            key={comp.id}
+            className="grid grid-cols-12 gap-4 items-center border-b pb-4 mb-4"
+          >
+            {/* Component Name */}
+            <div className="col-span-4">
+              <Select
+                onValueChange={(value) => handleChange(type, comp.id, "name", value)}
+                value={comp.name}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={
+                    isLoading 
+                      ? `Loading ${type} components...` 
+                      : error 
+                        ? `Error loading ${type} components` 
+                        : `Select ${type} component`
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map((option) => (
+                    <SelectItem 
+                      key={option.id} 
+                      value={typeof option.id === 'string' ? option.id : option.name}
+                    >
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {error && type !== 'benefit' && (
+                <p className="text-xs text-red-500 mt-1">
+                  {error}
+                  <button 
+                    type="button"
+                    onClick={retryFunction}
+                    className="ml-2 text-blue-500 underline hover:no-underline"
+                  >
+                    Retry
+                  </button>
+                </p>
+              )}
+            </div>
+
+            {/* Fixed Value */}
+            <div className="col-span-3">
+              <Input
+                type="number"
+                value={comp.fixedValue ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                  handleChange(type, comp.id, "fixedValue", value);
+                  // Clear percentage value when fixed value is entered
+                  if (value !== undefined && value > 0) {
+                    handleChange(type, comp.id, "percentageValue", undefined);
+                  }
+                }}
+                placeholder="0.00"
+                className="w-full"
+                disabled={comp.percentageValue !== undefined && comp.percentageValue > 0}
+              />
+            </div>
+
+            {/* Percentage Value */}
+            <div className="col-span-3">
+              <Input
+                type="number"
+                value={comp.percentageValue ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                  handleChange(type, comp.id, "percentageValue", value);
+                  // Clear fixed value when percentage value is entered
+                  if (value !== undefined && value > 0) {
+                    handleChange(type, comp.id, "fixedValue", undefined);
+                  }
+                }}
+                placeholder="0"
+                className="w-full"
+                disabled={comp.fixedValue !== undefined && comp.fixedValue > 0}
+              />
+            </div>
+
+            {/* Delete Button */}
+            <div className="col-span-2 flex justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemoveComponent(type, comp.id)}
+                className="hover:bg-red-50"
+                disabled={comp.id === "basic-default"} // Disable delete for default Basic component
+              >
+                <Trash2 className={`h-4 w-4 ${comp.id === "basic-default" ? "text-gray-300" : "text-red-500"}`} />
+              </Button>
+            </div>
           </div>
-        </div>
-      ))}
-    </>
-  );
+        ))}
+      </>
+    );
+  };
 
   const handleSubmitForm = () => {
     const payload = {
@@ -250,6 +474,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           variant="outline"
           onClick={() => handleAddComponent("earning")}
           className="mt-4"
+          disabled={loadingEarnings}
         >
           + Add Another Component
         </Button>
@@ -272,6 +497,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           variant="outline"
           onClick={() => handleAddComponent("deduction")}
           className="mt-4"
+          disabled={loadingDeductions}
         >
           + Add Another Component
         </Button>
@@ -320,4 +546,4 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       </div>
     </div>
   );
-} 
+}
