@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/page';
-
+import { DialogClose } from '@/components/ui/dialog';
 
 interface SalaryComponentDetail {
 	component_name: string;
@@ -15,12 +15,18 @@ interface DeductionDetail {
 	percentage_value: number;
 }
 
-export default function EditPayGradePage({ id, name }: { id: number, name: string }) {
+export default function EditPayGradePage({
+	id,
+	name,
+}: {
+	id: number;
+	name: string;
+}) {
 	const pathname = usePathname();
 	const router = useRouter();
 	const segments = pathname.split('/');
-	const {tenant} = useGlobal()
-	const payGradeId = id
+	const { tenant } = useGlobal();
+	const payGradeId = id;
 
 	const [payGradeName, setPayGradeName] = useState(name);
 	const [grossSalary, setGrossSalary] = useState<number>(0);
@@ -38,7 +44,7 @@ export default function EditPayGradePage({ id, name }: { id: number, name: strin
 	const [error, setError] = useState('');
 
 	useEffect(() => {
-		console.log (segments, tenant, payGradeId);
+		console.log(segments, tenant, payGradeId);
 		const fetchData = async () => {
 			try {
 				const token = localStorage.getItem('access_token');
@@ -167,6 +173,10 @@ export default function EditPayGradePage({ id, name }: { id: number, name: strin
 			);
 			alert('Pay grade updated successfully!');
 			router.push(`/Setins/Payset`);
+			// Optionally, close the dialog if you are using a modal/dialog component
+			// For example, if you have a prop like onClose, call it here:
+			// onClose?.();
+			router.refresh();
 		} catch (err: any) {
 			console.error(err);
 			setError(err.response?.data?.detail || 'Failed to update pay grade');
@@ -309,12 +319,13 @@ export default function EditPayGradePage({ id, name }: { id: number, name: strin
 					</div>
 				))}
 			</div>
-
-			<button
-				className='inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-				onClick={handleSubmit}>
-				Update Pay Grade
-			</button>
+			<DialogClose asChild>
+				<button
+					className='inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+					onClick={handleSubmit}>
+					Update Pay Grade
+				</button>
+			</DialogClose>
 		</main>
 	);
 }
