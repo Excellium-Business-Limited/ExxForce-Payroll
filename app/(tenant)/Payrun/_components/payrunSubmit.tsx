@@ -217,7 +217,7 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 														variant={'default'}
 														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
 														asChild>
-														<Link href='./Payrun/paytemps'>
+														<Link href={``}>
 															<Eye />{' '}
 															<p className=' font-light'>View Details</p>
 														</Link>

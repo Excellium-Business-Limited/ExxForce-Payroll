@@ -28,7 +28,7 @@ interface PayGradeDetail {
 }
 
 
-function paygradeDetails() {
+function paygradeDetails( {name} : {name:string}) {
     const pathname = usePathname();
 		const router = useRouter();
 		const segments = pathname.split('/');
@@ -44,9 +44,7 @@ function paygradeDetails() {
 						try {
 							const token = localStorage.getItem('access_token');
 							const res = await axios.get<PayGradeDetail>(
-								`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades/${encodeURIComponent(
-									pgName
-								)}/detail`,
+								`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades${name}/detail`,
 								{ headers: { Authorization: `Bearer ${token}` } }
 							);
 							setPayGrade(res.data);

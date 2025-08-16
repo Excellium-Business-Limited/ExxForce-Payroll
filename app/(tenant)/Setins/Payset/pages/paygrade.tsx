@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
 import { getTenant, getAccessToken } from '@/lib/auth';
 import PayGradeEdit from '../components/payGradeEdit';
+import { redirect } from 'next/navigation';
 
 interface ComponentDetail {
 	component_name: string;
@@ -68,9 +69,15 @@ const paygrade = () => {
 				);
 				setPayGrades(res.data);
 				console.log(res.data), payGrades;
-			} catch (err) {
+			} catch (err:any) {
 				console.error(err);
 				setError('Failed to load pay grades');
+				if (err.response?.status === 401) {
+					// Redirect to login if unauthorized
+					setTimeout(() => {
+						redirect('/login');
+					}, 2000);
+				}
 			} finally {
 				setIsLoading(false);
 			}

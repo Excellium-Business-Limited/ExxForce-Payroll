@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import {
@@ -21,6 +21,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import { useGlobal } from '@/app/Context/page';
+// import { formatDate } from 'date-fns';
 const PayrunForm = ({
 	className,
 	setIsSheetOpen,
@@ -30,18 +33,21 @@ const PayrunForm = ({
 	setIsSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	setIsPayrun: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-	 const pathname = usePathname();
-		const router = useRouter();
-		const segments = pathname.split('/');
-		const tenant = segments[1];
+	const pathname = usePathname();
+	const router = useRouter();
+	const segments = pathname.split('/');
+	const {tenant} = useGlobal();
 
-		const [name, setName] = useState('');
-		const [payPeriod, setPayPeriod] = useState('MONTHLY');
-		const [startDate, setStartDate] = useState('');
-		const [endDate, setEndDate] = useState('');
-		const [paymentDate, setPaymentDate] = useState('');
-		const [error, setError] = useState('');
-		const [isSubmitting, setIsSubmitting] = useState(false);
+	const [form, setForm] = useState({
+		name: '',
+		payPeriod: '',
+		startDate: '',
+		endDate: '',
+		paymentDate: '',
+	});
+	const { name, payPeriod, startDate, endDate, paymentDate } = form;
+	const [error, setError] = useState('');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 	const handleButtonClick = () => {
@@ -49,11 +55,25 @@ const PayrunForm = ({
 		setIsPayrun(true); // Close the sheet;
 		// Open the dialog
 	};
+	useEffect(() => {
+		console.log('Form state:', form);
+	}, [form]);
+	const formatDate = (date: string) => {
+		if (!date) return '';
+		const d = new Date(date);
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setIsSubmitting(true);
 		try {
 			const token = localStorage.getItem('access_token');
+			// Format dates to YYYY-MM-DD
+
 			await axios.post(
 				`http://${tenant}.localhost:8000/tenant/payrun/create`,
 				{
@@ -68,7 +88,7 @@ const PayrunForm = ({
 				}
 			);
 			alert('PayRun created successfully!');
-			router.push(`/${tenant}/payroll_payrun`);
+			// router.push(`/${tenant}/payroll_payrun`);
 		} catch (err: any) {
 			console.error('Error creating payrun', err);
 			setError(
@@ -84,15 +104,27 @@ const PayrunForm = ({
 		<div className={`h screen ${className} flex flex-col`}>
 			<h4>Start Payrun</h4>
 			<form
-				action=''
+				onSubmit={handleSubmit}
 				className='flex flex-col'>
 				<article className='mb-3'>
+					<span className=''>
+						<Label
+							htmlFor='name'>Name</Label>
+							<Input
+								type='text'
+								id='name'
+								value={name}
+								onChange={(e) => setForm({ ...form, name: e.target.value })}
+							/>
+					</span>
 					<Label
 						htmlFor='payfreq'
 						className='mt-3'>
 						Choose Pay Frequency
 					</Label>
-					<Select>
+					<Select
+						value={payPeriod}
+						onValueChange={(value) => setForm({ ...form, payPeriod: value.toUpperCase() })}>
 						<SelectTrigger
 							id='payfreq'
 							className='my-3 w-full'>
@@ -103,27 +135,42 @@ const PayrunForm = ({
 						</SelectTrigger>
 						<SelectContent>
 							<SelectGroup>
-								<SelectItem value='bi'>Bi-Weekly</SelectItem>
-								<SelectItem value='mont'>Monthly</SelectItem>
-								<SelectItem value='quat'>Quaterly</SelectItem>
-								<SelectItem value='ann'>Annually</SelectItem>
-								<SelectItem value='week'>Every Week</SelectItem>
-								<SelectItem value='3week'>Every 3 Weeks</SelectItem>
-								<SelectItem value='3mont'>Every 3 Months</SelectItem>
+								<SelectItem value='BI-WEEKLY'>Bi-Weekly</SelectItem>
+								<SelectItem value='MONTHLY'>Monthly</SelectItem>
+								<SelectItem value='QUARTERLY'>Quarterly</SelectItem>
+								<SelectItem value='ANNUALLY'>Annually</SelectItem>
+								<SelectItem value='EVERY WEEK'>Every Week</SelectItem>
+								<SelectItem value='EVERY 3 WEEKS'>Every 3 Weeks</SelectItem>
+								<SelectItem value='EVERY 3 MONTHS'>Every 3 Months</SelectItem>
 							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</article>
 				<article className='flex gap-6 my-4'>
 					<span>
-						<DatePicker title='First Payrun Date' />
+						<DatePicker
+							title='First Payrun Date'
+							onChange={(date: any) =>
+								setForm({ ...form, startDate: formatDate(date) })
+							}
+						/>
 					</span>
 					<span>
-						<DatePicker title='Payment Date' />
+						<DatePicker
+							title='Payment Date'
+							onChange={(date: any) =>
+								setForm({ ...form, paymentDate: formatDate(date) })
+							}
+						/>
 					</span>
 				</article>
 				<article className='w-3/6'>
-					<DatePicker title='Tax Year' />
+					<DatePicker
+						title='End Date'
+						onChange={(date: any) =>
+							setForm({ ...form, endDate: formatDate(date) })
+						}
+					/>
 				</article>
 				<span className='w-full border-[#f8edda] bg-[#faf3e6] rounded-md flex gap-1.5 p-3 my-5'>
 					<img
@@ -135,26 +182,26 @@ const PayrunForm = ({
 						payroll frequency
 					</h4>
 				</span>
-			</form>
-			<section className=' fixed bottom-0 flex self-end align-bottom content-end'>
-				<DialogClose asChild>
+				<section className=' fixed bottom-0 flex self-end align-bottom content-end'>
+					<DialogClose asChild>
+						<Button
+							className='m-3 text-muted-foreground'
+							variant='outline'>
+							{' '}
+							Close{' '}
+						</Button>
+					</DialogClose>
 					<Button
-						className='m-3 text-muted-foreground'
-						variant='outline'>
+						className='m-3 bg-[#3D56A8] text-white '
+						variant='outline'
+						type='submit'
+						onClick={() => setIsDialogOpen(true)}>
 						{' '}
-						Close{' '}
+						Save{' '}
 					</Button>
-				</DialogClose>
-				<Button
-					className='m-3 bg-[#3D56A8] text-white '
-					variant='outline'
-					type='submit'
-					onClick={() => setIsDialogOpen(true)}>
-					{' '}
-					Save{' '}
-				</Button>
-			</section>
-			<Dialog open={isDialogOpen}>
+				</section>
+			</form>
+			{/* <Dialog open={isDialogOpen}>
 				<DialogContent className='bg-white flex flex-col content-center items-center px-5 z-[5000]'>
 					<img
 						src='/icons/check2.png'
@@ -179,7 +226,7 @@ const PayrunForm = ({
 						</Button>
 					</span>
 				</DialogContent>
-			</Dialog>
+			</Dialog> */}
 		</div>
 	);
 };

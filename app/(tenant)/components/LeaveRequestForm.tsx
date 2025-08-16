@@ -59,7 +59,8 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://excellium.localhost:8000";
       const response = await axios.get(`${baseUrl}/tenant/leave/leave-types`, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
+          Authorization : `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 

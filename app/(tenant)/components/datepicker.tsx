@@ -32,20 +32,51 @@ function isValidDate(date: Date | undefined) {
 	return !isNaN(date.getTime());
 }
 
-export default function Calendar28({title, className, placeholder, cla, place} : {title:string, className?:string, placeholder?:string, cla?:string, place?:string}) {
+interface Calendar28Props {
+	title: string;
+	className?: string;
+	placeholder?: string;
+	cla?: string;
+	place?: string;
+	value?: Date;
+	onChange?: (date: Date | undefined) => void;
+}
+
+export default function Calendar28({
+	title,
+	className,
+	placeholder,
+	cla,
+	place,
+	value: propValue,
+	onChange,
+}: Calendar28Props) {
 	const [open, setOpen] = React.useState(false);
-	const [date, setDate] = React.useState<Date | undefined>(
-		// new Date('2025-06-01') 
-		
-	);
+	const [date, setDate] = React.useState<Date | undefined>(propValue);
 	const [month, setMonth] = React.useState<Date | undefined>(date);
 	const [value, setValue] = React.useState(formatDate(date));
 
+	// Sync with propValue if it changes
+	React.useEffect(() => {
+		if (propValue !== undefined) {
+			setDate(propValue);
+			setMonth(propValue);
+			setValue(formatDate(propValue));
+		}
+	}, [propValue]);
+
+	const handleDateChange = (newDate: Date | undefined) => {
+		setDate(newDate);
+		setValue(formatDate(newDate));
+		setMonth(newDate);
+		if (onChange) {
+			onChange(newDate);
+		}
+	};
+
 	return (
 		<div className={`flex flex-col gap-3 ${cla}`}>
-			<Label
-				htmlFor='date'
-				className='px-1'>
+			<Label htmlFor='date' className='px-1'>
 				{title}
 			</Label>
 			<div className='relative flex gap-2'>
@@ -55,11 +86,10 @@ export default function Calendar28({title, className, placeholder, cla, place} :
 					placeholder={placeholder}
 					className={`pr-10 ${place}`}
 					onChange={(e) => {
-						const date = new Date(e.target.value);
+						const inputDate = new Date(e.target.value);
 						setValue(e.target.value);
-						if (isValidDate(date)) {
-							setDate(date);
-							setMonth(date);
+						if (isValidDate(inputDate)) {
+							handleDateChange(inputDate);
 						}
 					}}
 					onKeyDown={(e) => {
@@ -69,16 +99,13 @@ export default function Calendar28({title, className, placeholder, cla, place} :
 						}
 					}}
 				/>
-				<Popover
-					open={open}
-					onOpenChange={setOpen}>
+				<Popover open={open} onOpenChange={setOpen}>
 					<PopoverTrigger asChild>
 						<Button
 							id='date-picker'
 							variant='ghost'
 							className={`absolute top-1/2 right-2 size-6 -translate-y-1/2 ${className}`}>
 							<CalendarIcon className='size-3.5' />
-							{/* <span className='sr-only'>Select date</span> */}
 						</Button>
 					</PopoverTrigger>
 					<PopoverContent
@@ -92,9 +119,8 @@ export default function Calendar28({title, className, placeholder, cla, place} :
 							captionLayout='dropdown'
 							month={month}
 							onMonthChange={setMonth}
-							onSelect={(date: React.SetStateAction<Date | undefined>) => {
-								setDate(date);
-								setValue(formatDate(date as Date | undefined));
+							onSelect={(selectedDate) => {
+								handleDateChange(selectedDate);
 								setOpen(false);
 							}}
 						/>
