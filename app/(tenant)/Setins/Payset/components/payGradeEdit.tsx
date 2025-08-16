@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
-import styles from './page.module.css';
+import { useGlobal } from '@/app/Context/page';
+
 
 interface SalaryComponentDetail {
 	component_name: string;
@@ -14,14 +15,14 @@ interface DeductionDetail {
 	percentage_value: number;
 }
 
-export default function EditPayGradePage() {
+export default function EditPayGradePage({ id, name }: { id: number, name: string }) {
 	const pathname = usePathname();
 	const router = useRouter();
 	const segments = pathname.split('/');
-	const tenant = segments[1];
-	const payGradeName = decodeURIComponent(segments[segments.length - 2]);
+	const {tenant} = useGlobal()
+	const payGradeId = id
 
-	const [name, setName] = useState('');
+	const [payGradeName, setPayGradeName] = useState(name);
 	const [grossSalary, setGrossSalary] = useState<number>(0);
 	const [salaryDetails, setSalaryDetails] = useState<SalaryComponentDetail[]>(
 		[]
@@ -37,6 +38,7 @@ export default function EditPayGradePage() {
 	const [error, setError] = useState('');
 
 	useEffect(() => {
+		console.log (segments, tenant, payGradeId);
 		const fetchData = async () => {
 			try {
 				const token = localStorage.getItem('access_token');
@@ -55,20 +57,18 @@ export default function EditPayGradePage() {
 						}
 					),
 					axios.get(
-						`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades/${encodeURIComponent(
-							payGradeName
-						)}/detail`,
+						`http://${tenant}.localhost:8000//tenant/payroll-settings/pay-grades/${name}/detail`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						}
 					),
 				]);
-
+				console.log(salaryRes.data, deductionRes.data, payGradeRes.data);
 				setAvailableSalaryComponents(salaryRes.data);
 				setAvailableDeductionComponents(deductionRes.data);
 
 				const pg = payGradeRes.data;
-				setName(pg.paygrade_name);
+				setPayGradeName(pg.paygrade_name);
 				setGrossSalary(Number(pg.gross_salary));
 				setSalaryDetails(
 					pg.components.map((c: any) => ({
@@ -94,7 +94,7 @@ export default function EditPayGradePage() {
 		};
 
 		fetchData();
-	}, [tenant, payGradeName]);
+	}, [tenant, payGradeId]);
 
 	const handleSalaryChange = (index: number, field: string, value: string) => {
 		setSalaryDetails((prev) => {
@@ -147,9 +147,7 @@ export default function EditPayGradePage() {
 		try {
 			const token = localStorage.getItem('access_token');
 			await axios.put(
-				`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades/${encodeURIComponent(
-					payGradeName
-				)}/update`,
+				`http://${tenant}.localhost:8000//tenant/payroll-settings/pay-grades/${payGradeName}/update`,
 				{
 					name,
 					gross_salary: grossSalary,
@@ -168,7 +166,7 @@ export default function EditPayGradePage() {
 				}
 			);
 			alert('Pay grade updated successfully!');
-			router.push(`/${tenant}/payroll_settings/pay_grades`);
+			router.push(`/Setins/Payset`);
 		} catch (err: any) {
 			console.error(err);
 			setError(err.response?.data?.detail || 'Failed to update pay grade');
@@ -176,25 +174,41 @@ export default function EditPayGradePage() {
 	};
 
 	return (
-		<main className={styles.container}>
-			<h1 className={styles.header}>Edit Pay Grade</h1>
-			{error && <p className={styles.error}>{error}</p>}
+		<main className=''>
+			<h1 className='text-2xl font-medium mb-4'>Edit Pay Grade</h1>
+			{error && <p className='text-red-500'>{error}</p>}
 
-			<div className={styles.section}>
-				<div className={styles.formGroup}>
-					<label className={styles.label}>Name</label>
+			<div className='mb-4'>
+				<div className='mb-2'>
+					<label className='block text-sm font-medium text-gray-700'>
+						Name
+					</label>
 					<input
-						className={styles.input}
-						value={name}
-						onChange={(e) => setName(e.target.value)}
+						className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+						value={payGradeName}
+						onChange={(e) => setPayGradeName(e.target.value)}
 						required
 					/>
 				</div>
 
-				<div className={styles.formGroup}>
-					<label className={styles.label}>Gross Salary</label>
+				<div className='mb-2'>
+					<label className='block text-sm font-medium text-gray-700'>
+						Gross Salary
+					</label>
 					<input
-						className={styles.input}
+						className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
+						type='number'
+						value={grossSalary}
+						onChange={(e) => setGrossSalary(Number(e.target.value))}
+					/>
+				</div>
+
+				<div className='mb-2'>
+					<label className='block text-sm font-medium text-gray-700'>
+						Gross Salary
+					</label>
+					<input
+						className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 						type='number'
 						value={grossSalary}
 						onChange={(e) => setGrossSalary(Number(e.target.value))}
@@ -203,20 +217,20 @@ export default function EditPayGradePage() {
 				</div>
 			</div>
 
-			<div className={styles.section}>
-				<h2 className={styles.sectionTitle}>Salary Component Details</h2>
+			<div className='mb-4'>
+				<h2 className='text-lg font-medium mb-2'>Salary Component Details</h2>
 				<button
 					type='button'
-					className={styles.addButton}
+					className='inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
 					onClick={addSalaryDetail}>
 					+ Add Salary Component
 				</button>
 				{salaryDetails.map((d, i) => (
 					<div
 						key={i}
-						className={styles.componentRow}>
+						className='flex items-center space-x-2 mb-2'>
 						<select
-							className={styles.input}
+							className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 							value={d.component_name}
 							onChange={(e) =>
 								handleSalaryChange(i, 'component_name', e.target.value)
@@ -232,7 +246,7 @@ export default function EditPayGradePage() {
 							))}
 						</select>
 						<input
-							className={styles.input}
+							className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 							placeholder='Fixed Value'
 							type='number'
 							value={d.fixed_value ?? ''}
@@ -240,9 +254,9 @@ export default function EditPayGradePage() {
 								handleSalaryChange(i, 'fixed_value', e.target.value)
 							}
 						/>
-						<span className={styles.orText}>or</span>
+						<span className='mx-2 text-gray-500'>or</span>
 						<input
-							className={styles.input}
+							className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 							placeholder='Percentage Value'
 							type='number'
 							value={d.percentage_value ?? ''}
@@ -254,20 +268,20 @@ export default function EditPayGradePage() {
 				))}
 			</div>
 
-			<div className={styles.section}>
-				<h2 className={styles.sectionTitle}>Deduction Details</h2>
+			<div className='mb-4'>
+				<h2 className='text-lg font-medium mb-2'>Deduction Details</h2>
 				<button
 					type='button'
-					className={styles.addButton}
+					className='inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
 					onClick={addDeductionDetail}>
 					+ Add Deduction
 				</button>
 				{deductionDetails.map((d, i) => (
 					<div
 						key={i}
-						className={styles.componentRow}>
+						className='flex items-center space-x-2 mb-2'>
 						<select
-							className={styles.input}
+							className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 							value={d.deduction_name}
 							onChange={(e) =>
 								handleDeductionChange(i, 'deduction_name', e.target.value)
@@ -283,7 +297,7 @@ export default function EditPayGradePage() {
 							))}
 						</select>
 						<input
-							className={styles.input}
+							className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 							placeholder='Percentage Value'
 							type='number'
 							value={d.percentage_value}
@@ -297,7 +311,7 @@ export default function EditPayGradePage() {
 			</div>
 
 			<button
-				className={styles.submitButton}
+				className='inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
 				onClick={handleSubmit}>
 				Update Pay Grade
 			</button>

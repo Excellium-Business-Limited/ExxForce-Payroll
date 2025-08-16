@@ -12,6 +12,7 @@ import { redirect, usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import  { useGlobal } from '@/app/Context/page';
 import { getAccessToken, getTenant } from '@/lib/auth';
+import { ST } from 'next/dist/shared/lib/utils';
 
 
 interface PayRun {
@@ -41,13 +42,13 @@ const page = () => {
 			const fetchPayRuns = async () => {
 				try {
 					setIsLoading(true);
-					const token = getAccessToken()
-					const res = await axios.get<PayRun[]>(
-						`http://${tenant}.localhost:8000/tenant/payrun/list`,
-						{ headers: { Authorization: `Bearer ${token}` } }
-					);
+						const token = getAccessToken()
+						const res = await axios.get<PayRun[]>(
+							`http://${tenant}.localhost:8000/tenant/payrun/list`,
+							{ headers: { Authorization: `Bearer ${token}` } }
+						);
 					setPayruns(res.data);
-					console.log(tenant)
+					
 					setIsLoading(false);
 					console.log(res.data);
 				} catch (err: any) {
@@ -64,10 +65,13 @@ const page = () => {
 			fetchPayRuns();
 			
 		}, []);
-
+	
+		useEffect(() => {
+			
+		}, [])
 		if (error) return <p >{error}</p>;
 
-		if (isLoading) return <div>Loading...</div>;
+		if (isLoading) return <div className='self-center font-extrabold'>Loading...</div>;
 
 		
 
@@ -192,9 +196,18 @@ const page = () => {
 							</TabsList>
 							<TabsContent value='monthly'>
 								<Submit
-									payruns={payrans.filter(
-										(payrun: any) => payrun.PAY_FREQUENCY === 'Monthly'
-									)}
+									payruns={payruns
+										.filter((payrun: any) => payrun.pay_period === 'MONTHLY')
+										.map((payrun: any) => ({
+											...payrun,
+											PAY_FREQUENCY: payrun.pay_period || '',
+											CREATED_BY: payrun.name || '',
+											TOTAL_EMPLOYEES: payrun.TOTAL_EMPLOYEES || 0, //Ask Daniel to add this to the response for this fetch
+											LAST_UPDATED: payrun.payment_date || '',
+											STATUS: payrun.status
+											// Add any other required fields with default values if missing
+										}))
+									}
 									nexts='24th, April 2025'
 								/>
 							</TabsContent>

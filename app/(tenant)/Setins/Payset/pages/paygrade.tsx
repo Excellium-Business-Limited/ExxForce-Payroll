@@ -23,16 +23,38 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import { getTenant } from '@/lib/auth';
+import { getTenant, getAccessToken } from '@/lib/auth';
+import PayGradeEdit from '../components/payGradeEdit';
+
+interface ComponentDetail {
+	component_name: string;
+	fixed_value?: number;
+	percentage_value?: number;
+}
+
+interface DeductionDetail {
+	deduction_name: string;
+	percentage_value: number;
+}
+
+interface PayGradeType {
+	name: string;
+	gross_salary: number;
+	component_details: ComponentDetail[];
+	deduction_details: DeductionDetail[];
+}
 
 const paygrade = () => {
 	const [payGrades, setPayGrades] = useState<any[]>([]);
 	const [error, setError] = useState('');
 	const [isLoading, setIsLoading] = useState(true);
+	const [tenant, setTenant] = useState('');
+	const { setPayGradeId } = useGlobal();
 
-	const tenant = getTenant();
-
+	
 	useEffect(() => {
+		const tenant = getTenant();
+		const token = getAccessToken();
 		console.log(`Fetching pay grades for tenant: ${tenant}`);
 		const fetchPayGrades = async () => {
 			try {
@@ -40,7 +62,7 @@ const paygrade = () => {
 					`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades`,
 					{
 						headers: {
-							Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+							Authorization: `Bearer ${token}`,
 						},
 					}
 				);
@@ -55,12 +77,17 @@ const paygrade = () => {
 		};
 
 		fetchPayGrades();
-	}, [tenant]);
+	}, []);
 	if (isLoading) {
 		return <div>Loading...</div>;
 	}
 	function deleteComponent(id: any): void {
 		throw new Error('Function not implemented.');
+	}
+
+	const createPayGrade = (data: PayGradeType) => {
+		console.log('Creating Pay Grade:', data);
+
 	}
 
 	return (
@@ -247,11 +274,20 @@ const paygrade = () => {
 									{payGrade.component_count}
 								</TableCell>
 								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									<span className='grid-cols-2 grid'>
-										<img
-											src='/icons/mage_edit.png'
-											alt='#'
-										/>
+									<div className='grid-cols-2 grid'>
+										<Dialog>
+											<DialogTrigger
+												className='cursor-pointer text-blue-600 hover:text-blue-800'>
+												<img
+													src='/icons/mage_edit.png'
+													alt='#'
+												/>
+											</DialogTrigger>
+											<DialogContent className='bg-white'>
+												<DialogTitle className='hidden '></DialogTitle>
+												<PayGradeEdit id={payGrade.id} name={payGrade.name} />
+											</DialogContent>
+										</Dialog>
 										<Dialog>
 											<DialogTrigger className=''>
 												<img
@@ -267,7 +303,7 @@ const paygrade = () => {
 												/>
 											</DialogContent>
 										</Dialog>
-									</span>
+									</div>
 								</TableCell>
 							</TableRow>
 						))}

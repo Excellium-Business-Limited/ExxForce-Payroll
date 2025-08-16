@@ -134,24 +134,26 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 							{payruns.map((payrun) => {
 								return (
 									<TableRow key={payrun.id}>
-										<TableCell>{payrun.PAY_FREQUENCY}</TableCell>
-										<TableCell>{payrun.CREATED_BY}</TableCell>
-										<TableCell>{payrun.TOTAL_EMPLOYEES}</TableCell>
-										<TableCell>{payrun.LAST_UPDATED}</TableCell>
-										<TableCell>{payrun.PAY_PERIOD}</TableCell>
-										<TableCell>{payrun.STATUS}</TableCell>
-										<TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAY_FREQUENCY}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.CREATED_BY}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.TOTAL_EMPLOYEES}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.LAST_UPDATED}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAY_PERIOD}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.STATUS}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium bg-white tracking-wider'>
 											<Popover>
 												<PopoverTrigger>
 													<EllipsisVertical />
 												</PopoverTrigger>
 												<PopoverContent
-													className={`grid grid-cols-1  !m-0 w-fit ${
-														payrun.STATUS === 'Approved'
-															? 'bg-green-100 text-green-800'
-															: 'bg-gray-100 text-gray-800'
-													}`}>
-													{payrun.STATUS !== 'Approved' ? (
+													className={`grid grid-cols-1  !m-0 w-fit  bg-white ${
+														// payrun.STATUS === 'Approved'
+														// 	? 'bg-green-100 text-green-800'
+														// 	: 'bg-gray-100 text-gray-800'
+														payrun.id ===1 ? 'text-black' : 'text-grey'
+													}
+													`}>
+													{payrun.STATUS !== 'APPROVED' ? (
 														<Button
 															variant={'default'}
 															className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
