@@ -15,6 +15,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import axios from 'axios';
 import { format, parseISO, isValid } from 'date-fns';
 import SalarySetupForm from './SalarySetupForm';
+import { useGlobal } from '@/app/Context/page';
 
 // Define the Employee interface to match your API
 interface Employee {
@@ -55,6 +56,7 @@ interface EmployeeFormProps {
 	isOpen: boolean;
 	isEdit: boolean;
 	employeeData: Employee | null;
+	editType?: 'general' | 'salary';
 	onClose: () => void;
 	onSubmit: (employeeFormData: any) => Promise<void>;
 	onShowSalaryForm?: (employeeData: any) => void;
@@ -82,6 +84,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	isOpen,
 	isEdit,
 	employeeData,
+	editType,
 	onClose,
 	onSubmit,
 	onShowSalaryForm
@@ -110,6 +113,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 	// State for form flow
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// Get global context for tenant and auth
+	const { tenant, globalState } = useGlobal();
 
 	// Helper function to format date for input (YYYY-MM-DD) using date-fns
 	const formatDateForInput = (dateString: string): string => {
@@ -231,8 +237,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		setDepartmentError('');
 		
 		try {
-			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
-			const response = await axios.get(`${baseUrl}/tenant/employee/departments`);
+			const response = await axios.get(
+				`http://${tenant}.localhost:8000/tenant/employee/departments`,
+				{
+					headers: {
+						Authorization: `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
 			
 			console.log('Departments fetched:', response.data);
 			
@@ -271,14 +283,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		fetchDepartments();
 	}, []);
 
-	// Reset form states when component opens/closes
-	useEffect(() => {
-		// Reset any internal state if needed
-	}, [isOpen]);
-
-	// Populate form when editing
+	// Populate form when editing - FIXED to properly handle all field types
 	useEffect(() => {
 		if (isEdit && employeeData) {
+			console.log('Populating form with employee data:', employeeData);
+			
+			// Split address if it contains a comma
+			const addressParts = employeeData.address ? employeeData.address.split(', ') : ['', ''];
+			
 			setFormData({
 				employeeId: employeeData.employee_id || '',
 				jobTitle: employeeData.job_title || '',
@@ -292,8 +304,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				email: employeeData.email || '',
 				gender: employeeData.gender || '',
 				dob: formatDateForInput(employeeData.date_of_birth),
-				address1: employeeData.address || '',
-				address2: '',
+				address1: addressParts[0] || '',
+				address2: addressParts[1] || '',
 			});
 		} else {
 			// Reset form for new employee
@@ -322,6 +334,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	};
 
 	const handleSelectChange = (key: keyof FormData, value: string) => {
+		console.log(`Setting ${key} to:`, value);
 		setFormData((prev) => ({ ...prev, [key]: value }));
 	};
 
@@ -360,23 +373,33 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			console.log('Starting API call...');
 			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
 
-			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
 			let response;
 			
-			if (isEdit && employeeData?.id) {
-				console.log('Updating employee with ID:', employeeData.id);
+			if (isEdit && employeeData?.employee_id) {
+				console.log('Updating employee with ID:', employeeData.employee_id);
+				// Use employee_id in the URL as requested
 				response = await axios.put(
-					`${baseUrl}/tenant/employee/update/${employeeData.id}`,
+					`http://${tenant}.localhost:8000/tenant/employee/update/${employeeData.employee_id}`,
 					apiData,
-					{ headers: { 'Content-Type': 'application/json' } }
+					{ 
+						headers: { 
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${globalState.accessToken}`,
+						} 
+					}
 				);
 				console.log('Employee updated:', response.data);
 			} else {
 				console.log('Creating new employee...');
 				response = await axios.post(
-					`${baseUrl}/tenant/employee/create`,
+					`http://${tenant}.localhost:8000/tenant/employee/create`,
 					apiData,
-					{ headers: { 'Content-Type': 'application/json' } }
+					{ 
+						headers: { 
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${globalState.accessToken}`,
+						} 
+					}
 				);
 				console.log('Employee created:', response.data);
 			}
@@ -435,7 +458,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		await handleSaveEmployee();
 	};
 
-	// If showing salary form, render it
+	// Debug log to check form data
+	console.log('Current form data:', formData);
+	console.log('Employee data:', employeeData);
+	console.log('Is edit mode:', isEdit);
+
 	return (
 		<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
 			<div className='mb-8'>
@@ -457,7 +484,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								id='employeeId' 
 								value={formData.employeeId}
 								required 
-								onChange={handleChange} 
+								onChange={handleChange}
+								disabled={isEdit} // Disable editing employee ID in edit mode
 							/>
 						</div>
 						<div className='space-y-2'>

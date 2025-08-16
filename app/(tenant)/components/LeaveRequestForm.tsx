@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axios from "axios";
 
 interface LeaveType {
-  id: string;
+  id: number;
   name: string;
   days_allowed: number;
 }
@@ -43,6 +44,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTypes, setIsLoadingTypes] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [leaveTypeError, setLeaveTypeError] = useState<string>("");
 
   // Fetch leave types on component mount
   useEffect(() => {
@@ -50,40 +52,54 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   }, []);
 
   const fetchLeaveTypes = async () => {
+    setIsLoadingTypes(true);
+    setLeaveTypeError("");
+
     try {
-      setIsLoadingTypes(true);
-      const response = await fetch('/api/tenant/leave/leave-types', {
-        method: 'GET',
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://excellium.localhost:8000";
+      const response = await axios.get(`${baseUrl}/tenant/leave/leave-types`, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch leave types');
-      }
+      console.log("Leave types fetched:", response.data);
 
-      const data = await response.json();
-      setLeaveTypes(data.data || []);
+      if (Array.isArray(response.data)) {
+        setLeaveTypes(response.data);
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        setLeaveTypes(response.data.data);
+      } else {
+        console.warn("Unexpected leave types API response structure:", response.data);
+        setLeaveTypeError("Unexpected response format");
+      }
     } catch (error) {
-      console.error('Error fetching leave types:', error);
-      // You might want to show a toast notification here
+      console.error("Error fetching leave types:", error);
+      setLeaveTypeError("Failed to load leave types");
+
+      // Fallback to hardcoded leave types in case of API failure
+      setLeaveTypes([
+        { id: 1, name: "Annual Leave", days_allowed: 20 },
+        { id: 2, name: "Sick Leave", days_allowed: 10 },
+        { id: 3, name: "Maternity Leave", days_allowed: 90 },
+        { id: 4, name: "Paternity Leave", days_allowed: 14 },
+      ]);
     } finally {
       setIsLoadingTypes(false);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ""
+        [field]: "",
       }));
     }
   };
@@ -106,7 +122,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     if (formData.start_date && formData.end_date) {
       const startDate = new Date(formData.start_date);
       const endDate = new Date(formData.end_date);
-      
+
       if (endDate < startDate) {
         newErrors.end_date = "End date must be after start date";
       }
@@ -122,60 +138,79 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
 
   const calculateLeaveDays = () => {
     if (!formData.start_date || !formData.end_date) return 0;
-    
+
     const startDate = new Date(formData.start_date);
     const endDate = new Date(formData.end_date);
     const timeDiff = endDate.getTime() - startDate.getTime();
     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end dates
-    
+
     return Math.max(0, daysDiff);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
+      console.log('Starting API call...');
       const submitData = {
         ...formData,
         days: calculateLeaveDays(),
       };
+      console.log('Complete API payload:', JSON.stringify(submitData, null, 2));
 
-      const response = await fetch('/api/tenant/leave/leave-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(submitData),
-      });
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+      const response = await axios.post(
+        `${baseUrl}/tenant/leave/leave-request`,
+        submitData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit leave request');
-      }
+      console.log('Leave request created:', response.data);
 
-      const result = await response.json();
-      
       // Call the parent's onSubmit handler
-      await onSubmit(result);
+      await onSubmit(response.data);
       
-      // Close the form on successful submission
+      console.log('Success! Leave request submitted.');
       onClose();
+
     } catch (error) {
       console.error('Error submitting leave request:', error);
-      // You might want to show a toast notification here
-      setErrors({ submit: error instanceof Error ? error.message : 'Failed to submit leave request' });
+      
+      if (axios.isAxiosError(error)) {
+        console.error('Request that failed:', JSON.stringify(submitData, null, 2));
+        console.error('Response status:', error.response?.status);
+        console.error('Response data:', error.response?.data);
+        
+        if (error.response?.status === 422) {
+          setErrors({
+            submit: `Validation Error: ${JSON.stringify(error.response.data, null, 2)}`
+          });
+        } else {
+          setErrors({
+            submit: `Failed to submit leave request: ${error.response?.data?.message || error.message}`
+          });
+        }
+      } else {
+        setErrors({
+          submit: 'Failed to submit leave request: Unknown error'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const selectedLeaveType = leaveTypes.find(type => type.id === formData.leave_type_id);
+  const selectedLeaveType = leaveTypes.find((type) => type.id === formData.leave_type_id);
   const leaveDays = calculateLeaveDays();
 
   return (
@@ -188,24 +223,42 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Leave type <span className="text-red-500">*</span>
           </label>
-          <Select 
-            value={formData.leave_type_id} 
-            onValueChange={(value) => handleInputChange('leave_type_id', value)}
+          <Select
+            value={formData.leave_type_id.toString()}
+            onValueChange={(val) => handleInputChange("leave_type_id", val)}
             disabled={isLoadingTypes}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue 
-                placeholder={isLoadingTypes ? "Loading leave types..." : "Select leave type"} 
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  isLoadingTypes
+                    ? "Loading leave types..."
+                    : leaveTypeError
+                    ? "Error loading leave types"
+                    : "Select leave type"
+                }
               />
             </SelectTrigger>
             <SelectContent>
-              {leaveTypes.map((leaveType) => (
-                <SelectItem key={leaveType.id} value={leaveType.id}>
-                  {leaveType.name} ({leaveType.days_allowed} days allowed)
+              {leaveTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id.toString()}>
+                  {type.name} ({type.days_allowed} days)
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {leaveTypeError && (
+            <p className="text-xs text-red-500 mt-1">
+              {leaveTypeError}
+              <button
+                type="button"
+                onClick={fetchLeaveTypes}
+                className="ml-2 text-blue-500 underline hover:no-underline"
+              >
+                Retry
+              </button>
+            </p>
+          )}
           {errors.leave_type_id && (
             <p className="text-red-500 text-xs mt-1">{errors.leave_type_id}</p>
           )}
@@ -218,12 +271,12 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
               Start date <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Input 
-                type="date" 
-                className="pr-10" 
+              <Input
+                type="date"
+                className="pr-10"
                 value={formData.start_date}
-                onChange={(e) => handleInputChange('start_date', e.target.value)}
-                min={new Date().toISOString().split('T')[0]} // Prevent past dates
+                onChange={(e) => handleInputChange("start_date", e.target.value)}
+                min={new Date().toISOString().split("T")[0]} // Prevent past dates
               />
               <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
             </div>
@@ -236,12 +289,12 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
               End date <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Input 
-                type="date" 
-                className="pr-10" 
+              <Input
+                type="date"
+                className="pr-10"
                 value={formData.end_date}
-                onChange={(e) => handleInputChange('end_date', e.target.value)}
-                min={formData.start_date || new Date().toISOString().split('T')[0]}
+                onChange={(e) => handleInputChange("end_date", e.target.value)}
+                min={formData.start_date || new Date().toISOString().split("T")[0]}
               />
               <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
             </div>
@@ -272,11 +325,11 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Reason For Leave <span className="text-red-500">*</span>
           </label>
-          <Textarea 
-            placeholder="Enter reason here..." 
-            className="resize-none min-h-[100px]" 
+          <Textarea
+            placeholder="Enter reason here..."
+            className="resize-none min-h-[100px]"
             value={formData.reason}
-            onChange={(e) => handleInputChange('reason', e.target.value)}
+            onChange={(e) => handleInputChange("reason", e.target.value)}
           />
           {errors.reason && (
             <p className="text-red-500 text-xs mt-1">{errors.reason}</p>
@@ -292,16 +345,16 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
 
         {/* Buttons */}
         <div className="flex justify-end gap-3">
-          <Button 
+          <Button
             type="button"
-            variant="outline" 
+            variant="outline"
             className="text-gray-700 border-gray-300"
             onClick={onClose}
             disabled={isLoading}
           >
             Close
           </Button>
-          <Button 
+          <Button
             type="submit"
             className="bg-blue-700 text-white hover:bg-blue-800"
             disabled={isLoading}
@@ -312,7 +365,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
                 Submitting...
               </>
             ) : (
-              'Submit'
+              "Submit"
             )}
           </Button>
         </div>
