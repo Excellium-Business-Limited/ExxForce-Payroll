@@ -1,3 +1,4 @@
+'use client';
 import { Card } from '@/components/ui/card';
 import {
 	Table,
@@ -6,7 +7,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import payRunList from '../_components/payrunList';
 import {
 	Popover,
@@ -16,8 +17,80 @@ import {
 import { EllipsisVertical, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import axios from 'axios';
+import { useGlobal } from '@/app/Context/page';
 
-const page = () => {
+interface PayRun {
+	id: number;
+	name: string;
+	pay_period: string;
+	start_date: string;
+	end_date: string;
+	payment_date: string;
+	status: string;
+}
+
+interface Employee {
+	id: number;
+	employee_id: string;
+	name: string;
+	job_title: string;
+	pay_frequency: string;
+}
+
+const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
+	const { tenant } = useGlobal();
+	const { payrunId } = React.use(params);
+
+	const baseURL = `http://${tenant}.localhost:8000`;
+
+	const [payRun, setPayRun] = useState<PayRun | null>(null);
+	const [employees, setEmployees] = useState<Employee[]>([]);
+	const [planName, setPlanName] = useState<string>('');
+	const [error, setError] = useState<string>('');
+	const [token, setToken] = useState<string>('');
+
+	useEffect(() => {
+		const storedToken = localStorage.getItem('access_token');
+		if (!storedToken) {
+			setError('No access token found');
+			return;
+		}
+		setToken(storedToken);
+
+		const fetchData = async () => {
+			try {
+				const [payRunRes, employeesRes, planRes] = await Promise.all([
+					axios.get<PayRun>(`${baseURL}/tenant/payrun/${payrunId}`, {
+						headers: { Authorization: `Bearer ${storedToken}` },
+					}),
+					axios.get<Employee[]>(
+						`${baseURL}/tenant/payrun/${payrunId}/eligible-employees`,
+						{
+							headers: { Authorization: `Bearer ${storedToken}` },
+						}
+					),
+					axios.get<{ plan_name: string }>(`${baseURL}/tenant/payrun/plan`, {
+						headers: { Authorization: `Bearer ${storedToken}` },
+					}),
+				]);
+
+				setPayRun(payRunRes.data);
+				setEmployees(employeesRes.data);
+				setPlanName(planRes.data.plan_name);
+				console.log(payRunRes.data, employeesRes.data, planRes.data);
+			} catch (err: any) {
+				console.error('Error loading data', err);
+				setError(
+					Array.isArray(err.response?.data?.detail)
+						? err.response.data.detail.map((e: any) => e.msg).join(', ')
+						: err.response?.data?.detail || 'Failed to load data'
+				);
+			}
+		};
+
+		fetchData();
+	}, [tenant, payrunId]);
 	return (
 		<div className='h-[1080px]'>
 			<div className='m-4'>

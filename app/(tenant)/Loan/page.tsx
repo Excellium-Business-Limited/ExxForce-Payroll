@@ -42,6 +42,9 @@ import { Card } from '@/components/ui/card';
 import { getTenant } from '@/lib/auth';
 import { set } from 'date-fns';
 import { redirect } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LoanReq from './components/loanReq';
+import LoanType from './components/loanType';
 
 interface Loan {
 	monthly_deduction: ReactNode;
@@ -95,6 +98,7 @@ export default function Home() {
 				}
 			} finally {
 				setLoading(false);
+				console.log(loans);
 			}
 		};
 
@@ -102,6 +106,7 @@ export default function Home() {
 			setLoading(true);
 			fetchLoans();
 			setLoading(false);
+			
 		}, 2000);
 		fetchLoans();
 		console.log(loans);
@@ -114,10 +119,7 @@ export default function Home() {
 	// 	router.push(`/${tenant}/loans/create`);
 	// };
 
-	const goToDetail = (loanId: number) => {
-		router.push(`/Loan/${loanId}`);
-	};
-
+	
 	  if (loading) return <p className='m-0 h-2 uppercase font-bold'>Loading loans…</p>;
 	if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
@@ -240,99 +242,32 @@ export default function Home() {
 					</span>
 				</div>
 				<Card className='mt-12 ml-auto w-full h-[750px] p-3'>
-					<div className='flex flex-row items-center justify-between w-full'>
-						<span>
-							<h1>Loan List</h1>
-						</span>
-						<span className='items-end self-end justify-between flex gap-4'>
-							<Button
-								variant={'outline'}
-								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-								Export
-							</Button>
-							<Select>
-								<SelectTrigger className=''>
-									Status:
-									<SelectValue placeholder='All' />
-								</SelectTrigger>
-								<SelectContent position='popper'>
-									<SelectItem value={'All'}>All</SelectItem>
-									<SelectItem value={'Ongoing'}>Ongoing</SelectItem>
-									<SelectItem value={'Paid'}>Paid</SelectItem>
-								</SelectContent>
-							</Select>
-							<Button
-								variant={'outline'}
-								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-								Filter
-							</Button>
-						</span>
-					</div>
-					<Table border={4}>
-						<TableHeader>
-							<TableRow>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Loan Number
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Employee Name
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Loan Name
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Loan Amount
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Deduction
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Balance Remaining
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Status
-								</TableHead>
-								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									View
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{loans.map((loan) => {
-								return (
-									<TableRow key={loan.id}>
-										<TableCell>{loan.loan_number}</TableCell>
-										<TableCell>{loan.employee_name}</TableCell>
-										<TableCell>{loan.loan_type}</TableCell>
-										<TableCell>{loan.amount}</TableCell>
-										<TableCell>{loan.monthly_deduction}</TableCell>
-										<TableCell>{loan.balance}</TableCell>
-										<TableCell>
-											<h4
-												className={`border justify-center flex rounded-4xl bg-[#dee7f6] p-1 ${
-													loan.status === 'approved'
-														? 'bg-green-100 text-green-800'
-														: 'bg-gray-100 text-gray-800'
-												}`}>
-												{loan.status}
-											</h4>
-										</TableCell>
-										<TableCell>
-											<Link href={`/Loan/${loan.loan_number}`}>
-												<Image
-													width={25}
-													height={25}
-													src='/iconamoon_eye-light.png'
-													alt=''
-													onClick={() => goToDetail(loan.id)}
-												/>
-											</Link>
-										</TableCell>
-									</TableRow>
-								);
-							})}
-						</TableBody>
-					</Table>
+					<Tabs
+						className='self-center h-[1080px]'
+						defaultValue='LRequest'>
+						<TabsList className='no-design'>
+							<div className='m-2'>
+								<TabsTrigger
+									className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'
+									value='LType'>
+									Loan Type
+								</TabsTrigger>
+								<TabsTrigger
+									className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'
+									value='LRequest'>
+									Loan Request
+								</TabsTrigger>
+							</div>
+						</TabsList>
+						<hr className=' h-[2px]' />
+						<TabsContent value='LType'>
+							<LoanType />
+						</TabsContent>
+						<TabsContent value='LRequest'>
+								<LoanReq loans={loans} />
+						</TabsContent>
+					</Tabs>
+					
 				</Card>
 			</div>
 		</div>

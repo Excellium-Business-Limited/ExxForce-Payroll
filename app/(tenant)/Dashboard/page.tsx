@@ -36,9 +36,9 @@ const Dashboard = () => {
 		return formattedSalary;
 	}
 	
-	const accessToken = globalState.accessToken || getAccessToken();
-
+	
 	useEffect(() => {
+		const accessToken = globalState.accessToken || getAccessToken();
 		if (tenant) {
 			updateGlobalState({ tenant : tenant, accessToken: accessToken });
 			fetchEmployees(tenant).then((data) => {
