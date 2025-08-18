@@ -5,6 +5,7 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import Loans from '../components/loanDetails';
 import { fetchEmployees } from '@/lib/api';
 import { getTenant } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 const items = [
 	{ id: '1', name: 'Item One', description: 'Details for item one' },
 	{ id: '2', name: 'Item Two', description: 'Details for item two' },
@@ -36,7 +37,6 @@ export default function LoanDetails({
 
 	const item = items.find((item) => item.id === loanId); // Use params.loanId
 
-	
 	useEffect(() => {
 		const tenant = getTenant();
 		const baseURL = `http://${tenant}.localhost:8000`;
@@ -56,18 +56,24 @@ export default function LoanDetails({
 			} catch (err: any) {
 				console.error('Error fetching loans', err);
 				setError(err.message || 'Failed to fetch loans');
+				if (err.response?.status === 401) {
+					// Redirect to login if unauthorized
+					setTimeout(() => {
+						redirect('/login');
+					}, 2000);
+				}
 			} finally {
 				setLoading(false);
 			}
 		};
 		fetchLoans();
-		timeout
+		timeout;
 	}, []);
-	
-	useEffect(()=>{
-		const tenant = getTenant()
-		// fetchEmployees(tenant)
-	},[])
+
+	useEffect(() => {
+		const tenant = getTenant();
+		// if (loans) 
+	}, []);
 
 	const timeout = setTimeout(() => {
 		console.log(loans);
@@ -83,7 +89,8 @@ export default function LoanDetails({
 
 	return (
 		<div>
-			<Loans item={loan} /> //item will become the details of the loan instead of null
+			<Loans item={loans} id={loanId} /> //item will become the details of the loan instead
+			of null
 		</div>
 	);
 }

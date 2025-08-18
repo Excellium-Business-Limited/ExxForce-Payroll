@@ -9,9 +9,59 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import React from 'react';
+import { getTenant } from '@/lib/auth';
+import axios from 'axios';
+import { redirect } from 'next/navigation';
+import React, { ReactNode, useEffect, useState } from 'react';
 
-const updateRepay = () => {
+interface Loan {
+	monthly_deduction: ReactNode;
+	id: number;
+	loan_number: string;
+	loan_type: string;
+	employee_name: string;
+	amount: number;
+	balance: number;
+	status: string;
+	start_date: string;
+}
+
+const updateRepay = ({ id } : { id: string }) => {
+	const [loan, setLoan] = useState<Loan[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState('');
+
+	useEffect(() => {
+		const tenant = getTenant();
+		const baseURL = `http://${tenant}.localhost:8000`;
+		const fetchLoans = async () => {
+			try {
+				const token = localStorage.getItem('access_token');
+				if (!token) throw new Error('No access token');
+
+				const res = await axios.get<Loan[]>(
+					`${baseURL}/tenant/loans/${id}`,
+					{
+						headers: { Authorization: `Bearer ${token}` },
+					}
+				);
+				setLoan(res.data);
+				console.log('Loans fetched successfully', loan);
+			} catch (err: any) {
+				console.error('Error fetching loans', err);
+				setError(err.message || 'Failed to fetch loans');
+				if (err.response?.status === 401) {
+					// Redirect to login if unauthorized
+					setTimeout(() => {
+						redirect('/login');
+					}, 2000);
+				}
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchLoans();
+	}, []);
 	const handleSubmit = () => {
 		console.log('Update repayment details');
 	}
