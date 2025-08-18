@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2 } from "lucide-react";
+import { Trash2, AlertCircle } from "lucide-react";
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/page';
 
@@ -21,8 +21,33 @@ type ComponentType = "earning" | "deduction" | "benefit";
 interface SalaryComponent {
   id: string;
   name: string;
+  componentId?: number | string; // Reference to backend component
+  calculationType?: 'fixed' | 'percentage';
+  defaultValue?: number;
   fixedValue?: number;
   percentageValue?: number;
+  calculatedAmount?: number; // New field for showing calculated amounts
+  isBasic?: boolean; // Flag to identify basic component
+  isEditable?: boolean; // Flag to control editability
+}
+
+interface BackendComponent {
+  id: number;
+  name: string;
+  calculation_type: 'fixed' | 'percentage';
+  value: number;
+  is_basic?: boolean;
+  is_pensionable?: boolean;
+  is_taxable?: boolean;
+}
+
+interface BackendDeduction {
+  id: number;
+  name: string;
+  calculation_type: 'fixed' | 'percentage';
+  value: number;
+  is_tax_related?: boolean;
+  is_active?: boolean;
 }
 
 interface Employee {
@@ -58,28 +83,30 @@ interface SalaryComponentSetupProps {
   onSubmit?: (data: any) => void;
 }
 
-// Define component option interface
-interface ComponentOption {
-  id: number | string;
-  name: string;
-}
-
 export default function SalaryComponentSetup({ employee, onClose, onSubmit }: SalaryComponentSetupProps) {
   const [employeeName, setEmployeeName] = useState("");
-  const [grossSalary, setGrossSalary] = useState<number | "">("");
+  const [grossSalary, setGrossSalary] = useState<number>(0);
   const [description, setDescription] = useState("");
 
   const [earningComponents, setEarningComponents] = useState<SalaryComponent[]>([]);
   const [deductionComponents, setDeductionComponents] = useState<SalaryComponent[]>([]);
   const [benefitComponents, setBenefitComponents] = useState<SalaryComponent[]>([]);
 
-  // State for component options from API
-  const [earningOptions, setEarningOptions] = useState<ComponentOption[]>([]);
-  const [deductionOptions, setDeductionOptions] = useState<ComponentOption[]>([]);
+  // Backend component options
+  const [earningOptions, setEarningOptions] = useState<BackendComponent[]>([]);
+  const [deductionOptions, setDeductionOptions] = useState<BackendDeduction[]>([]);
   const [loadingEarnings, setLoadingEarnings] = useState(false);
   const [loadingDeductions, setLoadingDeductions] = useState(false);
   const [earningError, setEarningError] = useState<string>('');
   const [deductionError, setDeductionError] = useState<string>('');
+
+  // Calculation states
+  const [totalEarnings, setTotalEarnings] = useState<number>(0);
+  const [totalDeductions, setTotalDeductions] = useState<number>(0);
+  const [basicAmount, setBasicAmount] = useState<number>(0);
+  const [netSalary, setNetSalary] = useState<number>(0);
+  const [hasCalculationError, setHasCalculationError] = useState<boolean>(false);
+  const [calculationError, setCalculationError] = useState<string>('');
 
   // Get global context for tenant and auth
   const { tenant, globalState } = useGlobal();
@@ -91,22 +118,9 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   useEffect(() => {
     if (employee) {
       setEmployeeName(`${employee.first_name} ${employee.last_name}`);
-      setGrossSalary(employee.custom_salary || "");
+      setGrossSalary(employee.custom_salary || 0);
     }
   }, [employee]);
-
-  // Add default "Basic" earning component when earning options are loaded
-  useEffect(() => {
-    if (earningOptions.length > 0 && earningComponents.length === 0) {
-      const basicComponent: SalaryComponent = {
-        id: "basic-default",
-        name: "Basic",
-        fixedValue: undefined,
-        percentageValue: undefined,
-      };
-      setEarningComponents([basicComponent]);
-    }
-  }, [earningOptions, earningComponents.length]);
 
   // Function to fetch earning components from API
   const fetchEarningComponents = async () => {
@@ -125,31 +139,45 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       
       console.log('Earning components fetched:', response.data);
       
+      let components: BackendComponent[] = [];
       if (Array.isArray(response.data)) {
-        setEarningOptions(response.data);
+        components = response.data;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        components = response.data.data;
+      } else if (response.data.components && Array.isArray(response.data.components)) {
+        components = response.data.components;
       }
-      else if (response.data.data && Array.isArray(response.data.data)) {
-        setEarningOptions(response.data.data);
-      }
-      else if (response.data.components && Array.isArray(response.data.components)) {
-        setEarningOptions(response.data.components);
-      }
-      else {
-        console.warn('Unexpected earning components API response structure:', response.data);
-        setEarningError('Unexpected response format');
+      
+      setEarningOptions(components);
+      
+      // Initialize with Basic component if available
+      const basicComponent = components.find(comp => comp.is_basic || comp.name.toLowerCase().includes('basic'));
+      if (basicComponent && earningComponents.length === 0) {
+        const newBasicComponent: SalaryComponent = {
+          id: "basic-default",
+          name: basicComponent.name,
+          componentId: basicComponent.id,
+          calculationType: basicComponent.calculation_type,
+          defaultValue: basicComponent.value,
+          isBasic: true,
+          isEditable: false,
+          calculatedAmount: grossSalary
+        };
+        setEarningComponents([newBasicComponent]);
       }
       
     } catch (error) {
       console.error('Error fetching earning components:', error);
       setEarningError('Failed to load earning components');
       
-      // Fallback to hardcoded components in case of API failure
-      setEarningOptions([
-        { id: 'basic', name: 'Basic' },
-        { id: 'housing', name: 'Housing Allowance' },
-        { id: 'transport', name: 'Transport Allowance' },
-        { id: 'meal', name: 'Meal Allowance' }
-      ]);
+      // Fallback to hardcoded components
+      const fallbackComponents: BackendComponent[] = [
+        { id: 1, name: 'Basic', calculation_type: 'fixed', value: 0, is_basic: true },
+        { id: 2, name: 'Housing Allowance', calculation_type: 'percentage', value: 15 },
+        { id: 3, name: 'Transport Allowance', calculation_type: 'fixed', value: 25000 },
+        { id: 4, name: 'Meal Allowance', calculation_type: 'fixed', value: 20000 }
+      ];
+      setEarningOptions(fallbackComponents);
     } finally {
       setLoadingEarnings(false);
     }
@@ -172,30 +200,28 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       
       console.log('Deduction components fetched:', response.data);
       
+      let components: BackendDeduction[] = [];
       if (Array.isArray(response.data)) {
-        setDeductionOptions(response.data);
+        components = response.data;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        components = response.data.data;
+      } else if (response.data.components && Array.isArray(response.data.components)) {
+        components = response.data.components;
       }
-      else if (response.data.data && Array.isArray(response.data.data)) {
-        setDeductionOptions(response.data.data);
-      }
-      else if (response.data.components && Array.isArray(response.data.components)) {
-        setDeductionOptions(response.data.components);
-      }
-      else {
-        console.warn('Unexpected deduction components API response structure:', response.data);
-        setDeductionError('Unexpected response format');
-      }
+      
+      setDeductionOptions(components);
       
     } catch (error) {
       console.error('Error fetching deduction components:', error);
       setDeductionError('Failed to load deduction components');
       
-      // Fallback to hardcoded components in case of API failure
-      setDeductionOptions([
-        { id: 'paye', name: 'PAYE' },
-        { id: 'pension', name: 'Pension' },
-        { id: 'ntf', name: 'NTF' }
-      ]);
+      // Fallback to hardcoded components
+      const fallbackComponents: BackendDeduction[] = [
+        { id: 1, name: 'PAYE', calculation_type: 'percentage', value: 7.5, is_tax_related: true },
+        { id: 2, name: 'Pension', calculation_type: 'percentage', value: 8 },
+        { id: 3, name: 'NSITF', calculation_type: 'percentage', value: 1 }
+      ];
+      setDeductionOptions(fallbackComponents);
     } finally {
       setLoadingDeductions(false);
     }
@@ -207,22 +233,119 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     fetchDeductionComponents();
   }, []);
 
+  // Calculate component amounts and update basic component
+  const calculateComponentAmounts = () => {
+    if (grossSalary <= 0) return;
+
+    setHasCalculationError(false);
+    setCalculationError('');
+
+    // Calculate earning components (excluding basic)
+    let totalNonBasicEarnings = 0;
+    const updatedEarningComponents = earningComponents.map(comp => {
+      if (comp.isBasic) {
+        return comp; // Skip basic component calculation for now
+      }
+
+      let calculatedAmount = 0;
+      if (comp.calculationType === 'percentage' && comp.percentageValue !== undefined) {
+        calculatedAmount = (grossSalary * comp.percentageValue) / 100;
+      } else if (comp.calculationType === 'fixed' && comp.fixedValue !== undefined) {
+        calculatedAmount = comp.fixedValue;
+      }
+
+      totalNonBasicEarnings += calculatedAmount;
+      return { ...comp, calculatedAmount };
+    });
+
+    // Calculate basic component as remainder
+    const remainingForBasic = grossSalary - totalNonBasicEarnings;
+    
+    // Check if basic would go below ₦1
+    if (remainingForBasic < 1) {
+      setHasCalculationError(true);
+      setCalculationError(`Basic salary cannot be less than ₦1. Current components exceed gross salary by ₦${Math.abs(remainingForBasic).toLocaleString()}`);
+      return;
+    }
+
+    // Update basic component
+    const finalEarningComponents = updatedEarningComponents.map(comp => {
+      if (comp.isBasic) {
+        return { ...comp, calculatedAmount: remainingForBasic };
+      }
+      return comp;
+    });
+
+    // Calculate deduction components
+    let totalDeductionsAmount = 0;
+    const updatedDeductionComponents = deductionComponents.map(comp => {
+      let calculatedAmount = 0;
+      if (comp.calculationType === 'percentage' && comp.percentageValue !== undefined) {
+        calculatedAmount = (grossSalary * comp.percentageValue) / 100;
+      } else if (comp.calculationType === 'fixed' && comp.fixedValue !== undefined) {
+        calculatedAmount = comp.fixedValue;
+      }
+
+      totalDeductionsAmount += calculatedAmount;
+      return { ...comp, calculatedAmount };
+    });
+
+    // Update states
+    setEarningComponents(finalEarningComponents);
+    setDeductionComponents(updatedDeductionComponents);
+    setTotalEarnings(grossSalary); // Total earnings is always gross
+    setTotalDeductions(totalDeductionsAmount);
+    setBasicAmount(remainingForBasic);
+    setNetSalary(grossSalary - totalDeductionsAmount);
+  };
+
+  // Recalculate when components or gross salary changes
+  useEffect(() => {
+    if (grossSalary > 0 && (earningComponents.length > 0 || deductionComponents.length > 0)) {
+      calculateComponentAmounts();
+    }
+  }, [grossSalary, earningComponents.length, deductionComponents.length]);
+
+  // Also recalculate when component values change
+  useEffect(() => {
+    if (grossSalary > 0) {
+      const timeoutId = setTimeout(() => {
+        calculateComponentAmounts();
+      }, 300); // Debounce calculations
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [earningComponents, deductionComponents, grossSalary]);
+
   const handleAddComponent = (type: ComponentType) => {
     const newComponent: SalaryComponent = {
       id: Date.now().toString(),
       name: "",
-      fixedValue: undefined,
-      percentageValue: undefined,
+      isEditable: true,
+      calculatedAmount: 0,
     };
-    if (type === "earning") setEarningComponents([...earningComponents, newComponent]);
-    if (type === "deduction") setDeductionComponents([...deductionComponents, newComponent]);
-    if (type === "benefit") setBenefitComponents([...benefitComponents, newComponent]);
+    
+    if (type === "earning") {
+      setEarningComponents([...earningComponents, newComponent]);
+    } else if (type === "deduction") {
+      setDeductionComponents([...deductionComponents, newComponent]);
+    } else if (type === "benefit") {
+      setBenefitComponents([...benefitComponents, newComponent]);
+    }
   };
 
   const handleRemoveComponent = (type: ComponentType, id: string) => {
-    if (type === "earning") setEarningComponents(earningComponents.filter((c) => c.id !== id));
-    if (type === "deduction") setDeductionComponents(deductionComponents.filter((c) => c.id !== id));
-    if (type === "benefit") setBenefitComponents(benefitComponents.filter((c) => c.id !== id));
+    if (type === "earning") {
+      // Don't allow removal of basic component
+      const componentToRemove = earningComponents.find(c => c.id === id);
+      if (componentToRemove?.isBasic) return;
+      
+      setEarningComponents(earningComponents.filter((c) => c.id !== id));
+    } else if (type === "deduction") {
+      setDeductionComponents(deductionComponents.filter((c) => c.id !== id));
+    } else if (type === "benefit") {
+      setBenefitComponents(benefitComponents.filter((c) => c.id !== id));
+    }
   };
 
   const handleChange = (
@@ -232,9 +355,34 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     value: any
   ) => {
     const update = (components: SalaryComponent[]) =>
-      components.map((c) =>
-        c.id === id ? { ...c, [field]: value } : c
-      );
+      components.map((c) => {
+        if (c.id === id) {
+          const updatedComponent = { ...c, [field]: value };
+          
+          // When name changes, update component metadata
+          if (field === 'name') {
+            const options = type === 'earning' ? earningOptions : deductionOptions;
+            const selectedComponent = options.find(opt => opt.name === value);
+            if (selectedComponent) {
+              updatedComponent.componentId = selectedComponent.id;
+              updatedComponent.calculationType = selectedComponent.calculation_type;
+              updatedComponent.defaultValue = selectedComponent.value;
+              updatedComponent.isBasic = 'is_basic' in selectedComponent ? selectedComponent.is_basic : false;
+              updatedComponent.isEditable = !updatedComponent.isBasic;
+            }
+          }
+          
+          // Clear opposite value when one is set
+          if (field === 'fixedValue' && value !== undefined && value > 0) {
+            updatedComponent.percentageValue = undefined;
+          } else if (field === 'percentageValue' && value !== undefined && value > 0) {
+            updatedComponent.fixedValue = undefined;
+          }
+          
+          return updatedComponent;
+        }
+        return c;
+      });
 
     if (type === "earning") setEarningComponents(update(earningComponents));
     if (type === "deduction") setDeductionComponents(update(deductionComponents));
@@ -295,6 +443,15 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }
   };
 
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
   const renderComponentRows = (type: ComponentType, components: SalaryComponent[]) => {
     const options = getComponentOptions(type);
     const isLoading = getLoadingState(type);
@@ -306,14 +463,16 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         {components.map((comp) => (
           <div
             key={comp.id}
-            className="grid grid-cols-12 gap-4 items-center border-b pb-4 mb-4"
+            className={`grid grid-cols-12 gap-4 items-center border-b pb-4 mb-4 ${
+              comp.isBasic ? 'bg-blue-50 rounded-lg p-3' : ''
+            }`}
           >
             {/* Component Name */}
-            <div className="col-span-4">
+            <div className="col-span-3">
               <Select
                 onValueChange={(value) => handleChange(type, comp.id, "name", value)}
                 value={comp.name}
-                disabled={isLoading}
+                disabled={isLoading || comp.isBasic}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={
@@ -347,44 +506,63 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
                   </button>
                 </p>
               )}
+              {comp.isBasic && (
+                <p className="text-xs text-blue-600 mt-1">
+                  Auto-calculated as remainder
+                </p>
+              )}
             </div>
 
             {/* Fixed Value */}
-            <div className="col-span-3">
+            <div className="col-span-2">
               <Input
                 type="number"
                 value={comp.fixedValue ?? ""}
                 onChange={(e) => {
                   const value = e.target.value ? parseFloat(e.target.value) : undefined;
                   handleChange(type, comp.id, "fixedValue", value);
-                  // Clear percentage value when fixed value is entered
-                  if (value !== undefined && value > 0) {
-                    handleChange(type, comp.id, "percentageValue", undefined);
-                  }
                 }}
                 placeholder="0.00"
                 className="w-full"
-                disabled={comp.percentageValue !== undefined && comp.percentageValue > 0}
+                disabled={
+                  comp.percentageValue !== undefined && comp.percentageValue > 0 ||
+                  comp.isBasic ||
+                  comp.calculationType === 'percentage'
+                }
               />
             </div>
 
             {/* Percentage Value */}
-            <div className="col-span-3">
+            <div className="col-span-2">
               <Input
                 type="number"
                 value={comp.percentageValue ?? ""}
                 onChange={(e) => {
                   const value = e.target.value ? parseFloat(e.target.value) : undefined;
                   handleChange(type, comp.id, "percentageValue", value);
-                  // Clear fixed value when percentage value is entered
-                  if (value !== undefined && value > 0) {
-                    handleChange(type, comp.id, "fixedValue", undefined);
-                  }
                 }}
                 placeholder="0"
                 className="w-full"
-                disabled={comp.fixedValue !== undefined && comp.fixedValue > 0}
+                disabled={
+                  comp.fixedValue !== undefined && comp.fixedValue > 0 ||
+                  comp.isBasic ||
+                  comp.calculationType === 'fixed'
+                }
+                max="100"
+                min="0"
+                step="0.1"
               />
+            </div>
+
+            {/* Calculated Amount */}
+            <div className="col-span-3">
+              <div className={`px-3 py-2 rounded-md text-sm font-medium ${
+                comp.isBasic 
+                  ? 'bg-blue-100 text-blue-800' 
+                  : 'bg-gray-100 text-gray-700'
+              }`}>
+                {formatCurrency(comp.calculatedAmount || 0)}
+              </div>
             </div>
 
             {/* Delete Button */}
@@ -394,9 +572,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
                 size="icon"
                 onClick={() => handleRemoveComponent(type, comp.id)}
                 className="hover:bg-red-50"
-                disabled={comp.id === "basic-default"} // Disable delete for default Basic component
+                disabled={comp.isBasic}
               >
-                <Trash2 className={`h-4 w-4 ${comp.id === "basic-default" ? "text-gray-300" : "text-red-500"}`} />
+                <Trash2 className={`h-4 w-4 ${
+                  comp.isBasic ? "text-gray-300" : "text-red-500"
+                }`} />
               </Button>
             </div>
           </div>
@@ -406,6 +586,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   const handleSubmitForm = () => {
+    if (hasCalculationError) {
+      alert('Please fix calculation errors before submitting.');
+      return;
+    }
+
     const payload = {
       employeeName,
       grossSalary,
@@ -414,8 +599,14 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       benefitComponents,
       description,
       employee: employee,
+      calculations: {
+        totalEarnings,
+        totalDeductions,
+        basicAmount,
+        netSalary
+      }
     };
-    console.log("Form Data:", payload);
+    console.log("Salary Component Setup Data:", payload);
     onSubmit?.(payload);
   };
 
@@ -429,7 +620,8 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       <div>
         <h2 className="text-lg font-semibold">Employee Salary Component Setup</h2>
         <p className="text-sm text-gray-500">
-          Fill in the details below to configure the salary structure for {employee?.first_name} {employee?.last_name}.
+          Configure salary structure for {employee?.first_name} {employee?.last_name}. 
+          The Basic component will auto-adjust based on other components.
         </p>
       </div>
 
@@ -441,7 +633,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
             value={employeeName}
             onChange={(e) => setEmployeeName(e.target.value)}
             placeholder="John Doe"
-            disabled={!!employee} // Disable if employee is provided
+            disabled={!!employee}
           />
         </div>
         <div className="flex-1 space-y-2">
@@ -449,13 +641,55 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           <Input
             type="number"
             value={grossSalary}
-            onChange={(e) =>
-              setGrossSalary(e.target.value ? parseFloat(e.target.value) : "")
-            }
+            onChange={(e) => {
+              const value = e.target.value ? parseFloat(e.target.value) : 0;
+              setGrossSalary(value);
+            }}
             placeholder="₦500,000.00"
+            min="1"
           />
         </div>
       </div>
+
+      {/* Calculation Error Alert */}
+      {hasCalculationError && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <AlertCircle className="h-5 w-5 text-red-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Calculation Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                {calculationError}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary Card */}
+      {grossSalary > 0 && !hasCalculationError && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">Salary Breakdown</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-blue-600 font-medium">Gross Salary:</span>
+              <div className="text-blue-900 font-semibold">{formatCurrency(grossSalary)}</div>
+            </div>
+            <div>
+              <span className="text-blue-600 font-medium">Basic Amount:</span>
+              <div className="text-blue-900 font-semibold">{formatCurrency(basicAmount)}</div>
+            </div>
+            <div>
+              <span className="text-blue-600 font-medium">Total Deductions:</span>
+              <div className="text-red-600 font-semibold">{formatCurrency(totalDeductions)}</div>
+            </div>
+            <div>
+              <span className="text-blue-600 font-medium">Net Salary:</span>
+              <div className="text-green-600 font-semibold">{formatCurrency(netSalary)}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Earning Components */}
       <section>
@@ -463,9 +697,10 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         <div className="space-y-1">
           {/* Header Row */}
           <div className="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-700 border-b pb-3 mb-4">
-            <div className="col-span-4">Component</div>
-            <div className="col-span-3">Fixed Amount (₦)</div>
-            <div className="col-span-3">Percentage (%)</div>
+            <div className="col-span-3">Component</div>
+            <div className="col-span-2">Fixed Amount (₦)</div>
+            <div className="col-span-2">Percentage (%)</div>
+            <div className="col-span-3">Calculated Amount</div>
             <div className="col-span-2 text-center">Action</div>
           </div>
           {renderComponentRows("earning", earningComponents)}
@@ -486,9 +721,10 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         <div className="space-y-1">
           {/* Header Row */}
           <div className="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-700 border-b pb-3 mb-4">
-            <div className="col-span-4">Component</div>
-            <div className="col-span-3">Fixed Amount (₦)</div>
-            <div className="col-span-3">Percentage (%)</div>
+            <div className="col-span-3">Component</div>
+            <div className="col-span-2">Fixed Amount (₦)</div>
+            <div className="col-span-2">Percentage (%)</div>
+            <div className="col-span-3">Calculated Amount</div>
             <div className="col-span-2 text-center">Action</div>
           </div>
           {renderComponentRows("deduction", deductionComponents)}
@@ -509,9 +745,10 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         <div className="space-y-1">
           {/* Header Row */}
           <div className="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-700 border-b pb-3 mb-4">
-            <div className="col-span-4">Component</div>
-            <div className="col-span-3">Fixed Amount (₦)</div>
-            <div className="col-span-3">Percentage (%)</div>
+            <div className="col-span-3">Component</div>
+            <div className="col-span-2">Fixed Amount (₦)</div>
+            <div className="col-span-2">Percentage (%)</div>
+            <div className="col-span-3">Calculated Amount</div>
             <div className="col-span-2 text-center">Action</div>
           </div>
           {renderComponentRows("benefit", benefitComponents)}
@@ -540,7 +777,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         <Button variant="outline" onClick={handleCloseForm}>
           Close
         </Button>
-        <Button onClick={handleSubmitForm}>
+        <Button 
+          onClick={handleSubmitForm}
+          disabled={hasCalculationError || grossSalary <= 0}
+          className={hasCalculationError ? 'opacity-50 cursor-not-allowed' : ''}
+        >
           Save Salary Setup
         </Button>
       </div>
