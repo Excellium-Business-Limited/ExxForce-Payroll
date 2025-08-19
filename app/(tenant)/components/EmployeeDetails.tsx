@@ -8,6 +8,7 @@ import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import
 import LeaveListDisplay from '../components/LeaveListDisplay'; // Import the LeaveListDisplay
 import LeaveRequestForm from '../components/LeaveRequestForm'; // Import the LeaveRequestForm
 import PayrollBreakdown from '../components/PayrollBreakdown'; // Import the PayrollBreakdown
+import DocumentUploadModal from '../components/DocumentUploadModal'; // Import the DocumentUploadModal
 
 interface Employee {
   id?: number;
@@ -68,6 +69,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
   const [showSalaryForm, setShowSalaryForm] = useState<boolean>(false);
   const [showSalaryComponentSetup, setShowSalaryComponentSetup] = useState<boolean>(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState<boolean>(false);
   const [editType, setEditType] = useState<'general' | 'salary'>('general');
   
   // Leave-related state
@@ -137,7 +139,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   };
 
   // Check if any form is currently open
-  const isAnyFormOpen = showEmployeeForm || showSalaryForm || showSalaryComponentSetup || showLeaveRequestForm;
+  const isAnyFormOpen = showEmployeeForm || showSalaryForm || showSalaryComponentSetup || showLeaveRequestForm || showDocumentUpload;
 
   // Handler for tab change with form validation
   const handleTabChange = (newTab: 'general' | 'payroll' | 'document' | 'loan' | 'leave' | 'payment-history') => {
@@ -239,6 +241,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowSalaryForm(false); // Close salary form if open
     setShowSalaryComponentSetup(false); // Close salary component setup if open
     setShowLeaveRequestForm(false); // Close leave request form if open
+    setShowDocumentUpload(false); // Close document upload if open
   };
 
   // Handler for Salary & Payment Details edit
@@ -247,6 +250,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowEmployeeForm(false); // Close employee form if open
     setShowSalaryComponentSetup(false); // Close salary component setup if open
     setShowLeaveRequestForm(false); // Close leave request form if open
+    setShowDocumentUpload(false); // Close document upload if open
   };
 
   // Handler for Process Payroll button
@@ -255,6 +259,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowEmployeeForm(false); // Close employee form if open
     setShowSalaryForm(false); // Close salary form if open
     setShowLeaveRequestForm(false); // Close leave request form if open
+    setShowDocumentUpload(false); // Close document upload if open
   };
 
   // Handler for Leave Request button
@@ -263,6 +268,16 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowEmployeeForm(false); // Close employee form if open
     setShowSalaryForm(false); // Close salary form if open
     setShowSalaryComponentSetup(false); // Close salary component setup if open
+    setShowDocumentUpload(false); // Close document upload if open
+  };
+
+  // Handler for Document Upload button
+  const handleUploadDocument = () => {
+    setShowDocumentUpload(true);
+    setShowEmployeeForm(false); // Close employee form if open
+    setShowSalaryForm(false); // Close salary form if open
+    setShowSalaryComponentSetup(false); // Close salary component setup if open
+    setShowLeaveRequestForm(false); // Close leave request form if open
   };
 
   // Handler for closing the inline forms
@@ -280,6 +295,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   const handleCloseLeaveRequestForm = () => {
     setShowLeaveRequestForm(false);
+  };
+
+  const handleCloseDocumentUpload = () => {
+    setShowDocumentUpload(false);
   };
 
   // Handler for form submission
@@ -331,6 +350,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       setShowLeaveRequestForm(false);
     } catch (error) {
       console.error('Error submitting leave request:', error);
+    }
+  };
+
+  // Handler for document upload submission
+  const handleDocumentUploadSubmit = async (documentData: any) => {
+    try {
+      console.log('Document uploaded:', documentData);
+      // Handle document upload logic here
+      // You might want to call an API to save the document
+      // Close the form after successful submission
+      setShowDocumentUpload(false);
+    } catch (error) {
+      console.error('Error uploading document:', error);
     }
   };
 
@@ -446,7 +478,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </p>
 
       <div className="flex gap-3">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+        <button 
+          onClick={handleUploadDocument}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
           <Upload className="w-4 h-4" />
           Upload Document
         </button>
@@ -626,8 +661,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             <span className="text-sm font-medium">Back to Employees</span>
           </button>
           <div className="flex items-center space-x-2 ml-4">
-            <span className="text-sm text-gray-500">Employee</span>
-            <span className="text-sm text-gray-400">/</span>
             <span className="text-sm text-gray-900 font-medium">Employee Details</span>
           </div>
         </div>
@@ -974,9 +1007,44 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             </div>
           </div>
         )}
+
+        {/* Right Side Form Panel - Document Upload Form Overlay */}
+        {showDocumentUpload && (
+          <div className="absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+            {/* Form Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Upload Document
+              </h2>
+              <button
+                onClick={handleCloseDocumentUpload}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close form"
+              >
+                <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-auto">
+              <DocumentUploadModal
+                isOpen={showDocumentUpload}
+                onClose={handleCloseDocumentUpload}
+                onSubmit={handleDocumentUploadSubmit}
+                employeeId={employee.id?.toString()}
+                employeeName={`${employee.first_name} ${employee.last_name}`}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default EmployeeDetails;
+// -500">Employee</span>
+//             <span className="text-sm text-gray-400">/</span>
+//             <span className="text-sm text-gray
