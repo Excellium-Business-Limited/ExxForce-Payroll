@@ -136,6 +136,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     }
   };
 
+  // Check if any form is currently open
+  const isAnyFormOpen = showEmployeeForm || showSalaryForm || showSalaryComponentSetup || showLeaveRequestForm;
+
+  // Handler for tab change with form validation
+  const handleTabChange = (newTab: 'general' | 'payroll' | 'document' | 'loan' | 'leave' | 'payment-history') => {
+    if (isAnyFormOpen) {
+      // Show a confirmation dialog or toast notification
+      alert('Please save or cancel the current form before switching tabs.');
+      return;
+    }
+    setActiveTab(newTab);
+  };
+
   // Check if employee has payroll data
   const checkPayrollData = async () => {
     if (!employee.employee_id) return;
@@ -598,9 +611,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     </div>
   );
 
-  // Determine if any form panel is open
-  const isAnyFormOpen = showEmployeeForm || showSalaryForm || showSalaryComponentSetup || showLeaveRequestForm;
-
   return (
     <div className="bg-white w-full h-full overflow-hidden flex flex-col">
       {/* Header */}
@@ -643,12 +653,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => handleTabChange(tab.id as any)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                } ${isAnyFormOpen ? 'cursor-not-allowed opacity-50' : ''}`}
+                disabled={isAnyFormOpen}
               >
                 {tab.label}
               </button>
@@ -767,39 +778,16 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                             </dd>
                           </div>
                           <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NHSIF</dt>
+                            <dt className="text-sm text-gray-600">NHF</dt>
                             <dd className="text-sm text-gray-900 font-medium">
                               {employee.is_nhf_applicable ? 'Yes' : 'No'}
                             </dd>
                           </div>
                           <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NTF</dt>
+                            <dt className="text-sm text-gray-600">NSITF</dt>
                             <dd className="text-sm text-gray-900 font-medium">
                               {employee.is_nsitf_applicable ? 'Yes' : 'No'}
                             </dd>
-                          </div>
-                        </dl>
-                      </div>
-
-                      {/* Benefits Column */}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-4">Benefits</h4>
-                        <dl className="space-y-3">
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">Housing Allowance</dt>
-                            <dd className="text-sm text-gray-900 font-medium">Yes</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NHIS</dt>
-                            <dd className="text-sm text-gray-900 font-medium">No</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NHIS</dt>
-                            <dd className="text-sm text-gray-900 font-medium">Yes</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NHIS</dt>
-                            <dd className="text-sm text-gray-900 font-medium">Yes</dd>
                           </div>
                         </dl>
                       </div>
