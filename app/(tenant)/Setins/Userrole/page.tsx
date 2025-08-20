@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import React from 'react'
+import Loading from '@/components/ui/Loading';
 
 
 const Log = () =>{
@@ -72,7 +73,12 @@ const page = () => {
 					Manage your organization settings and preference
 				</p>
 			</article>
-
+			<Loading
+				variant='pulse'
+				overlay={false}
+				className='my-4'
+				message='Syncing...'
+			/>
 			<Card className='w-[950px] m-4 h-[500px]'>
 				<CardHeader className='flex justify-between mb-4'>
 					<h4>User History</h4>
@@ -81,13 +87,12 @@ const page = () => {
 						<DialogTrigger asChild>
 							<Button
 								variant={'outline'}
-								className='bg-[#3d56a8] text-white'
-								>
+								className='bg-[#3d56a8] text-white'>
 								+ New User
 							</Button>
 						</DialogTrigger>
 						<DialogContent className=' bg-white'>
-							<DialogTitle >Invite User</DialogTitle>
+							<DialogTitle>Invite User</DialogTitle>
 							<Log />
 						</DialogContent>
 					</Dialog>

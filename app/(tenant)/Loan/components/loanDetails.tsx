@@ -224,7 +224,7 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 						<div className='px-2 flex justify-between'>
 							<h6 className='text-md'>Loan Summary</h6>
 							<p className='rounded-[10px] bg-[#e9eff9] w-[69px] h-[24px] text-xs p-1 border self-end'>
-								{loanSummary.status}
+								{item.status.charAt(0).toUpperCase() + item.status.slice(1)}
 							</p>
 						</div>
 						<div className='grid grid-rows-2 grid-cols-3 gap-2.5 m-2.5'>

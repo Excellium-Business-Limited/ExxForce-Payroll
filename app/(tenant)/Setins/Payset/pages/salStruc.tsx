@@ -204,7 +204,7 @@ const salStruc = () => {
 								</section>
 								<DialogFooter>
 									<div>
-										<DialogClose>
+										<DialogClose asChild>
 											<Button
 												type='button'
 												variant='outline'

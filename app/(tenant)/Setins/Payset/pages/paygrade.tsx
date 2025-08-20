@@ -26,6 +26,7 @@ import { Trash2 } from 'lucide-react';
 import { getTenant, getAccessToken } from '@/lib/auth';
 import PayGradeEdit from '../components/payGradeEdit';
 import { redirect } from 'next/navigation';
+import Loading from '@/components/ui/Loading';
 
 interface ComponentDetail {
 	component_name: string;
@@ -86,7 +87,17 @@ const paygrade = () => {
 		fetchPayGrades();
 	}, []);
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return (
+			<div>
+				{' '}
+				<Loading
+					message='Loading Paygrades...'
+					size='medium'
+					variant='spinner'
+					overlay={false}
+				/>
+			</div>
+		);
 	}
 	function deleteComponent(id: any): void {
 		throw new Error('Function not implemented.');

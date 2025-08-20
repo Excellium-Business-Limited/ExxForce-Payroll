@@ -16,7 +16,7 @@ import {
 	TableCell,
 } from '@/components/ui/table';
 import Dialogs from '@/app/(tenant)/components/dialog';
-import React from 'react';
+import React, { use, useEffect } from 'react';
 import Add from './add';
 import {
 	Dialog,
@@ -26,6 +26,32 @@ import {
 } from '@/components/ui/dialog';
 
 const DepList = () => {
+	const [departments, setDepartments] = React.useState<any[]>([]);
+	useEffect(() => {
+		const tenant = localStorage.getItem('tenant');
+		if (!tenant) {
+			console.error('Tenant not found in localStorage');
+			return;
+		}
+		const baseUrl = `http://${tenant}.localhost:8000`;
+		const fetchDepartments = async () => {
+			try {
+				const res = await fetch(`${baseUrl}/tenant/employee/departments`, {
+					headers: {
+						Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+					},
+				});
+				;
+				// if (res.ok) setDepartments(res.data)
+				if (!res.ok) throw new Error('Failed to fetch departments');
+				const data = await res.json();
+				setDepartments(data);
+			} catch (error) {
+				console.error(error);
+			}
+		};
+		fetchDepartments();
+	}, []);
 	return (
 		<div>
 			<section className='flex justify-between align-middle px-4 py-2'>
@@ -55,36 +81,7 @@ const DepList = () => {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					<TableRow>
-						<TableCell>Software Developer</TableCell>
-						<TableCell></TableCell>
-						<TableCell></TableCell>
-					</TableRow>
-					<TableRow>
-						<TableCell>Technical Writer</TableCell>
-						<TableCell></TableCell>
-						<TableCell></TableCell>
-					</TableRow>
-					<TableRow>
-						<TableCell>Product Designer</TableCell>
-						<TableCell></TableCell>
-						<TableCell></TableCell>
-					</TableRow>
-					<TableRow>
-						<TableCell>Legal Officer</TableCell>
-						<TableCell></TableCell>
-						<TableCell></TableCell>
-					</TableRow>
-					<TableRow>
-						<TableCell>Project Manager</TableCell>
-						<TableCell></TableCell>
-						<TableCell></TableCell>
-					</TableRow>
-					<TableRow>
-						<TableCell>Cloud Engineer</TableCell>
-						<TableCell></TableCell>
-						<TableCell></TableCell>
-					</TableRow>
+					{}
 				</TableBody>
 			</Table>
 		</div>
