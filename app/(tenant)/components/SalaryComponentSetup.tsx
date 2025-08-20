@@ -162,6 +162,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   const [netSalaryCalculation, setNetSalaryCalculation] = useState<NetSalaryCalculation | null>(null);
   const [isCalculatingNetSalary, setIsCalculatingNetSalary] = useState(false);
   const [hasCalculatedNetSalary, setHasCalculatedNetSalary] = useState(false);
+  const [showNetSalaryDetails, setShowNetSalaryDetails] = useState(false);
 
   // Get global context for tenant and auth
   const { tenant, globalState } = useGlobal();
@@ -285,6 +286,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       const result = calculateNetSalaryDetailed();
       setNetSalaryCalculation(result);
       setHasCalculatedNetSalary(true);
+      setShowNetSalaryDetails(true);
     } catch (error) {
       console.error("Error calculating net salary:", error);
       alert("Failed to calculate net salary. Please try again.");
@@ -492,6 +494,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   useEffect(() => {
     setHasCalculatedNetSalary(false);
     setNetSalaryCalculation(null);
+    setShowNetSalaryDetails(false);
   }, [grossSalary, earningComponents, deductionComponents]);
 
   const handleAddComponent = (type: ComponentType) => {
@@ -564,6 +567,28 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     if (type === "earning") setEarningComponents(update(earningComponents));
     if (type === "deduction") setDeductionComponents(update(deductionComponents));
     if (type === "benefit") setBenefitComponents(update(benefitComponents));
+  };
+
+  // Get available component options (filtering out already selected ones)
+  const getAvailableComponentOptions = (type: ComponentType) => {
+    const allOptions = getComponentOptions(type);
+    const selectedComponentNames = getCurrentComponents(type).map(comp => comp.name).filter(name => name);
+    
+    return allOptions.filter(option => !selectedComponentNames.includes(option.name));
+  };
+
+  // Get current components based on type
+  const getCurrentComponents = (type: ComponentType) => {
+    switch (type) {
+      case "earning":
+        return earningComponents;
+      case "deduction":
+        return deductionComponents;
+      case "benefit":
+        return benefitComponents;
+      default:
+        return [];
+    }
   };
 
   // Get component options based on type
@@ -648,7 +673,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   const renderComponentRows = (type: ComponentType, components: SalaryComponent[]) => {
-    const options = getComponentOptions(type);
+    const availableOptions = getAvailableComponentOptions(type);
     const isLoading = getLoadingState(type);
     const error = getErrorState(type);
     const retryFunction = getRetryFunction(type);
@@ -675,18 +700,30 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
                       ? `Loading ${type} components...` 
                       : error 
                         ? `Error loading ${type} components` 
-                        : `Select ${type} component`
+                        : comp.name || `Select ${type} component`
                   } />
                 </SelectTrigger>
                 <SelectContent>
-                  {options.map((option) => (
+                  {/* Show already selected component if this component has a name */}
+                  {comp.name && (
+                    <SelectItem value={comp.name}>
+                      {comp.name}
+                    </SelectItem>
+                  )}
+                  {/* Show available options */}
+                  {availableOptions.map((option) => (
                     <SelectItem 
                       key={option.id} 
-                      value={typeof option.id === 'string' ? option.id : option.name}
+                      value={option.name}
                     >
                       {option.name}
                     </SelectItem>
                   ))}
+                  {availableOptions.length === 0 && !comp.name && (
+                    <SelectItem value="" disabled>
+                      No more options available
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               {error && type !== 'benefit' && (
@@ -955,7 +992,9 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
               </div>
 
               {/* Tax Calculation Results */}
-              {netSalaryCalculation && (
+              {netSalaryCalculation && hasCalculatedNetSalary && (
+              {/* Tax Calculation Results */}
+              {hasCalculatedNetSalary && netSalaryCalculation && (
                 <div className="space-y-6 mt-6">
                   {/* Summary Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1191,9 +1230,12 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           variant="outline"
           onClick={() => handleAddComponent("earning")}
           className="mt-4"
-          disabled={loadingEarnings}
+          disabled={loadingEarnings || getAvailableComponentOptions("earning").length === 0}
         >
           + Add Another Component
+          {getAvailableComponentOptions("earning").length === 0 && (
+            <span className="ml-2 text-xs text-gray-500">(All components selected)</span>
+          )}
         </Button>
       </section>
 
@@ -1215,9 +1257,12 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           variant="outline"
           onClick={() => handleAddComponent("deduction")}
           className="mt-4"
-          disabled={loadingDeductions}
+          disabled={loadingDeductions || getAvailableComponentOptions("deduction").length === 0}
         >
           + Add Another Component
+          {getAvailableComponentOptions("deduction").length === 0 && (
+            <span className="ml-2 text-xs text-gray-500">(All components selected)</span>
+          )}
         </Button>
       </section>
 
@@ -1239,8 +1284,12 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           variant="outline"
           onClick={() => handleAddComponent("benefit")}
           className="mt-4"
+          disabled={getAvailableComponentOptions("benefit").length === 0}
         >
           + Add Another Component
+          {getAvailableComponentOptions("benefit").length === 0 && (
+            <span className="ml-2 text-xs text-gray-500">(All components selected)</span>
+          )}
         </Button>
       </section>
 
