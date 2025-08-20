@@ -116,6 +116,11 @@ interface SalaryComponentSetupProps {
   onSubmit?: (data: any) => void;
 }
 
+interface BenefitOption {
+  id: number;
+  name: string;
+}
+
 // Nigerian PAYE tax brackets for 2025
 const TAX_BRACKETS: TaxBracket[] = [
   { min: 0, max: 300000, rate: 7 },        // First ₦300,000 at 7%
@@ -133,10 +138,10 @@ const PENSION_EMPLOYER_RATE = 0.10; // 10% employer contribution
 const NHF_RATE = 0.025; // 2.5% of basic salary
 const NSITF_RATE = 0.01; // 1% of gross salary
 
-export default function SalaryComponentSetup({ employee, onClose, onSubmit }: SalaryComponentSetupProps) {
-  const [employeeName, setEmployeeName] = useState("");
+export default function SalaryComponentSetup({ employee, onClose, onSubmit }: SalaryComponentSetupProps): JSX.Element {
+  const [employeeName, setEmployeeName] = useState<string>("");
   const [grossSalary, setGrossSalary] = useState<number>(0);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState<string>("");
 
   const [earningComponents, setEarningComponents] = useState<SalaryComponent[]>([]);
   const [deductionComponents, setDeductionComponents] = useState<SalaryComponent[]>([]);
@@ -145,8 +150,8 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   // Backend component options
   const [earningOptions, setEarningOptions] = useState<BackendComponent[]>([]);
   const [deductionOptions, setDeductionOptions] = useState<BackendDeduction[]>([]);
-  const [loadingEarnings, setLoadingEarnings] = useState(false);
-  const [loadingDeductions, setLoadingDeductions] = useState(false);
+  const [loadingEarnings, setLoadingEarnings] = useState<boolean>(false);
+  const [loadingDeductions, setLoadingDeductions] = useState<boolean>(false);
   const [earningError, setEarningError] = useState<string>('');
   const [deductionError, setDeductionError] = useState<string>('');
 
@@ -160,15 +165,19 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
   // Net salary calculation states
   const [netSalaryCalculation, setNetSalaryCalculation] = useState<NetSalaryCalculation | null>(null);
-  const [isCalculatingNetSalary, setIsCalculatingNetSalary] = useState(false);
-  const [hasCalculatedNetSalary, setHasCalculatedNetSalary] = useState(false);
-  const [showNetSalaryDetails, setShowNetSalaryDetails] = useState(false);
+  const [isCalculatingNetSalary, setIsCalculatingNetSalary] = useState<boolean>(false);
+  const [hasCalculatedNetSalary, setHasCalculatedNetSalary] = useState<boolean>(false);
+  const [showNetSalaryDetails, setShowNetSalaryDetails] = useState<boolean>(false);
 
   // Get global context for tenant and auth
   const { tenant, globalState } = useGlobal();
 
   // Hardcoded benefit options (since no API endpoint provided)
-  const benefitOptions = ["Bonus", "Medical", "Leave Allowance"];
+  const benefitOptions: BenefitOption[] = [
+    { id: 1, name: "Bonus" },
+    { id: 2, name: "Medical" },
+    { id: 3, name: "Leave Allowance" }
+  ];
 
   // Initialize form with employee data if provided
   useEffect(() => {
@@ -266,7 +275,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     };
   };
 
-  const handleCalculateNetSalary = async () => {
+  const handleCalculateNetSalary = async (): Promise<void> => {
     if (!employee) {
       alert("Employee data is required for tax calculation");
       return;
@@ -296,7 +305,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Function to fetch earning components from API
-  const fetchEarningComponents = async () => {
+  const fetchEarningComponents = async (): Promise<void> => {
     setLoadingEarnings(true);
     setEarningError('');
     
@@ -357,7 +366,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Function to fetch deduction components from API
-  const fetchDeductionComponents = async () => {
+  const fetchDeductionComponents = async (): Promise<void> => {
     setLoadingDeductions(true);
     setDeductionError('');
     
@@ -407,7 +416,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   }, []);
 
   // Calculate component amounts and update basic component
-  const calculateComponentAmounts = () => {
+  const calculateComponentAmounts = (): void => {
     if (grossSalary <= 0) return;
 
     setHasCalculationError(false);
@@ -497,7 +506,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     setShowNetSalaryDetails(false);
   }, [grossSalary, earningComponents, deductionComponents]);
 
-  const handleAddComponent = (type: ComponentType) => {
+  const handleAddComponent = (type: ComponentType): void => {
     const newComponent: SalaryComponent = {
       id: Date.now().toString(),
       name: "",
@@ -514,7 +523,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }
   };
 
-  const handleRemoveComponent = (type: ComponentType, id: string) => {
+  const handleRemoveComponent = (type: ComponentType, id: string): void => {
     if (type === "earning") {
       // Don't allow removal of basic component
       const componentToRemove = earningComponents.find(c => c.id === id);
@@ -533,7 +542,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     id: string,
     field: keyof SalaryComponent,
     value: any
-  ) => {
+  ): void => {
     const update = (components: SalaryComponent[]) =>
       components.map((c) => {
         if (c.id === id) {
@@ -570,7 +579,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Get available component options (filtering out already selected ones)
-  const getAvailableComponentOptions = (type: ComponentType) => {
+  const getAvailableComponentOptions = (type: ComponentType): (BackendComponent | BackendDeduction | BenefitOption)[] => {
     const allOptions = getComponentOptions(type);
     const selectedComponentNames = getCurrentComponents(type).map(comp => comp.name).filter(name => name);
     
@@ -578,7 +587,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Get current components based on type
-  const getCurrentComponents = (type: ComponentType) => {
+  const getCurrentComponents = (type: ComponentType): SalaryComponent[] => {
     switch (type) {
       case "earning":
         return earningComponents;
@@ -592,21 +601,21 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Get component options based on type
-  const getComponentOptions = (type: ComponentType) => {
+  const getComponentOptions = (type: ComponentType): (BackendComponent | BackendDeduction | BenefitOption)[] => {
     switch (type) {
       case "earning":
         return earningOptions;
       case "deduction":
         return deductionOptions;
       case "benefit":
-        return benefitOptions.map((option, index) => ({ id: index, name: option }));
+        return benefitOptions;
       default:
         return [];
     }
   };
 
   // Get loading state based on type
-  const getLoadingState = (type: ComponentType) => {
+  const getLoadingState = (type: ComponentType): boolean => {
     switch (type) {
       case "earning":
         return loadingEarnings;
@@ -620,7 +629,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Get error state based on type
-  const getErrorState = (type: ComponentType) => {
+  const getErrorState = (type: ComponentType): string => {
     switch (type) {
       case "earning":
         return earningError;
@@ -634,7 +643,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Get retry function based on type
-  const getRetryFunction = (type: ComponentType) => {
+  const getRetryFunction = (type: ComponentType): (() => void) => {
     switch (type) {
       case "earning":
         return fetchEarningComponents;
@@ -646,7 +655,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   };
 
   // Format currency
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
@@ -654,11 +663,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }).format(amount);
   };
 
-  const formatPercentage = (rate: number) => {
+  const formatPercentage = (rate: number): string => {
     return `${rate.toFixed(2)}%`;
   };
 
-  const getPayFrequencyMultiplier = () => {
+  const getPayFrequencyMultiplier = (): number => {
     if (!employee) return 12;
     switch (employee.pay_frequency) {
       case 'WEEKLY': return 52;
@@ -668,11 +677,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }
   };
 
-  const getAnnualAmount = (amount: number) => {
+  const getAnnualAmount = (amount: number): number => {
     return amount * getPayFrequencyMultiplier();
   };
 
-  const renderComponentRows = (type: ComponentType, components: SalaryComponent[]) => {
+  const renderComponentRows = (type: ComponentType, components: SalaryComponent[]): JSX.Element => {
     const availableOptions = getAvailableComponentOptions(type);
     const isLoading = getLoadingState(type);
     const error = getErrorState(type);
@@ -817,7 +826,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     );
   };
 
-  const handleSubmitForm = () => {
+  const handleSubmitForm = (): void => {
     if (hasCalculationError) {
       alert('Please fix calculation errors before submitting.');
       return;
@@ -848,7 +857,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     onSubmit?.(payload);
   };
 
-  const handleCloseForm = () => {
+  const handleCloseForm = (): void => {
     onClose?.();
   };
 
@@ -991,8 +1000,6 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
                 </Button>
               </div>
 
-              {/* Tax Calculation Results */}
-              {netSalaryCalculation && hasCalculatedNetSalary && (
               {/* Tax Calculation Results */}
               {hasCalculatedNetSalary && netSalaryCalculation && (
                 <div className="space-y-6 mt-6">
@@ -1345,4 +1352,3 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       </div>
     </div>
   );
-}
