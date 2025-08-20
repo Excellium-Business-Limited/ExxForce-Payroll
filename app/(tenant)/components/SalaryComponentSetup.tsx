@@ -932,19 +932,23 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
             </div>
             <div>
               <span className="text-blue-600 font-medium">Net Salary:</span>
-              <div className="text-green-600 font-semibold">{formatCurrency(netSalary)}</div>
+              <div className="text-green-600 font-semibold">
+                {hasCalculatedNetSalary && netSalaryCalculation 
+                  ? formatCurrency(netSalaryCalculation.netSalary) 
+                  : "—"}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Nigerian Tax Calculator Section */}
+      {/* Tax Calculator Section */}
       {employee && grossSalary > 0 && !hasCalculationError && (
         <Card className="border-green-200">
           <CardHeader>
             <CardTitle className="text-lg text-green-700 flex items-center">
               <Calculator className="w-5 h-5 mr-2" />
-              Nigerian Tax Calculator
+              Net Salary Calculation
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -953,7 +957,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center mb-3">
                   <Info className="w-5 h-5 text-blue-600 mr-2" />
-                  <h4 className="font-semibold text-blue-900">Employee Tax Information</h4>
+                  <h4 className="font-semibold text-blue-900">Employee Deductions</h4>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
@@ -994,7 +998,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
                   ) : (
                     <>
                       <Calculator className="w-5 h-5 mr-2" />
-                      Calculate Net Salary with Nigerian Tax
+                      Calculate Net Salary
                     </>
                   )}
                 </Button>
@@ -1145,7 +1149,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
                         {/* Tax Brackets Reference */}
                         <div className="mt-6">
-                          <h4 className="font-semibold mb-3 text-gray-700">Nigerian PAYE Tax Brackets (2025)</h4>
+                          <h4 className="font-semibold mb-3 text-gray-700">PAYE Tax Brackets (2025)</h4>
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-sm">
                               <thead>
@@ -1318,7 +1322,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
             <div className="ml-3">
               <h3 className="text-sm font-medium text-yellow-800">Calculate Net Salary Required</h3>
               <div className="mt-2 text-sm text-yellow-700">
-                You must calculate the net salary using the Nigerian Tax Calculator before submitting the form.
+                You must calculate the net salary before submitting the form.
               </div>
             </div>
           </div>
