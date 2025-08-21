@@ -25,8 +25,14 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 
+interface Department {
+	id: number;	
+	name: string;
+	totalEmployees: number;
+	}
+
 const DepList = () => {
-	const [departments, setDepartments] = React.useState<any[]>([]);
+	const [departments, setDepartments] = React.useState<[]>([]);
 	useEffect(() => {
 		const tenant = localStorage.getItem('tenant');
 		if (!tenant) {
@@ -46,12 +52,17 @@ const DepList = () => {
 				if (!res.ok) throw new Error('Failed to fetch departments');
 				const data = await res.json();
 				setDepartments(data);
+				
 			} catch (error) {
 				console.error(error);
 			}
 		};
 		fetchDepartments();
 	}, []);
+	setTimeout(() => {
+		console.log(departments);
+		
+	}, 3000);
 	return (
 		<div>
 			<section className='flex justify-between align-middle px-4 py-2'>
@@ -81,7 +92,18 @@ const DepList = () => {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{}
+					{departments.map((department:Department) => {
+						return (
+							<TableRow key={department.id}>
+								<TableCell className='font-medium'>
+									{department.name}
+								</TableCell>
+								<TableCell>{department.totalEmployees}</TableCell>
+								<TableCell>
+								</TableCell>
+							</TableRow>
+						)
+					})}
 				</TableBody>
 			</Table>
 		</div>
