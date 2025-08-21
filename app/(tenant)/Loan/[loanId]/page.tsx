@@ -89,8 +89,7 @@ export default function LoanDetails({
 
 	return (
 		<div>
-			<Loans item={loans} id={loanId} /> //item will become the details of the loan instead
-			of null
+			<Loans item={loans} id={loanId} />
 		</div>
 	);
 }

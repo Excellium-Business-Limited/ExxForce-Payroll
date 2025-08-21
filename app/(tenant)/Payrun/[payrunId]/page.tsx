@@ -24,6 +24,8 @@ interface PayRun {
 	id: number;
 	name: string;
 	pay_period: string;
+	
+	deductions: string;
 	start_date: string;
 	end_date: string;
 	payment_date: string;
@@ -31,11 +33,15 @@ interface PayRun {
 }
 
 interface Employee {
-	id: number;
+	benefits: string
+	deductions: string
 	employee_id: string;
+	gross: string;
+	id: number;
 	name: string;
-	job_title: string;
-	pay_frequency: string;
+	net_salary: string;
+	paygrade: string;
+	status: string;
 }
 
 const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
@@ -73,6 +79,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					axios.get<{ plan_name: string }>(`${baseURL}/tenant/payrun/plan`, {
 						headers: { Authorization: `Bearer ${storedToken}` },
 					}),
+
 				]);
 
 				setPayRun(payRunRes.data);
@@ -112,9 +119,9 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>50</h2>
+						<h2 className='font-bold'>{employees.length}</h2>
 						<p className='text-xs text-muted-foreground'>
-							90% of employees are regular staff
+							90% of employees are eligible for this run
 						</p>
 					</span>
 				</Card>
@@ -132,7 +139,9 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>₦3,500,000.00</h2>
+						<h2 className='font-bold'>{
+							employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0)
+						}</h2>
 						<p className='text-xs text-muted-foreground'>
 							Total payroll after deductions
 						</p>
@@ -189,33 +198,33 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 								<TableCell>GROSS SALARY</TableCell>
 								<TableCell>DEDUCTIONS</TableCell>
 								<TableCell>BENEFITS</TableCell>
-								<TableCell>DAYS WORKED</TableCell>
+								{/* <TableCell>DAYS WORKED</TableCell> */}
 								<TableCell>NET SALARY</TableCell>
 								<TableCell>STATUS</TableCell>
 								<TableCell>MORE</TableCell>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{payRunList.map((payrun, index) => {
+							{employees.map((payrun, index) => {
 								return (
 									<TableRow
 										key={index}
 										className='text-sm font-light align-middle content-center items-center'>
-										<TableCell>{payrun.EMPLOYEE_NAME}</TableCell>
-										<TableCell>{payrun.PAY_GRADE}</TableCell>
-										<TableCell>₦{payrun.GROSS_SALARY}.00</TableCell>
-										<TableCell>₦{payrun.DEDUCTIONS}.00</TableCell>
-										<TableCell>₦{payrun.BENEFITS}.00</TableCell>
-										<TableCell>{payrun.DAYS_WORKED}</TableCell>
-										<TableCell>₦{payrun.NET_SALARY}.00</TableCell>
+										<TableCell>{payrun.name}</TableCell>
+										<TableCell>{payrun.paygrade}</TableCell>
+										<TableCell>₦{payrun.gross}.00</TableCell>
+										<TableCell>₦{payrun.deductions}.00</TableCell>
+										<TableCell>₦{payrun.benefits}.00</TableCell>
+										{/* <TableCell>{payrun.days_worked}</TableCell> */}
+										<TableCell>₦{payrun.net_salary}.00</TableCell>
 										<TableCell>
 											<span
 												className={`${
-													payrun.STATUS === 'Paid'
+													payrun.status === 'Paid'
 														? 'text-green-600  bg-[#e6f6f4] border-green-200 '
 														: 'text-yellow-600 bg-[#fff0de] border-yellow-200'
 												} border-2 px-3 py-1 rounded-xl text-sm font-light`}>
-												{payrun.STATUS}
+												{payrun.status}
 											</span>
 										</TableCell>
 										<TableCell>

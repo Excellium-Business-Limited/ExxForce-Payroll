@@ -224,7 +224,8 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 						<div className='px-2 flex justify-between'>
 							<h6 className='text-md'>Loan Summary</h6>
 							<p className='rounded-[10px] bg-[#e9eff9] w-[69px] h-[24px] text-xs p-1 border self-end'>
-								{item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+								{/* {item.status.charAt(0).toUpperCase() + item.status.slice(1)} */}
+								{item.status}
 							</p>
 						</div>
 						<div className='grid grid-rows-2 grid-cols-3 gap-2.5 m-2.5'>
@@ -322,7 +323,7 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 							</span>
 							<span>
 								<h5 className='text-muted-foreground'>Next Deduction</h5>
-								<p>{paymentDetails.nextDeduction}</p>
+								<p>{item.paymentDetails.nextDeduction}</p>
 							</span>
 						</div>
 					</dl>
@@ -338,7 +339,7 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{previousPayments.map((payment, index) => (
+							{item.previousPayments.map((payment : { month: string; amountDeducted: string; balanceRemaining: string; dateOfDeduction: string; status: string; }, index : number) => (
 								<TableRow key={index}>
 									<TableCell>{payment.month}</TableCell>
 									<TableCell>{payment.amountDeducted}</TableCell>
