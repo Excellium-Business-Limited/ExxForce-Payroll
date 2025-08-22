@@ -1,0 +1,113 @@
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Image from 'next/image';
+import { useState } from 'react';
+
+export function SignupForm({
+	className,
+	...props
+}: React.ComponentProps<'div'>) {
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+	const [loading, setLoading] = useState(false);
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setLoading(true);
+		const res = await fetch('http://localhost:8000/api/signup/', {
+			// Use your Django API URL
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email, password }),
+		});
+		setLoading(false);
+		if (res.ok) {
+			alert('Signup successful!');
+		} else {
+			alert('Signup failed!');
+		}
+	};
+	return (
+		<div
+			className={cn(
+				'flex flex-col gap-6 justify-center min-h-screen items-center self-center',
+				className
+			)}
+			{...props}>
+			<Card className='h-full p-0 overflow-hidden self-center sm:w-[50%] mt-10 w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>
+				<CardContent className='grid min-h-svh p-0 lg:grid-cols-2'>
+					<div className='relative h-full xl:h-[100%] bg-muted md:block'></div>
+					<form
+						className='p-6 md:p-8'
+						onSubmit={handleSubmit}>
+						<div className='flex flex-col gap-6'>
+							<div className='flex flex-col items-center text-center'>
+								<h1 className='text-2xl font-bold'>Welcome Back to ExxForce</h1>
+								<p className='text-balance text-muted-foreground'>
+									Login to your account
+								</p>
+							</div>
+							<div className='grid gap-2'>
+								<Label htmlFor='email'>Email</Label>
+								<Input
+									id='email'
+									type='email'
+									placeholder='m@example.com'
+									required
+								/>
+							</div>
+							<div className='grid gap-2'>
+								<div className='flex items-center'>
+									<Label htmlFor='password'>Password</Label>
+									<a
+										href='#'
+										className='ml-auto text-sm underline-offset-2 hover:underline'>
+										Forgot your password?
+									</a>
+								</div>
+								<Input
+									id='password'
+									type='password'
+									required
+								/>
+							</div>
+							<Button
+								type='submit'
+								className='w-full bg-[#3D56A8]'
+								disabled={loading}>
+								{loading ? 'Signing up...' : 'Signup'}
+							</Button>
+							<div className='relative flex items-center py-4'>
+								<Input
+									id='remember-me'
+									type='checkbox'
+									className='h-4 w-4 rounded border-gray-300 text-[#3D56A8] focus:ring-[#3D56A8]'
+								/>
+								<Label
+									htmlFor='remember-me'
+									className=' ml-1.5'>
+									Remember me{' '}
+								</Label>
+							</div>
+							{/* <div className='text-center text-sm'>
+								You are new here?{' '}
+								<a
+									href='./signup'
+									className='underline underline-offset-4 text-blue-400 hover:text-blue-600'>
+									Create an account
+								</a>
+							</div> */}
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+			<div className='text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary'>
+				By clicking continue, you agree to our <a href='#'>Terms of Service</a>{' '}
+				and <a href='#'>Privacy Policy</a>.
+			</div>
+		</div>
+	);
+}

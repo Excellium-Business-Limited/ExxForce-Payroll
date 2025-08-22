@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import CompanyForm from './[tenant]/components/companyForm';
-import LoanDetails from './[tenant]/Loan/components/loanDetails';
-import img from './main/resources/logo.svg';
+import CompanyForm from './(tenant)/components/companyForm';
+import LoanDetails from './(tenant)/Loan/components/loanDetails';
+import img from './(tenant)/resources/logo.svg';
 import imagen from '../public/Payroll Dashboard.png';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -28,7 +28,7 @@ export default function Home() {
 				</div>
 				<div className='flex self-end flex-row items-center gap-4'>
 					<a
-						href='/Authorization/login'
+						href='/login'
 						className='hover:underline'>
 						Login
 					</a>
