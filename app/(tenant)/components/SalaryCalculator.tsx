@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, Info, AlertCircle } from "lucide-react";
+import { Calculator, AlertCircle } from "lucide-react";
 
 interface Employee {
   id?: number;
@@ -30,6 +30,21 @@ interface Employee {
   is_nsitf_applicable: boolean;
 }
 
+interface SalaryComponent {
+  id: string;
+  name: string;
+  componentId?: number | string;
+  calculationType?: 'fixed' | 'percentage';
+  defaultValue?: number;
+  fixedValue?: number;
+  percentageValue?: number;
+  calculatedAmount?: number;
+  isBasic?: boolean;
+  isEditable?: boolean;
+  isPensionable?: boolean;
+  isTaxable?: boolean;
+}
+
 interface TaxBracket {
   min: number;
   max: number;
@@ -38,11 +53,18 @@ interface TaxBracket {
 
 interface NetSalaryCalculation {
   grossSalary: number;
-  basicSalary: number;
-  allowances: number;
   totalIncome: number;
   
-  // Deductions
+  // Component breakdowns
+  pensionableComponents: { name: string; amount: number }[];
+  taxableComponents: { name: string; amount: number }[];
+  otherDeductions: { name: string; amount: number }[];
+  
+  // Calculated amounts
+  totalPensionableAmount: number;
+  totalTaxableAmount: number;
+  
+  // Statutory deductions
   pensionEmployeeContribution: number;
   pensionEmployerContribution: number;
   nhfDeduction: number;
@@ -53,18 +75,29 @@ interface NetSalaryCalculation {
   taxableIncome: number;
   payeTax: number;
   
+  // Other deductions from components
+  totalOtherDeductions: number;
+  
   // Final amounts
-  totalDeductions: number;
+  totalStatutoryDeductions: number;
+  totalAllDeductions: number;
   netSalary: number;
   
   // Additional info
   effectiveTaxRate: number;
   marginalTaxRate: number;
+  
+  // Status flags
+  hasPensionableComponents: boolean;
+  hasTaxableComponents: boolean;
+  hasOtherDeductions: boolean;
 }
 
 interface SalaryCalculatorProps {
   employee: Employee;
   grossSalary: number;
+  earningComponents: SalaryComponent[];
+  deductionComponents: SalaryComponent[];
   onCalculationComplete?: (calculation: NetSalaryCalculation) => void;
   showDetailedBreakdown?: boolean;
   className?: string;
@@ -84,12 +117,14 @@ const TAX_BRACKETS: TaxBracket[] = [
 const CONSOLIDATED_RELIEF_ALLOWANCE = 200000 + (20000 * 12); // ₦200,000 + (₦20,000 × 12 months)
 const PENSION_RATE = 0.08; // 8% employee contribution
 const PENSION_EMPLOYER_RATE = 0.10; // 10% employer contribution
-const NHF_RATE = 0.025; // 2.5% of basic salary
+const NHF_RATE = 0.025; // 2.5% of basic salary (calculated on gross for simplicity)
 const NSITF_RATE = 0.01; // 1% of gross salary
 
 export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
   employee,
   grossSalary,
+  earningComponents,
+  deductionComponents,
   onCalculationComplete,
   showDetailedBreakdown = true,
   className = ""
@@ -125,88 +160,137 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
     return amount * getPayFrequencyMultiplier();
   };
 
-  // Tax Calculation Function
-  const calculateTax = (taxableIncome: number): { tax: number; marginalRate: number } => {
-    let tax = 0;
+  // Tax Calculation Function (operates on annual amounts)
+  const calculateTax = (annualTaxableIncome: number): { annualTax: number; marginalRate: number } => {
+    let annualTax = 0;
     let marginalRate = 0;
 
     for (const bracket of TAX_BRACKETS) {
-      if (taxableIncome > bracket.min - 1) {
-        const taxableInBracket = Math.min(taxableIncome, bracket.max) - (bracket.min - 1);
-        tax += (taxableInBracket * bracket.rate) / 100;
+      if (annualTaxableIncome > bracket.min - 1) {
+        const taxableInBracket = Math.min(annualTaxableIncome, bracket.max) - (bracket.min - 1);
+        annualTax += (taxableInBracket * bracket.rate) / 100;
         marginalRate = bracket.rate;
         
-        if (taxableIncome <= bracket.max) break;
+        if (annualTaxableIncome <= bracket.max) break;
       }
     }
 
-    return { tax, marginalRate };
+    return { annualTax, marginalRate };
   };
 
   // Main Calculation Function
   const calculateNetSalaryDetailed = (): NetSalaryCalculation => {
     const grossSalaryAmount = grossSalary;
-    
-    // For simplicity, assume 60% basic, 40% allowances (this can be made configurable)
-    const basicSalary = grossSalaryAmount * 0.6;
-    const allowances = grossSalaryAmount * 0.4;
     const totalIncome = grossSalaryAmount;
 
-    // Calculate deductions
+    // Analyze earning components for pensionable and taxable amounts
+    const pensionableComponents: { name: string; amount: number }[] = [];
+    const taxableComponents: { name: string; amount: number }[] = [];
+    let totalPensionableAmount = 0;
+    let totalTaxableAmount = 0;
+
+    earningComponents.forEach(comp => {
+      if (comp.calculatedAmount && comp.calculatedAmount > 0 && comp.name) {
+        if (comp.isPensionable) {
+          pensionableComponents.push({ name: comp.name, amount: comp.calculatedAmount });
+          totalPensionableAmount += comp.calculatedAmount;
+        }
+        if (comp.isTaxable) {
+          taxableComponents.push({ name: comp.name, amount: comp.calculatedAmount });
+          totalTaxableAmount += comp.calculatedAmount;
+        }
+      }
+    });
+
+    // Analyze deduction components for other deductions
+    const otherDeductions: { name: string; amount: number }[] = [];
+    let totalOtherDeductions = 0;
+
+    deductionComponents.forEach(comp => {
+      if (comp.calculatedAmount && comp.calculatedAmount > 0 && comp.name) {
+        otherDeductions.push({ name: comp.name, amount: comp.calculatedAmount });
+        totalOtherDeductions += comp.calculatedAmount;
+      }
+    });
+
+    // Calculate statutory deductions
     let pensionEmployeeContribution = 0;
     let pensionEmployerContribution = 0;
     let nhfDeduction = 0;
     let nsitfDeduction = 0;
 
+    // Pension calculation based on pensionable components
     if (employee.is_pension_applicable) {
-      pensionEmployeeContribution = grossSalaryAmount * PENSION_RATE;
-      pensionEmployerContribution = grossSalaryAmount * PENSION_EMPLOYER_RATE;
+      if (totalPensionableAmount > 0) {
+        pensionEmployeeContribution = totalPensionableAmount * PENSION_RATE;
+        pensionEmployerContribution = totalPensionableAmount * PENSION_EMPLOYER_RATE;
+      }
     }
 
+    // NHF is calculated on gross salary
     if (employee.is_nhf_applicable) {
-      nhfDeduction = basicSalary * NHF_RATE;
+      nhfDeduction = grossSalaryAmount * NHF_RATE;
     }
 
+    // NSITF is calculated on gross salary
     if (employee.is_nsitf_applicable) {
       nsitfDeduction = grossSalaryAmount * NSITF_RATE;
     }
 
-    // Calculate taxable income
-    const consolidatedReliefAllowance = CONSOLIDATED_RELIEF_ALLOWANCE;
-    const taxableIncomeBeforeRelief = totalIncome - pensionEmployeeContribution;
-    const taxableIncome = Math.max(0, taxableIncomeBeforeRelief - consolidatedReliefAllowance);
+    // Calculate taxable income and PAYE tax (convert to annual for tax calculation)
+    const consolidatedReliefAllowance = CONSOLIDATED_RELIEF_ALLOWANCE; // This is already annual
+    let monthlyTaxableIncomeBeforeRelief = 0;
+    
+    if (totalTaxableAmount > 0) {
+      // Subtract pension contribution from taxable income before applying relief
+      monthlyTaxableIncomeBeforeRelief = totalTaxableAmount - pensionEmployeeContribution;
+    }
+    
+    // Convert to annual amounts for tax calculation
+    const annualTaxableIncomeBeforeRelief = monthlyTaxableIncomeBeforeRelief * 12;
+    const annualTaxableIncome = Math.max(0, annualTaxableIncomeBeforeRelief - consolidatedReliefAllowance);
+    const monthlyTaxableIncome = annualTaxableIncome / 12;
 
-    // Calculate PAYE tax
     let payeTax = 0;
     let marginalTaxRate = 0;
 
-    if (employee.is_paye_applicable && taxableIncome > 0) {
-      const taxCalculation = calculateTax(taxableIncome);
-      payeTax = taxCalculation.tax;
+    if (employee.is_paye_applicable && annualTaxableIncome > 0 && totalTaxableAmount > 0) {
+      const taxCalculation = calculateTax(annualTaxableIncome);
+      const annualPayeTax = taxCalculation.annualTax;
+      payeTax = annualPayeTax / 12; // Convert back to monthly
       marginalTaxRate = taxCalculation.marginalRate;
     }
 
     // Calculate totals
-    const totalDeductionsAmount = pensionEmployeeContribution + nhfDeduction + nsitfDeduction + payeTax;
-    const netSalaryAmount = grossSalaryAmount - totalDeductionsAmount;
+    const totalStatutoryDeductions = pensionEmployeeContribution + nhfDeduction + nsitfDeduction + payeTax;
+    const totalAllDeductions = totalStatutoryDeductions + totalOtherDeductions;
+    const netSalaryAmount = grossSalaryAmount - totalAllDeductions;
     const effectiveTaxRate = grossSalaryAmount > 0 ? (payeTax / grossSalaryAmount) * 100 : 0;
 
     return {
       grossSalary: grossSalaryAmount,
-      basicSalary,
-      allowances,
       totalIncome,
+      pensionableComponents,
+      taxableComponents,
+      otherDeductions,
+      totalPensionableAmount,
+      totalTaxableAmount,
       pensionEmployeeContribution,
       pensionEmployerContribution,
       nhfDeduction,
       nsitfDeduction,
       consolidatedReliefAllowance,
-      taxableIncome,
+      taxableIncome: monthlyTaxableIncome,
       payeTax,
-      totalDeductions: totalDeductionsAmount,
+      totalOtherDeductions,
+      totalStatutoryDeductions,
+      totalAllDeductions,
       netSalary: netSalaryAmount,
       effectiveTaxRate,
-      marginalTaxRate
+      marginalTaxRate,
+      hasPensionableComponents: pensionableComponents.length > 0,
+      hasTaxableComponents: taxableComponents.length > 0,
+      hasOtherDeductions: otherDeductions.length > 0
     };
   };
 
@@ -236,12 +320,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
     }
   };
 
-  // Reset calculation when gross salary changes
+  // Reset calculation when inputs change
   React.useEffect(() => {
     setHasCalculated(false);
     setCalculation(null);
     setShowDetails(false);
-  }, [grossSalary]);
+  }, [grossSalary, earningComponents, deductionComponents]);
 
   if (grossSalary <= 0) {
     return (
@@ -256,7 +340,6 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Employee Deductions Info */}
       <Card className="border-blue-200">
         <CardHeader>
           <CardTitle className="text-lg text-blue-700 flex items-center">
@@ -266,28 +349,66 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Deductions Info */}
+            {/* Component Analysis */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center mb-3">
-                <Info className="w-5 h-5 text-blue-600 mr-2" />
-                <h4 className="font-semibold text-blue-900">Employee Deductions</h4>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${employee.is_paye_applicable ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span>PAYE Tax</span>
+              <h4 className="font-semibold text-blue-900 mb-3">Component Analysis</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                
+                {/* Pensionable Components */}
+                <div>
+                  <h5 className="font-medium text-blue-800 mb-2">Pensionable Components:</h5>
+                  {earningComponents.filter(comp => comp.isPensionable && comp.calculatedAmount && comp.name).length > 0 ? (
+                    <ul className="text-blue-700 space-y-1">
+                      {earningComponents
+                        .filter(comp => comp.isPensionable && comp.calculatedAmount && comp.name)
+                        .map(comp => (
+                          <li key={comp.id} className="flex justify-between">
+                            <span className="truncate mr-2">{comp.name}</span>
+                            <span className="font-medium">{formatCurrency(comp.calculatedAmount || 0)}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-yellow-600">No pensionable components selected</p>
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${employee.is_pension_applicable ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span>Pension (8%)</span>
+
+                {/* Taxable Components */}
+                <div>
+                  <h5 className="font-medium text-blue-800 mb-2">Taxable Components:</h5>
+                  {earningComponents.filter(comp => comp.isTaxable && comp.calculatedAmount && comp.name).length > 0 ? (
+                    <ul className="text-blue-700 space-y-1">
+                      {earningComponents
+                        .filter(comp => comp.isTaxable && comp.calculatedAmount && comp.name)
+                        .map(comp => (
+                          <li key={comp.id} className="flex justify-between">
+                            <span className="truncate mr-2">{comp.name}</span>
+                            <span className="font-medium">{formatCurrency(comp.calculatedAmount || 0)}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-yellow-600">No taxable components selected</p>
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${employee.is_nhf_applicable ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span>NHF (2.5%)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${employee.is_nsitf_applicable ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span>NSITF (1%)</span>
+
+                {/* Other Deductions */}
+                <div>
+                  <h5 className="font-medium text-blue-800 mb-2">Other Deductions:</h5>
+                  {deductionComponents.filter(comp => comp.calculatedAmount && comp.name).length > 0 ? (
+                    <ul className="text-blue-700 space-y-1">
+                      {deductionComponents
+                        .filter(comp => comp.calculatedAmount && comp.name)
+                        .map(comp => (
+                          <li key={comp.id} className="flex justify-between">
+                            <span className="truncate mr-2">{comp.name}</span>
+                            <span className="font-medium">{formatCurrency(comp.calculatedAmount || 0)}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-600">No other deductions</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -334,7 +455,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                   <Card className="border-red-200 bg-red-50">
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl font-bold text-red-900">
-                        {formatCurrency(calculation.totalDeductions)}
+                        {formatCurrency(calculation.totalAllDeductions)}
                       </div>
                       <div className="text-sm text-red-600">Total Deductions</div>
                     </CardContent>
@@ -349,6 +470,35 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Warning Messages */}
+                {employee.is_pension_applicable && !calculation.hasPensionableComponents && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <div className="flex">
+                      <AlertCircle className="h-5 w-5 text-yellow-400" />
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">No Pensionable Components</h3>
+                        <div className="mt-2 text-sm text-yellow-700">
+                          Employee is set to contribute to pension but no pensionable salary components are selected.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {employee.is_paye_applicable && !calculation.hasTaxableComponents && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <div className="flex">
+                      <AlertCircle className="h-5 w-5 text-yellow-400" />
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">No Taxable Components</h3>
+                        <div className="mt-2 text-sm text-yellow-700">
+                          Employee is set to pay PAYE tax but no taxable salary components are selected.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Show/Hide Details Button */}
                 {showDetailedBreakdown && (
@@ -366,63 +516,97 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                 {showDetails && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Income Breakdown */}
+                      {/* Statutory Deductions */}
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-lg text-green-700">Income Components</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Basic Salary (60%)</span>
-                            <span className="font-semibold">{formatCurrency(calculation.basicSalary)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Allowances (40%)</span>
-                            <span className="font-semibold">{formatCurrency(calculation.allowances)}</span>
-                          </div>
-                          <div className="border-t pt-2">
-                            <div className="flex justify-between text-lg font-bold text-green-700">
-                              <span>Total Income</span>
-                              <span>{formatCurrency(calculation.totalIncome)}</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Deductions Breakdown */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg text-red-700">Deductions</CardTitle>
+                          <CardTitle className="text-lg text-red-700">Statutory Deductions</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {employee.is_pension_applicable && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">Pension (8%)</span>
+                              <span className="text-gray-600">
+                                Pension (8%)
+                                {!calculation.hasPensionableComponents && 
+                                  <span className="text-yellow-600 text-xs ml-1">(No pensionable components)</span>
+                                }
+                              </span>
                               <span className="font-semibold">{formatCurrency(calculation.pensionEmployeeContribution)}</span>
                             </div>
                           )}
                           {employee.is_nhf_applicable && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">NHF (2.5%)</span>
+                              <span className="text-gray-600">NHF (2.5% of gross)</span>
                               <span className="font-semibold">{formatCurrency(calculation.nhfDeduction)}</span>
                             </div>
                           )}
                           {employee.is_nsitf_applicable && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">NSITF (1%)</span>
+                              <span className="text-gray-600">NSITF (1% of gross)</span>
                               <span className="font-semibold">{formatCurrency(calculation.nsitfDeduction)}</span>
                             </div>
                           )}
                           {employee.is_paye_applicable && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">PAYE Tax</span>
+                              <span className="text-gray-600">
+                                PAYE Tax
+                                {!calculation.hasTaxableComponents && 
+                                  <span className="text-yellow-600 text-xs ml-1">(No taxable components)</span>
+                                }
+                              </span>
                               <span className="font-semibold">{formatCurrency(calculation.payeTax)}</span>
                             </div>
                           )}
                           <div className="border-t pt-2">
                             <div className="flex justify-between text-lg font-bold text-red-700">
-                              <span>Total Deductions</span>
-                              <span>{formatCurrency(calculation.totalDeductions)}</span>
+                              <span>Statutory Total</span>
+                              <span>{formatCurrency(calculation.totalStatutoryDeductions)}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Other Deductions & Summary */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg text-purple-700">Other Deductions & Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {calculation.hasOtherDeductions ? (
+                            <>
+                              {calculation.otherDeductions.map((deduction, index) => (
+                                <div key={index} className="flex justify-between">
+                                  <span className="text-gray-600">{deduction.name}</span>
+                                  <span className="font-semibold">{formatCurrency(deduction.amount)}</span>
+                                </div>
+                              ))}
+                              <div className="border-t pt-2">
+                                <div className="flex justify-between font-semibold text-purple-700">
+                                  <span>Other Deductions Total</span>
+                                  <span>{formatCurrency(calculation.totalOtherDeductions)}</span>
+                                </div>
+                              </div>
+                              <div className="border-t pt-2">
+                                <div className="flex justify-between text-lg font-bold text-red-700">
+                                  <span>All Deductions Total</span>
+                                  <span>{formatCurrency(calculation.totalAllDeductions)}</span>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-gray-500 text-center py-4">No other deductions</p>
+                              <div className="border-t pt-2">
+                                <div className="flex justify-between text-lg font-bold text-red-700">
+                                  <span>Total Deductions</span>
+                                  <span>{formatCurrency(calculation.totalStatutoryDeductions)}</span>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                          <div className="border-t pt-2 bg-green-50 p-3 rounded-lg">
+                            <div className="flex justify-between text-xl font-bold text-green-800">
+                              <span>Net Salary</span>
+                              <span>{formatCurrency(calculation.netSalary)}</span>
                             </div>
                           </div>
                         </CardContent>
@@ -430,7 +614,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                     </div>
 
                     {/* Tax Calculation Details */}
-                    {employee.is_paye_applicable && (
+                    {employee.is_paye_applicable && calculation.hasTaxableComponents && (
                       <Card>
                         <CardHeader>
                           <CardTitle className="text-lg">Tax Calculation Details</CardTitle>
@@ -439,20 +623,28 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-3">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Gross Income</span>
-                                <span>{formatCurrency(calculation.totalIncome)}</span>
+                                <span className="text-gray-600">Monthly Taxable Components</span>
+                                <span>{formatCurrency(calculation.totalTaxableAmount)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Less: Pension Contribution</span>
-                                <span>({formatCurrency(calculation.pensionEmployeeContribution)})</span>
+                                <span className="text-gray-600">Annual Taxable Components</span>
+                                <span>{formatCurrency(calculation.totalTaxableAmount * 12)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Less: Consolidated Relief</span>
+                                <span className="text-gray-600">Less: Annual Pension Contribution</span>
+                                <span>({formatCurrency(calculation.pensionEmployeeContribution * 12)})</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Less: Consolidated Relief (Annual)</span>
                                 <span>({formatCurrency(calculation.consolidatedReliefAllowance)})</span>
                               </div>
                               <div className="border-t pt-2">
                                 <div className="flex justify-between font-semibold">
-                                  <span>Taxable Income</span>
+                                  <span>Annual Taxable Income</span>
+                                  <span>{formatCurrency(calculation.taxableIncome * 12)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-500 mt-1">
+                                  <span>Monthly Equivalent</span>
                                   <span>{formatCurrency(calculation.taxableIncome)}</span>
                                 </div>
                               </div>
@@ -460,8 +652,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                             
                             <div className="space-y-3">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">PAYE Tax</span>
+                                <span className="text-gray-600">Monthly PAYE Tax</span>
                                 <span className="font-semibold">{formatCurrency(calculation.payeTax)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Annual PAYE Tax</span>
+                                <span className="font-semibold">{formatCurrency(calculation.payeTax * 12)}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Effective Tax Rate</span>
@@ -476,7 +672,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
 
                           {/* Tax Brackets Reference */}
                           <div className="mt-6">
-                            <h4 className="font-semibold mb-3 text-gray-700">PAYE Tax Brackets (2025)</h4>
+                            <h4 className="font-semibold mb-3 text-gray-700">PAYE Tax Brackets (2025) - Annual Amounts</h4>
                             <div className="overflow-x-auto">
                               <table className="min-w-full text-sm">
                                 <thead>
@@ -488,10 +684,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                                 </thead>
                                 <tbody>
                                   {TAX_BRACKETS.map((bracket, index) => {
-                                    const isApplicable = calculation.taxableIncome >= bracket.min;
+                                    const annualTaxableIncome = calculation.taxableIncome * 12;
+                                    const isApplicable = annualTaxableIncome >= bracket.min;
                                     const taxableInBracket = Math.min(
-                                      Math.max(0, calculation.taxableIncome - (bracket.min - 1)),
-                                      bracket.max === Infinity ? calculation.taxableIncome : bracket.max - (bracket.min - 1)
+                                      Math.max(0, annualTaxableIncome - (bracket.min - 1)),
+                                      bracket.max === Infinity ? annualTaxableIncome : bracket.max - (bracket.min - 1)
                                     );
                                     const taxInBracket = (taxableInBracket * bracket.rate) / 100;
                                     
@@ -530,7 +727,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                           </div>
                           <div>
                             <div className="text-xl font-bold text-red-900">
-                              {formatCurrency(getAnnualAmount(calculation.totalDeductions))}
+                              {formatCurrency(getAnnualAmount(calculation.totalAllDeductions))}
                             </div>
                             <div className="text-sm text-red-600">Annual Deductions</div>
                           </div>
@@ -555,43 +752,84 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
 };
 
 // Export the calculation function for external use
-export const calculateNetSalary = (employee: Employee, grossSalary: number): NetSalaryCalculation => {
+export const calculateNetSalary = (
+  employee: Employee, 
+  grossSalary: number, 
+  earningComponents: SalaryComponent[], 
+  deductionComponents: SalaryComponent[]
+): NetSalaryCalculation => {
   const grossSalaryAmount = grossSalary;
-  
-  // For simplicity, assume 60% basic, 40% allowances (this can be made configurable)
-  const basicSalary = grossSalaryAmount * 0.6;
-  const allowances = grossSalaryAmount * 0.4;
   const totalIncome = grossSalaryAmount;
 
-  // Calculate deductions
+  // Analyze earning components for pensionable and taxable amounts
+  const pensionableComponents: { name: string; amount: number }[] = [];
+  const taxableComponents: { name: string; amount: number }[] = [];
+  let totalPensionableAmount = 0;
+  let totalTaxableAmount = 0;
+
+  earningComponents.forEach(comp => {
+    if (comp.calculatedAmount && comp.calculatedAmount > 0 && comp.name) {
+      if (comp.isPensionable) {
+        pensionableComponents.push({ name: comp.name, amount: comp.calculatedAmount });
+        totalPensionableAmount += comp.calculatedAmount;
+      }
+      if (comp.isTaxable) {
+        taxableComponents.push({ name: comp.name, amount: comp.calculatedAmount });
+        totalTaxableAmount += comp.calculatedAmount;
+      }
+    }
+  });
+
+  // Analyze deduction components for other deductions
+  const otherDeductions: { name: string; amount: number }[] = [];
+  let totalOtherDeductions = 0;
+
+  deductionComponents.forEach(comp => {
+    if (comp.calculatedAmount && comp.calculatedAmount > 0 && comp.name) {
+      otherDeductions.push({ name: comp.name, amount: comp.calculatedAmount });
+      totalOtherDeductions += comp.calculatedAmount;
+    }
+  });
+
+  // Calculate statutory deductions
   let pensionEmployeeContribution = 0;
   let pensionEmployerContribution = 0;
   let nhfDeduction = 0;
   let nsitfDeduction = 0;
 
+  // Pension calculation based on pensionable components
   if (employee.is_pension_applicable) {
-    pensionEmployeeContribution = grossSalaryAmount * PENSION_RATE;
-    pensionEmployerContribution = grossSalaryAmount * PENSION_EMPLOYER_RATE;
+    if (totalPensionableAmount > 0) {
+      pensionEmployeeContribution = totalPensionableAmount * PENSION_RATE;
+      pensionEmployerContribution = totalPensionableAmount * PENSION_EMPLOYER_RATE;
+    }
   }
 
+  // NHF is calculated on gross salary
   if (employee.is_nhf_applicable) {
-    nhfDeduction = basicSalary * NHF_RATE;
+    nhfDeduction = grossSalaryAmount * NHF_RATE;
   }
 
+  // NSITF is calculated on gross salary
   if (employee.is_nsitf_applicable) {
     nsitfDeduction = grossSalaryAmount * NSITF_RATE;
   }
 
-  // Calculate taxable income
+  // Calculate taxable income and PAYE tax
   const consolidatedReliefAllowance = CONSOLIDATED_RELIEF_ALLOWANCE;
-  const taxableIncomeBeforeRelief = totalIncome - pensionEmployeeContribution;
+  let taxableIncomeBeforeRelief = 0;
+  
+  if (totalTaxableAmount > 0) {
+    // Subtract pension contribution from taxable income before applying relief
+    taxableIncomeBeforeRelief = totalTaxableAmount - pensionEmployeeContribution;
+  }
+  
   const taxableIncome = Math.max(0, taxableIncomeBeforeRelief - consolidatedReliefAllowance);
 
-  // Calculate PAYE tax
   let payeTax = 0;
   let marginalTaxRate = 0;
 
-  if (employee.is_paye_applicable && taxableIncome > 0) {
+  if (employee.is_paye_applicable && taxableIncome > 0 && totalTaxableAmount > 0) {
     let tax = 0;
     let marginalRate = 0;
 
@@ -610,15 +848,19 @@ export const calculateNetSalary = (employee: Employee, grossSalary: number): Net
   }
 
   // Calculate totals
-  const totalDeductionsAmount = pensionEmployeeContribution + nhfDeduction + nsitfDeduction + payeTax;
-  const netSalaryAmount = grossSalaryAmount - totalDeductionsAmount;
+  const totalStatutoryDeductions = pensionEmployeeContribution + nhfDeduction + nsitfDeduction + payeTax;
+  const totalAllDeductions = totalStatutoryDeductions + totalOtherDeductions;
+  const netSalaryAmount = grossSalaryAmount - totalAllDeductions;
   const effectiveTaxRate = grossSalaryAmount > 0 ? (payeTax / grossSalaryAmount) * 100 : 0;
 
   return {
     grossSalary: grossSalaryAmount,
-    basicSalary,
-    allowances,
     totalIncome,
+    pensionableComponents,
+    taxableComponents,
+    otherDeductions,
+    totalPensionableAmount,
+    totalTaxableAmount,
     pensionEmployeeContribution,
     pensionEmployerContribution,
     nhfDeduction,
@@ -626,10 +868,15 @@ export const calculateNetSalary = (employee: Employee, grossSalary: number): Net
     consolidatedReliefAllowance,
     taxableIncome,
     payeTax,
-    totalDeductions: totalDeductionsAmount,
+    totalOtherDeductions,
+    totalStatutoryDeductions,
+    totalAllDeductions,
     netSalary: netSalaryAmount,
     effectiveTaxRate,
-    marginalTaxRate
+    marginalTaxRate,
+    hasPensionableComponents: pensionableComponents.length > 0,
+    hasTaxableComponents: taxableComponents.length > 0,
+    hasOtherDeductions: otherDeductions.length > 0
   };
 };
 
