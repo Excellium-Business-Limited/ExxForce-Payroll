@@ -47,7 +47,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     onBack,
     parentOnSubmit
 }) => {
-    const { tenant, globalState } = useGlobal();
+    const { tenant } = useGlobal();
     const [formData, setFormData] = useState<SalaryFormData>({
         payGradeName: 'Entry Level Staff',
         payFrequency: 'MONTHLY',
@@ -62,29 +62,92 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [banks, setBanks] = useState<{ code: string; name: string }[]>([]);
+    const [loadingBanks, setLoadingBanks] = useState(false);
 
-    // Pre-populate form with existing employee data if editing
+    // Popular Nigerian banks for fallback
+    const fallbackBanks = [
+        { code: 'ACCESS', name: 'Access Bank' },
+        { code: 'ZENITH', name: 'Zenith Bank' },
+        { code: 'GTB', name: 'Guaranty Trust Bank' },
+        { code: 'FIRSTBANK', name: 'First Bank of Nigeria' },
+        { code: 'UBA', name: 'United Bank for Africa' },
+        { code: 'FCMB', name: 'First City Monument Bank' },
+        { code: 'FIDELITY', name: 'Fidelity Bank' },
+        { code: 'UNION', name: 'Union Bank' },
+        { code: 'STANBIC', name: 'Stanbic IBTC Bank' },
+        { code: 'STERLING', name: 'Sterling Bank' }
+    ];
+
+    // Fetch banks list
+    useEffect(() => {
+        const fetchBanks = async () => {
+            setLoadingBanks(true);
+            try {
+                // Try different possible API endpoints
+                const possibleEndpoints = [
+                    `http://${tenant}.localhost:8000/tenant/banks`,
+                    `http://${tenant}.localhost:8000/api/banks`,
+                    `http://${tenant}.localhost:8000/banks`,
+                    'http://excellium.localhost:8000/tenant/banks',
+                    'http://excellium.localhost:8000/api/banks',
+                    'http://excellium.localhost:8000/banks'
+                ];
+
+                let banksData = null;
+                
+                for (const endpoint of possibleEndpoints) {
+                    try {
+                        console.log('Trying banks endpoint:', endpoint);
+                        const response = await axios.get(endpoint);
+                        
+                        if (response.data && Array.isArray(response.data)) {
+                            banksData = response.data;
+                            console.log('Successfully fetched banks from:', endpoint);
+                            break;
+                        } else if (response.data?.data && Array.isArray(response.data.data)) {
+                            banksData = response.data.data;
+                            console.log('Successfully fetched banks from:', endpoint);
+                            break;
+                        } else if (response.data?.banks && Array.isArray(response.data.banks)) {
+                            banksData = response.data.banks;
+                            console.log('Successfully fetched banks from:', endpoint);
+                            break;
+                        }
+                    } catch (endpointError) {
+                        console.log('Failed to fetch from:', endpoint, endpointError.response?.status);
+                        continue; // Try next endpoint
+                    }
+                }
+                
+                if (banksData && banksData.length > 0) {
+                    setBanks(banksData);
+                    console.log('Using API banks data:', banksData.length, 'banks');
+                } else {
+                    console.log('No banks data from API, using fallback');
+                    setBanks(fallbackBanks);
+                }
+            } catch (error) {
+                console.error('Error fetching banks:', error);
+                console.log('Using fallback banks due to error');
+                setBanks(fallbackBanks);
+            } finally {
+                setLoadingBanks(false);
+            }
+        };
+
+        fetchBanks();
+    }, []);
+
+    // Pre-populate account name with employee's full name
     useEffect(() => {
         if (employeeData) {
             setFormData(prev => ({
                 ...prev,
-                accountName: `${employeeData.first_name} ${employeeData.last_name}`.trim(),
-                // If editing and employee already has salary data, populate it
-                ...(isEdit && employeeData.pay_grade_name && {
-                    payGradeName: employeeData.pay_grade_name,
-                    payFrequency: employeeData.pay_frequency || 'MONTHLY',
-                    customSalary: employeeData.custom_salary || 200000,
-                    bankName: employeeData.bank_name || '',
-                    accountNumber: employeeData.account_number || '',
-                    accountName: employeeData.account_name || `${employeeData.first_name} ${employeeData.last_name}`.trim(),
-                    isPayeApplicable: employeeData.is_paye_applicable !== false,
-                    isPensionApplicable: employeeData.is_pension_applicable !== false,
-                    isNhfApplicable: employeeData.is_nhf_applicable !== false,
-                    isNsitfApplicable: employeeData.is_nsitf_applicable !== false,
-                })
+                accountName: `${employeeData.first_name} ${employeeData.last_name}`.trim()
             }));
         }
-    }, [employeeData, isEdit]);
+    }, [employeeData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
@@ -152,11 +215,14 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
         setIsSubmitting(true);
 
         try {
-            // Prepare salary data to update the employee
-            const salaryUpdateData = {
-                // Keep existing employee data
+            // Use tenant-based URL similar to the employee endpoints
+            const baseUrl = `http://${tenant}.localhost:8000`;
+            
+            // Prepare combined employee and salary data for API
+            const combinedData = {
+                // Employee data
                 ...employeeData,
-                // Add/update salary fields
+                // Salary data
                 pay_grade_name: formData.payGradeName,
                 pay_frequency: formData.payFrequency,
                 custom_salary: formData.customSalary,
@@ -169,31 +235,44 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                 is_nsitf_applicable: formData.isNsitfApplicable
             };
 
-            console.log('Updating employee with salary data:', salaryUpdateData);
-            console.log('Using employee_id (form ID):', employeeData.employee_id);
+            console.log('Submitting combined employee and salary data:', combinedData);
 
-            // Update employee using the PUT endpoint with employee_id (the form ID, not database ID)
-            const response = await axios.put(
-                `http://${tenant}.localhost:8000/tenant/employee/update/${employeeData.employee_id}`,
-                salaryUpdateData,
-                { 
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${globalState.accessToken}`,
-                    } 
-                }
-            );
-
-            console.log('Employee updated with salary data:', response.data);
-
-            // Call the onSubmit handler from EmployeeForm
-            await onSubmit(salaryUpdateData);
+            let response;
             
-            console.log('Success! Employee salary data updated.');
-            alert('Employee salary details saved successfully!');
+            if (isEdit && existingEmployeeId) {
+                // Update existing employee with salary data
+                console.log('Updating employee with ID:', existingEmployeeId);
+                response = await axios.put(
+                    `${baseUrl}/tenant/employee/update/${existingEmployeeId}`,
+                    combinedData,
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+                console.log('Employee updated with salary data:', response.data);
+                alert('Employee updated successfully with salary information!');
+            } else {
+                // Create new employee with salary data
+                console.log('Creating new employee with salary data...');
+                response = await axios.post(
+                    `${baseUrl}/tenant/employee/create`,
+                    combinedData,
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+                console.log('Employee created with salary data:', response.data);
+                alert('Employee created successfully with salary information!');
+            }
+
+            // Call parent's onSubmit handler
+            console.log('Calling parent onSubmit...');
+            await parentOnSubmit(combinedData);
+            
+            // Call the salary form's onSubmit
+            await onSubmit(combinedData);
+
+            console.log('Success! Employee and salary data saved.');
+            onClose();
 
         } catch (error) {
-            console.error('Error updating employee with salary data:', error);
+            console.error('Error saving employee and salary data:', error);
             
             if (axios.isAxiosError(error)) {
                 console.error('Response status:', error.response?.status);
@@ -202,10 +281,10 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                 if (error.response?.status === 422) {
                     alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
                 } else {
-                    alert(`Failed to save salary data: ${error.response?.data?.message || error.message}`);
+                    alert(`Failed to save employee and salary data: ${error.response?.data?.message || error.message}`);
                 }
             } else {
-                alert('Failed to save salary data: Unknown error');
+                alert('Failed to save employee and salary data: Unknown error');
             }
         } finally {
             setIsSubmitting(false);
@@ -291,14 +370,23 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                     <h2 className='text-lg font-semibold'>Bank Details</h2>
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                         <div className='space-y-2'>
-                            <Label htmlFor='bankName'>Bank name</Label>
-                            <Input 
-                                id='bankName' 
+                            <Label>Bank name</Label>
+                            <Select 
                                 value={formData.bankName}
-                                onChange={handleInputChange}
-                                placeholder="Enter bank name (e.g., Access Bank, Zenith Bank)"
-                                required 
-                            />
+                                onValueChange={(val) => handleSelectChange('bankName', val)}
+                                disabled={loadingBanks}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={loadingBanks ? 'Loading banks...' : 'Select bank'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {banks.map((bank) => (
+                                        <SelectItem key={bank.code} value={bank.name}>
+                                            {bank.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className='space-y-2'>
@@ -370,7 +458,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                 <div className='rounded-md bg-blue-50 p-4 space-y-1 text-sm'>
                     <h3 className='font-semibold text-blue-700'>Summary</h3>
                     <p><span className='font-medium'>Employee</span>: {employeeData?.first_name} {employeeData?.last_name}</p>
-                    <p><span className='font-medium'>Employee ID</span>: {employeeData?.employee_id}</p>
                     <p><span className='font-medium'>Position</span>: {employeeData?.job_title}</p>
                     <p><span className='font-medium'>Employment Type</span>: {getEmploymentTypeDisplay(employeeData?.employment_type)}</p>
                     <p><span className='font-medium'>Salary</span>: {formatCurrency(formData.customSalary)}</p>
@@ -395,7 +482,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                         disabled={isSubmitting}
                         className='bg-[#3D56A8] hover:bg-[#2E4299]'
                     >
-                        {isSubmitting ? 'Saving...' : 'Save Salary Details'}
+                        {isSubmitting ? 'Saving...' : 'Save'}
                     </Button>
                 </div>
             </form>
