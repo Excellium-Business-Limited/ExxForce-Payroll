@@ -113,6 +113,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 	// State for form flow
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [showSalaryForm, setShowSalaryForm] = useState(false);
+	const [createdEmployee, setCreatedEmployee] = useState<Employee | null>(null);
 
 	// Get global context for tenant and auth
 	const { tenant, globalState } = useGlobal();
@@ -436,7 +438,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		}
 	};
 
-	// Handle save and next (validates but doesn't post, shows salary form)
+	// NEW: Handle save and next (saves employee first, then shows salary form)
 	const handleSaveAndNext = async () => {
 		console.log('Save and Next clicked...');
 		
@@ -444,13 +446,111 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			return;
 		}
 
-		// Prepare employee data and pass to parent to show salary form
 		const apiData = prepareEmployeeDataForAPI();
-		console.log('Passing employee data to salary form:', apiData);
-		
-		if (onShowSalaryForm) {
-			onShowSalaryForm(apiData);
+		setIsSubmitting(true);
+
+		try {
+			console.log('Creating employee first...');
+			console.log('Employee API payload:', JSON.stringify(apiData, null, 2));
+
+			const response = await axios.post(
+				`http://${tenant}.localhost:8000/tenant/employee/create`,
+				apiData,
+				{ 
+					headers: { 
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${globalState.accessToken}`,
+					} 
+				}
+			);
+
+			console.log('Employee created successfully:', response.data);
+			
+			// Store the created employee data (with ID) for the salary form
+			const employeeWithId = {
+				...apiData,
+				id: response.data.id, // Backend database ID
+				employee_id: response.data.employee_id || apiData.employee_id, // Form employee_id (the one users fill)
+				...response.data // Include any additional data from the response
+			};
+			
+			setCreatedEmployee(employeeWithId);
+			
+			// Show success message
+			alert('Employee created successfully! Now set up salary details.');
+			
+			// Show the salary form
+			setShowSalaryForm(true);
+
+		} catch (error) {
+			console.error('Error creating employee:', error);
+			
+			if (axios.isAxiosError(error)) {
+				console.error('Request that failed:', JSON.stringify(apiData, null, 2));
+				console.error('Response status:', error.response?.status);
+				console.error('Response data:', error.response?.data);
+				
+				if (error.response?.status === 422) {
+					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+				} else {
+					alert(`Failed to create employee: ${error.response?.data?.message || error.message}`);
+				}
+			} else {
+				alert('Failed to create employee: Unknown error');
+			}
+		} finally {
+			setIsSubmitting(false);
 		}
+	};
+
+	// Handle salary form submission - updates the existing employee
+	const handleSalaryFormSubmit = async (salaryData: any) => {
+		if (!createdEmployee) {
+			console.error('No created employee data available');
+			return;
+		}
+
+		try {
+			console.log('Updating employee with salary data...');
+			console.log('Using employee_id (form ID):', createdEmployee.employee_id);
+			
+			const response = await axios.put(
+				`http://${tenant}.localhost:8000/tenant/employee/update/${createdEmployee.employee_id}`,
+				salaryData,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${globalState.accessToken}`,
+					}
+				}
+			);
+
+			console.log('Employee updated with salary data:', response.data);
+			
+			// Call parent's onSubmit with the final data
+			await onSubmit(salaryData);
+			
+			// Close both forms
+			setShowSalaryForm(false);
+			onClose();
+
+		} catch (error) {
+			console.error('Error updating employee with salary data:', error);
+			throw error; // Re-throw to let SalarySetupForm handle the error
+		}
+	};
+
+	// Handle closing salary form (go back to employee form)
+	const handleSalaryFormClose = () => {
+		setShowSalaryForm(false);
+		// Keep the employee form open
+	};
+
+	// Handle going back from salary form to employee form
+	const handleSalaryFormBack = () => {
+		setShowSalaryForm(false);
+		// Keep the employee form open, reset created employee
+		setCreatedEmployee(null);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -462,6 +562,21 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	console.log('Current form data:', formData);
 	console.log('Employee data:', employeeData);
 	console.log('Is edit mode:', isEdit);
+
+	// If salary form is shown, render it instead of employee form
+	if (showSalaryForm && createdEmployee) {
+		return (
+			<SalarySetupForm
+				employeeData={createdEmployee}
+				isEdit={true} // It's an edit since we're updating existing employee
+				existingEmployeeId={createdEmployee.id}
+				onClose={handleSalaryFormClose}
+				onSubmit={handleSalaryFormSubmit}
+				onBack={handleSalaryFormBack}
+				parentOnSubmit={onSubmit}
+			/>
+		);
+	}
 
 	return (
 		<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
@@ -715,7 +830,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								onClick={handleSaveAndNext}
 								disabled={isSubmitting}
 								className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-								Save and Next
+								{isSubmitting ? 'Saving...' : 'Save and Next'}
 							</Button>
 						</>
 					)}
