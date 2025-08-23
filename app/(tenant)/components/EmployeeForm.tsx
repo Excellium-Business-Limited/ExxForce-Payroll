@@ -113,6 +113,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 	// State for form flow
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [createdEmployeeData, setCreatedEmployeeData] = useState<any>(null);
 
 	// Get global context for tenant and auth
 	const { tenant, globalState } = useGlobal();
@@ -376,8 +377,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			let response;
 			
 			if (isEdit && employeeData?.employee_id) {
-				console.log('Updating employee with ID:', employeeData.employee_id);
-				// Use employee_id in the URL as requested
+				console.log('Updating employee with employee_id:', employeeData.employee_id);
+				// Use employee_id in the URL (not the numeric id field)
 				response = await axios.put(
 					`http://${tenant}.localhost:8000/tenant/employee/update/${employeeData.employee_id}`,
 					apiData,
@@ -436,7 +437,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		}
 	};
 
-	// Handle save and next (validates but doesn't post, shows salary form)
+	// Handle save and next - now directly submits employee and shows salary form
 	const handleSaveAndNext = async () => {
 		console.log('Save and Next clicked...');
 		
@@ -444,12 +445,66 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			return;
 		}
 
-		// Prepare employee data and pass to parent to show salary form
 		const apiData = prepareEmployeeDataForAPI();
-		console.log('Passing employee data to salary form:', apiData);
-		
-		if (onShowSalaryForm) {
-			onShowSalaryForm(apiData);
+		setIsSubmitting(true);
+
+		try {
+			console.log('Creating employee for Save and Next...');
+			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
+
+			// Create the employee first
+			const response = await axios.post(
+				`http://${tenant}.localhost:8000/tenant/employee/create`,
+				apiData,
+				{ 
+					headers: { 
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${globalState.accessToken}`,
+					} 
+				}
+			);
+
+			console.log('Employee created for salary setup:', response.data);
+
+			// Store the created employee data with the employee_id from response
+			const createdEmployee = {
+				...apiData,
+				employee_id: response.data?.employee_id || apiData.employee_id,
+				id: response.data?.id || response.data?.employee_id
+			};
+
+			setCreatedEmployeeData(createdEmployee);
+
+			// Call the parent's onSubmit handler
+			console.log('Calling parent onSubmit...');
+			await onSubmit(apiData);
+
+			// Show salary form with the created employee data
+			if (onShowSalaryForm) {
+				console.log('Showing salary form with employee data:', createdEmployee);
+				onShowSalaryForm(createdEmployee);
+			}
+
+			alert('Employee created successfully! Now configure salary details.');
+
+		} catch (error) {
+			console.error('Error creating employee for salary setup:', error);
+			
+			if (axios.isAxiosError(error)) {
+				console.error('Request that failed:', JSON.stringify(apiData, null, 2));
+				console.error('Response status:', error.response?.status);
+				console.error('Response data:', error.response?.data);
+				
+				if (error.response?.status === 422) {
+					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+				} else {
+					alert(`Failed to create employee: ${error.response?.data?.message || error.message}`);
+				}
+			} else {
+				alert('Failed to create employee: Unknown error');
+			}
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -715,7 +770,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								onClick={handleSaveAndNext}
 								disabled={isSubmitting}
 								className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-								Save and Next
+								{isSubmitting ? 'Creating...' : 'Save and Next'}
 							</Button>
 						</>
 					)}
