@@ -119,8 +119,8 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Basic validation
-        const requiredFields = ['payGradeName', 'payFrequency', 'customSalary', 'bankName', 'accountNumber', 'accountName'];
+        // Basic validation - removed payGradeName from required fields
+        const requiredFields = ['payFrequency', 'customSalary', 'bankName', 'accountNumber', 'accountName'];
         const missingFields = requiredFields.filter(field => {
             const value = formData[field as keyof SalaryFormData];
             return !value || (typeof value === 'string' && value.trim() === '');
@@ -226,7 +226,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                         id='payGradeName' 
                         value={formData.payGradeName}
                         onChange={handleInputChange}
-                        required
                     />
                     <p className='text-xs text-muted-foreground'>
                         Pay grades are templates for employees with the same pay components. Default ones exist by pay frequency, but you can also create custom grades.
