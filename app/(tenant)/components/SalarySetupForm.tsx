@@ -38,6 +38,14 @@ interface SalaryFormData {
     isNsitfApplicable: boolean;
 }
 
+interface PayGrade {
+    id: number;
+    name: string;
+    base_salary?: number;
+    gross_salary?: number;
+    // Add other pay grade properties as needed
+}
+
 const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     employeeData,
     isEdit = false,
@@ -49,9 +57,9 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 }) => {
     const { tenant, globalState } = useGlobal();
     const [formData, setFormData] = useState<SalaryFormData>({
-        payGradeName: 'Entry Level Staff',
+        payGradeName: '',
         payFrequency: 'MONTHLY',
-        customSalary: 200000,
+        customSalary: 0,
         bankName: '',
         accountNumber: '',
         accountName: '',
@@ -61,9 +69,35 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
         isNsitfApplicable: true,
     });
 
+    const [payGrades, setPayGrades] = useState<PayGrade[]>([]);
+    const [isLoadingPayGrades, setIsLoadingPayGrades] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Pre-populate account name with employee's full name
+    // Fetch pay grades from API
+    const fetchPayGrades = async () => {
+        setIsLoadingPayGrades(true);
+        try {
+            const response = await axios.get(
+                `http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${globalState.accessToken}`,
+                    }
+                }
+            );
+            
+            console.log('Pay grades fetched:', response.data);
+            setPayGrades(response.data.data || response.data || []);
+        } catch (error) {
+            console.error('Error fetching pay grades:', error);
+            // Don't show alert for this error as it's not critical
+            setPayGrades([]);
+        } finally {
+            setIsLoadingPayGrades(false);
+        }
+    };
+
+    // Pre-populate account name with employee's full name and fetch pay grades
     useEffect(() => {
         if (employeeData) {
             setFormData(prev => ({
@@ -71,7 +105,9 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                 accountName: `${employeeData.first_name} ${employeeData.last_name}`.trim()
             }));
         }
-    }, [employeeData]);
+        
+        fetchPayGrades();
+    }, [employeeData, tenant, globalState.accessToken]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
@@ -83,6 +119,24 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 
     const handleSelectChange = (key: keyof SalaryFormData, value: string) => {
         setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handlePayGradeChange = (value: string) => {
+        setFormData(prev => ({ ...prev, payGradeName: value }));
+        
+        // If a pay grade with gross_salary is selected, update the salary field
+        if (value && value !== 'no-paygrade') {
+            const selectedPayGrade = payGrades.find(pg => pg.name === value);
+            if (selectedPayGrade && selectedPayGrade.gross_salary) {
+                setFormData(prev => ({ 
+                    ...prev, 
+                    customSalary: selectedPayGrade.gross_salary || 0
+                }));
+            }
+        } else if (value === 'no-paygrade') {
+            // Reset salary to 0 when no pay grade is selected
+            setFormData(prev => ({ ...prev, customSalary: 0 }));
+        }
     };
 
     const handleCheckboxChange = (key: keyof SalaryFormData, checked: boolean) => {
@@ -119,7 +173,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Basic validation - removed payGradeName from required fields
+        // Basic validation - removed payGradeName from required fields since it can be empty
         const requiredFields = ['payFrequency', 'customSalary', 'bankName', 'accountNumber', 'accountName'];
         const missingFields = requiredFields.filter(field => {
             const value = formData[field as keyof SalaryFormData];
@@ -140,8 +194,11 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 
         try {
             // Prepare salary data for API
+            // Send empty string for pay grade if "no-paygrade" is selected
+            const payGradeValue = formData.payGradeName === 'no-paygrade' ? '' : formData.payGradeName;
+            
             const salaryData = {
-                pay_grade_name: formData.payGradeName,
+                pay_grade_name: payGradeValue,
                 pay_frequency: formData.payFrequency,
                 custom_salary: formData.customSalary,
                 bank_name: formData.bankName,
@@ -222,13 +279,41 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
             <form onSubmit={handleSubmit} className='space-y-8'>
                 <div className='space-y-4'>
                     <Label htmlFor='payGradeName'>Pay grade</Label>
-                    <Input 
-                        id='payGradeName' 
+                    <Select 
                         value={formData.payGradeName}
-                        onChange={handleInputChange}
-                    />
+                        onValueChange={handlePayGradeChange}
+                        disabled={isLoadingPayGrades}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder={
+                                isLoadingPayGrades 
+                                    ? 'Loading pay grades...' 
+                                    : 'Select a pay grade or choose no pay grade'
+                            } />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="no-paygrade">
+                                <div className="flex flex-col">
+                                    <span>No Pay Grade</span>
+                                    <span className="text-xs text-muted-foreground">Employee has no assigned pay grade</span>
+                                </div>
+                            </SelectItem>
+                            {payGrades.map((payGrade) => (
+                                <SelectItem key={payGrade.id} value={payGrade.name}>
+                                    <div className="flex flex-col">
+                                        <span>{payGrade.name}</span>
+                                        {payGrade.gross_salary && (
+                                            <span className="text-xs text-muted-foreground">
+                                                Gross: {formatCurrency(payGrade.gross_salary)}
+                                            </span>
+                                        )}
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <p className='text-xs text-muted-foreground'>
-                        Pay grades are templates for employees with the same pay components. Default ones exist by pay frequency, but you can also create custom grades.
+                        Pay grades are templates for employees with the same pay components. You can select an existing pay grade or choose "No Pay Grade" for custom salary arrangements.
                     </p>
                 </div>
 
@@ -261,11 +346,15 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                             value={formData.customSalary}
                             onChange={handleInputChange}
                             min="0"
-                            step="1000"
                             required
+                            disabled={!!(formData.payGradeName && formData.payGradeName !== 'no-paygrade')}
+                            placeholder="Enter salary amount"
                         />
                         <p className='text-xs text-muted-foreground'>
-                            Amount: {formatCurrency(formData.customSalary)}
+                            {formData.customSalary > 0 ? `Amount: ${formatCurrency(formData.customSalary)}` : 'Enter salary amount'}
+                            {formData.payGradeName && formData.payGradeName !== 'no-paygrade' && (
+                                <span className="block text-blue-600">Salary is set by selected pay grade</span>
+                            )}
                         </p>
                     </div>
                 </div>
@@ -355,6 +444,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                     <p><span className='font-medium'>Employee</span>: {employeeData?.first_name} {employeeData?.last_name}</p>
                     <p><span className='font-medium'>Position</span>: {employeeData?.job_title}</p>
                     <p><span className='font-medium'>Employment Type</span>: {getEmploymentTypeDisplay(employeeData?.employment_type)}</p>
+                    <p><span className='font-medium'>Pay Grade</span>: {formData.payGradeName === 'no-paygrade' ? 'No Pay Grade' : formData.payGradeName || 'Not selected'}</p>
                     <p><span className='font-medium'>Salary</span>: {formatCurrency(formData.customSalary)}</p>
                     <p><span className='font-medium'>Pay Frequency</span>: {formData.payFrequency.charAt(0) + formData.payFrequency.slice(1).toLowerCase().replace('_', '-')}</p>
                     <p><span className='font-medium'>Deductions</span>: {getDeductionsText()}</p>
@@ -374,7 +464,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
                     </Button>
                     <Button 
                         type='submit' 
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isLoadingPayGrades}
                         className='bg-[#3D56A8] hover:bg-[#2E4299]'
                     >
                         {isSubmitting ? 'Saving...' : 'Save Salary Details'}
