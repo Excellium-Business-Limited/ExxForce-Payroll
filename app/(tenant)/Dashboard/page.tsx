@@ -54,6 +54,7 @@ const Dashboard = () => {
 	const timeout = setTimeout(() => {
 		console.log(globalState);
 	}, 2000);
+	console.log(employees)
 	return (
 		<div>
 			<div>
@@ -107,7 +108,7 @@ const Dashboard = () => {
 									height={20}
 								/>
 							</span>
-							<h5>Total Net Salary</h5>
+							<h5>Total Salary</h5>
 						</article>
 						<hr />
 						<span>
