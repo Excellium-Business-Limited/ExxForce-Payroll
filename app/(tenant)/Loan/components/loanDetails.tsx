@@ -146,11 +146,18 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 	React.useEffect(() => {
 		if (employees) {
 			console.log('Updated employees:', employees);
-			setCurrEmp(employees.find((emp) => `${emp.first_name} ${emp.last_name}` ===item.employee_name ));
-			console.log('Current Employee:', currEmp);
+			const foundEmployee = employees.find(
+				(emp) => `${emp.first_name} ${emp.last_name}` === item.employee_name
+			);
+			setCurrEmp(foundEmployee);
+			console.log('Found Employee:', foundEmployee); // Log the found value instead
+			console.log('Employee name to match:', item.employee_name);
 		}
+	}, [employees]); // Removed currEmp from dependencies
 
-	}, [employees, currEmp]);
+	React.useEffect(() => {
+		console.log('Current Employee state updated:', currEmp);
+	}, [currEmp]);
 
 	return (
 		<div className='w-full'>
@@ -206,12 +213,10 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 								</h6>
 								<h6>
 									₦
-									{currEmp?.custom_salary.toLocaleString(
-										'en-NG', {
-											maximumFractionDigits: 2,
-											useGrouping: true,
-										}
-									)}
+									{(currEmp?.custom_salary ?? 0).toLocaleString('en-NG', {
+										maximumFractionDigits: 2,
+										useGrouping: true,
+									})}
 								</h6>
 							</span>
 						</div>
@@ -289,7 +294,9 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 									/>
 									<h6 className='text-xs text-muted-foreground'>End Date</h6>
 								</div>
-								<h4>{item.completed_at ? item.completed_at : 'Loan Ongoing'}</h4>
+								<h4>
+									{item.completed_at ? item.completed_at : 'Loan Ongoing'}
+								</h4>
 							</span>
 						</div>
 					</Card>
@@ -300,14 +307,17 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 							{(() => {
 								const amount = Number(item.amount) || 0;
 								const balance = Number(item.balance) || 0;
-								const progressValue = amount > 0 ? ((balance - amount) / balance) * 100 : 0;
+								const progressValue =
+									amount > 0 ? ((balance - amount) / balance) * 100 : 0;
 								return (
 									<>
 										<Progress
 											value={progressValue}
 											className='flex self-center w-[350px]'
 										/>
-										<p className='text-xs self-center ml-2'>{`${progressValue.toFixed(2)} Percent`}</p>
+										<p className='text-xs self-center ml-2'>{`${progressValue.toFixed(
+											2
+										)} Percent`}</p>
 									</>
 								);
 							})()}
@@ -339,7 +349,7 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{item.previousPayments.map((payment : { month: string; amountDeducted: string; balanceRemaining: string; dateOfDeduction: string; status: string; }, index : number) => (
+							{/* {item.previousPayments.map((payment : { month: string; amountDeducted: string; balanceRemaining: string; dateOfDeduction: string; status: string; }, index : number) => (
 								<TableRow key={index}>
 									<TableCell>{payment.month}</TableCell>
 									<TableCell>{payment.amountDeducted}</TableCell>
@@ -351,7 +361,7 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 										</h6>
 									</TableCell>
 								</TableRow>
-							))}
+							))} */}
 						</TableBody>
 					</Table>
 				</div>

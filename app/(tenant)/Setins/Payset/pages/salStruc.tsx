@@ -32,6 +32,7 @@ import { set } from 'date-fns';
 
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import AddSs from '../components/addSalaryStruc';
 
 const salStruc = () => {
 	const [isEmpty, setIsEmpty] = React.useState(true);
@@ -128,7 +129,7 @@ const salStruc = () => {
 	return (
 		<div>
 			<Card className='border-none shadow-none m-3 p-4'>
-				<div>
+				<div className='flex justify-between w-full'>
 					<h1>Salary Components</h1>
 					<Dialog>
 						<DialogTrigger asChild>
@@ -136,92 +137,9 @@ const salStruc = () => {
 								+ Add New Component
 							</Button>
 						</DialogTrigger>
-						<form onSubmit={handleSubmit}>
-							<DialogContent className=' bg-white'>
-								<DialogHeader>
-									<DialogTitle>Add New Salary Component</DialogTitle>
-								</DialogHeader>
-								<section>
-									<span>
-										<Label htmlFor='componentName'>Component Name</Label>
-										<Input
-											type='text'
-											id='componentName'
-											placeholder='Enter component name'
-											className='w-full my-3'
-										/>
-									</span>
-									<span>
-										<Label htmlFor='payslipName'>Name in Payslip</Label>
-										<Input
-											type='text'
-											id='payslipName'
-											placeholder='Enter name in payslip'
-											className='w-full my-3'
-										/>
-									</span>
-								</section>
-								<section>
-									<span>
-										<Label htmlFor='calculationType'>Calculation Type</Label>
-										<Select>
-											<SelectTrigger className='w-full my-3'>
-												<SelectValue placeholder='Select calculation type' />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value='fixed'>Fixed</SelectItem>
-												<SelectItem value='percentage'>
-													Percentage Based
-												</SelectItem>
-											</SelectContent>
-										</Select>
-									</span>
-									<span>
-										<Label htmlFor='value'>Value</Label>
-										<Input
-											type='number'
-											id='value'
-											placeholder='Enter value'
-											className='w-full my-3'
-										/>
-									</span>
-								</section>
-								<section>
-									<span>
-										<Checkbox id='isTaxable' />
-										<Label htmlFor='isTaxable'>Taxable</Label>
-										<p className='text-sm text-gray-500'>
-											Select if this component is taxable
-										</p>
-									</span>
-									<span>
-										<Checkbox id='isPensionable' />
-										<Label htmlFor='isPensionable'>Pensionable</Label>
-										<p className='text-sm text-gray-500'>
-											Select if this component is pensionable
-										</p>
-									</span>
-								</section>
-								<DialogFooter>
-									<div>
-										<DialogClose asChild>
-											<Button
-												type='button'
-												variant='outline'
-												className='m-2 bg-white text-gray-700 rounded-md px-4 py-2'
-												onClick={() => setAdd(false)}>
-												Cancel
-											</Button>
-										</DialogClose>
-										<Button
-											type='submit'
-											className='bg-blue-600 text-white text-sm rounded-md px-4 py-2'>
-											Save
-										</Button>
-									</div>
-								</DialogFooter>
-							</DialogContent>
-						</form>
+						<DialogContent className='bg-white'>
+							<AddSs/>
+						</DialogContent>
 					</Dialog>
 				</div>
 				<Table>
