@@ -58,11 +58,7 @@ interface Loan {
 	start_date: string;
 }
 
-const items = [
-	{ id: '1', name: 'Item One' },
-	{ id: '2', name: 'Item Two' },
-	{ id: '3', name: 'Item Three' },
-];
+
 
 export default function Home() {
 	const pathname = usePathname();
@@ -129,7 +125,7 @@ export default function Home() {
 				<div className='flex flex-row items-center justify-between w-full'>
 					<span>
 						<h1>Loan</h1>
-						<p className='text-xs'>Create and Mange Loans</p>
+						<p className='text-xs'>Create and Manage Loans</p>
 					</span>
 					<span className='items-end self-end justify-between flex gap-4'>
 						<Sheet>
@@ -211,7 +207,7 @@ export default function Home() {
 				<div className='flex flex-row items-center justify-between w-full'>
 					<span>
 						<h1>Loan</h1>
-						<p className='text-xs'>Create and Mange Loans</p>
+						<p className='text-xs'>Create and Manage Loans</p>
 					</span>
 					<span className='items-end self-end justify-between flex gap-4'>
 						<Sheet>
