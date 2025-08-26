@@ -30,6 +30,17 @@ export const GlobalProvider = ({ children }) => {
                 }
     }
 
+    useEffect(() => {
+			const accessToken = localStorage.getItem('access_token');
+			const refreshToken = localStorage.getItem('refresh_token');
+
+			if (accessToken || refreshToken) {
+				updateGlobalState({
+					accessToken: accessToken || '',
+					refreshToken: refreshToken || '',
+				});
+			}
+		}, []);
 
     useEffect(() => {
         const t = getTenant();

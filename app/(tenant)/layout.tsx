@@ -4,6 +4,7 @@ import '../globals.css';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './components/sidebar';
 import Navigation from './components/Nav';
+import { TokenRefreshProvider } from '@/lib/Refresh';
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -27,15 +28,17 @@ export default function RootLayout({
 }>) {
 	return (
 		<div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-			<div className=' w-full mb-3'>
-				<SidebarProvider>
-					<AppSidebar className='bg-black' />
-					<div className='grid w-full'>
-						<Navigation />
-						<main className='w-full'>{children}</main>
-					</div>
-				</SidebarProvider>
-			</div>
+			<TokenRefreshProvider apiBaseUrl={'http://localhost:8000'}>
+				<div className=' w-full mb-3'>
+					<SidebarProvider>
+						<AppSidebar className='bg-black' />
+						<div className='grid w-full'>
+							<Navigation />
+							<main className='w-full'>{children}</main>
+						</div>
+					</SidebarProvider>
+				</div>
+			</TokenRefreshProvider>
 		</div>
 	);
 }
