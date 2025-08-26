@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DatePicker from '../../components/datepicker';
-import React from 'react';
+import React, { use, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import {
 	Table,
@@ -37,11 +37,11 @@ import Link from 'next/link';
 
 interface payrun {
 	id: number;
-	PAY_FREQUENCY: string;
-	CREATED_BY: string;
-	TOTAL_EMPLOYEES: number;
-	LAST_UPDATED: string;
 	PAY_PERIOD: string;
+	NAME: string;
+	TOTAL_EMPLOYEES: number;
+	PAYMENT_DATE: string;
+	START_DATE: string;
 	STATUS: string;
 }
 
@@ -50,6 +50,11 @@ interface MonthlyProps {
 }
 
 const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
+	useEffect(() => {
+		const tenant = localStorage.getItem('tenant');
+		const accessToken = localStorage.getItem('access_token');
+
+	},[])
 	return (
 		<div>
 			<Card className='w-[250px] p-4 my-4'>
@@ -111,16 +116,16 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 									PAY FREQUENCY
 								</TableHead>
 								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									CREATED BY
+									Name
 								</TableHead>
 								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									TOTAL EMPLOYEES
 								</TableHead>
 								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									LAST UPDATED
+									PAYMENT DATE
 								</TableHead>
 								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									PAY PERIOD
+									START DATE
 								</TableHead>
 								<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									STATUS
@@ -134,11 +139,11 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 							{payruns.map((payrun) => {
 								return (
 									<TableRow key={payrun.id}>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAY_FREQUENCY}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.CREATED_BY}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.TOTAL_EMPLOYEES}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.LAST_UPDATED}</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAY_PERIOD}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.NAME}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.TOTAL_EMPLOYEES}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAYMENT_DATE}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.START_DATE}</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.STATUS}</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium bg-white tracking-wider'>
 											<Popover>
@@ -175,14 +180,14 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 																	<div>
 																		<p>
 																			You are about to approve the payrun “
-																			{`${payrun.PAY_PERIOD} ${payrun.PAY_FREQUENCY}`}
+																			{`${payrun.NAME} ${payrun.PAY_PERIOD}`}
 																			”. This action cannot be undone
 																		</p>
 																	</div>
 																	<div>
 																		<section className='flex justify-between my-4'>
 																			<p>Pay Date:</p>
-																			<p>{payrun.PAY_PERIOD}</p>
+																			<p>{payrun.PAYMENT_DATE}</p>
 																		</section>
 																		<section className='flex justify-between my-4'>
 																			<p>Total Employees</p>

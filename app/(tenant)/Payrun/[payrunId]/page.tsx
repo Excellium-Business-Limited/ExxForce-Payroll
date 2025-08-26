@@ -19,12 +19,15 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/page';
+import { getAccessToken, getTenant } from '@/lib/auth';
+// import { Router } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 interface PayRun {
 	id: number;
 	name: string;
 	pay_period: string;
-	
+
 	deductions: string;
 	start_date: string;
 	end_date: string;
@@ -33,8 +36,8 @@ interface PayRun {
 }
 
 interface Employee {
-	benefits: string
-	deductions: string
+	benefits: string;
+	deductions: string;
 	employee_id: string;
 	gross: string;
 	id: number;
@@ -45,41 +48,41 @@ interface Employee {
 }
 
 const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
-	const { tenant } = useGlobal();
-	const { payrunId } = React.use(params);
-
-	const baseURL = `http://${tenant}.localhost:8000`;
-
+	const router = useRouter();
 	const [payRun, setPayRun] = useState<PayRun | null>(null);
+	const [isLoading, setIsLoading] = useState<Boolean>(false);
 	const [employees, setEmployees] = useState<Employee[]>([]);
 	const [planName, setPlanName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [token, setToken] = useState<string>('');
+	const { payrunId } = React.use(params);
 
 	useEffect(() => {
-		const storedToken = localStorage.getItem('access_token');
-		if (!storedToken) {
+		const accessToken = localStorage.getItem('access_token');
+		if (!accessToken) {
 			setError('No access token found');
 			return;
 		}
-		setToken(storedToken);
+		setToken(accessToken);
+		const tenant = getTenant();
+
+		const baseURL = `http://${tenant}.localhost:8000`;
 
 		const fetchData = async () => {
 			try {
 				const [payRunRes, employeesRes, planRes] = await Promise.all([
 					axios.get<PayRun>(`${baseURL}/tenant/payrun/${payrunId}`, {
-						headers: { Authorization: `Bearer ${storedToken}` },
+						headers: { Authorization: `Bearer ${accessToken}` },
 					}),
 					axios.get<Employee[]>(
 						`${baseURL}/tenant/payrun/${payrunId}/eligible-employees`,
 						{
-							headers: { Authorization: `Bearer ${storedToken}` },
+							headers: { Authorization: `Bearer ${accessToken}` },
 						}
 					),
 					axios.get<{ plan_name: string }>(`${baseURL}/tenant/payrun/plan`, {
-						headers: { Authorization: `Bearer ${storedToken}` },
+						headers: { Authorization: `Bearer ${accessToken}` },
 					}),
-
 				]);
 
 				setPayRun(payRunRes.data);
@@ -93,16 +96,58 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 						? err.response.data.detail.map((e: any) => e.msg).join(', ')
 						: err.response?.data?.detail || 'Failed to load data'
 				);
+				if (err.status === 401) {
+					router.push('/login');
+				}
 			}
 		};
-
 		fetchData();
-	}, [tenant, payrunId]);
+	}, []);
+	const handleSubmit = async () => {
+		const tenant = getTenant();
+		const baseURL = `http://${tenant}.localhost:8000`;
+		const accessToken = getAccessToken();
+
+		try {
+			setIsLoading(true);
+			const res = await axios.post(
+				`http://${tenant}.localhost:8000/tenant/payrun/${payrunId}/submit`,
+				{}, // empty request body
+				{ headers: { Authorization: `Bearer ${accessToken}` } }
+			);
+
+			if (res.status === 200) {
+				console.log(res);
+			}
+			router.refresh();
+		} catch (err: any) {
+			console.log(err); // Also fixed: was logging "Error" instead of the actual error
+			// Uncomment if you want to handle 401 specifically
+			// if (err.response?.status === 401) {
+			//     router.push('/login');
+			// }
+		} finally {
+			setIsLoading(false); // Don't forget to reset loading state
+		}
+	};
+
 	return (
 		<div className='h-[1080px]'>
-			<div className='m-4'>
-				<h1>Pay Runs</h1>
-				<p className='text-xs'>Create and Mange your Payruns</p>
+			<div className='m-4 flex justify-between'>
+				<div>
+					<h1>Pay Runs</h1>
+					<p className='text-xs'>Create and Mange your Payruns</p>
+				</div>
+				{payRun?.status !== 'APPROVED' ? (
+					<div>
+						<Button
+							variant={'default'}
+							className='bg-blue-500'
+							onClick={handleSubmit}>
+							Submit for Approval
+						</Button>
+					</div>
+				) : null}
 			</div>
 			<section className='flex justify-between m-2 w-[1050px]'>
 				<Card className='m-1 p-3 w-[250px] h-fit'>
@@ -139,9 +184,9 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>{
-							employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0)
-						}</h2>
+						<h2 className='font-bold'>
+							{employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0)}
+						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Total payroll after deductions
 						</p>
@@ -193,15 +238,31 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<Table>
 						<TableHeader>
 							<TableRow className='text-[#3a56d8]'>
-								<TableCell>EMPLOYEE NAME </TableCell>
-								<TableCell>PAY GRADE</TableCell>
-								<TableCell>GROSS SALARY</TableCell>
-								<TableCell>DEDUCTIONS</TableCell>
-								<TableCell>BENEFITS</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									EMPLOYEE NAME{' '}
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									PAY GRADE
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									GROSS SALARY
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									DEDUCTIONS
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									BENEFITS
+								</TableCell>
 								{/* <TableCell>DAYS WORKED</TableCell> */}
-								<TableCell>NET SALARY</TableCell>
-								<TableCell>STATUS</TableCell>
-								<TableCell>MORE</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									NET SALARY
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									STATUS
+								</TableCell>
+								<TableCell className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									MORE
+								</TableCell>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -210,14 +271,26 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 									<TableRow
 										key={index}
 										className='text-sm font-light align-middle content-center items-center'>
-										<TableCell>{payrun.name}</TableCell>
-										<TableCell>{payrun.paygrade}</TableCell>
-										<TableCell>₦{payrun.gross}.00</TableCell>
-										<TableCell>₦{payrun.deductions}.00</TableCell>
-										<TableCell>₦{payrun.benefits}.00</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.name}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.paygrade}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											₦{payrun.gross}.00
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											₦{payrun.deductions}.00
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											₦{payrun.benefits}.00
+										</TableCell>
 										{/* <TableCell>{payrun.days_worked}</TableCell> */}
-										<TableCell>₦{payrun.net_salary}.00</TableCell>
-										<TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											₦{payrun.net_salary}.00
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
 											<span
 												className={`${
 													payrun.status === 'Paid'
@@ -227,7 +300,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 												{payrun.status}
 											</span>
 										</TableCell>
-										<TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
 											<Popover>
 												<PopoverTrigger>
 													<EllipsisVertical />

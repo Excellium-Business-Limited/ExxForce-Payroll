@@ -137,11 +137,8 @@ const PayrunForm = ({
 							<SelectGroup>
 								<SelectItem value='BI-WEEKLY'>Bi-Weekly</SelectItem>
 								<SelectItem value='MONTHLY'>Monthly</SelectItem>
-								<SelectItem value='QUARTERLY'>Quarterly</SelectItem>
-								<SelectItem value='ANNUALLY'>Annually</SelectItem>
-								<SelectItem value='EVERY WEEK'>Every Week</SelectItem>
-								<SelectItem value='EVERY 3 WEEKS'>Every 3 Weeks</SelectItem>
-								<SelectItem value='EVERY 3 MONTHS'>Every 3 Months</SelectItem>
+								<SelectItem value='WEEKLY'>Weekly</SelectItem>
+								
 							</SelectGroup>
 						</SelectContent>
 					</Select>

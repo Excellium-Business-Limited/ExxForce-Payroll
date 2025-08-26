@@ -19,6 +19,8 @@ interface PayRun {
 	id: number;
 	name: string;
 	pay_period: string;
+	total_employees: number;
+	pay_frequency: string;
 	start_date: string;
 	end_date: string;
 	payment_date: string;
@@ -200,30 +202,50 @@ const page = () => {
 										.filter((payrun: any) => payrun.pay_period === 'MONTHLY')
 										.map((payrun: any) => ({
 											...payrun,
-											PAY_FREQUENCY: payrun.pay_period || '',
-											CREATED_BY: payrun.name || '',
-											TOTAL_EMPLOYEES: payrun.TOTAL_EMPLOYEES || 0, //Ask Daniel to add this to the response for this fetch
-											LAST_UPDATED: payrun.payment_date || '',
-											STATUS: payrun.status
+											PAY_PERIOD: payrun.pay_period || '',
+											NAME: payrun.name || '',
+											TOTAL_EMPLOYEES: payrun.total_employees || 0, //Ask Daniel to add this to the response for this fetch
+											PAYMENT_DATE: payrun.payment_date || '',
+											START_DATE: payrun.start_date || '',
+											STATUS: payrun.status,
 											// Add any other required fields with default values if missing
-										}))
-									}
+										}))}
 									nexts='24th, April 2025'
 								/>
 							</TabsContent>
 							<TabsContent value='bi-weekly'>
 								<Submit
-									payruns={payrans.filter(
-										(payrun: any) => payrun.PAY_FREQUENCY === 'Bi-Weekly'
-									)}
+									payruns={payruns
+										.filter(
+											(payrun: any) => payrun.pay_period === 'BI-WEEKLY'
+										)
+										.map((payrun: any) => ({
+											...payrun,
+											PAY_PERIOD: payrun.pay_period || '',
+											NAME: payrun.name || '',
+											TOTAL_EMPLOYEES: payrun.total_employees || 0, //Ask Daniel to add this to the response for this fetch
+											PAYMENT_DATE: payrun.payment_date || '',
+											START_DATE: payrun.start_date || '',
+											STATUS: payrun.status,
+											// Add any other required fields with default values if missing
+										}))}
 									nexts='15th, April 2025'
 								/>
 							</TabsContent>
 							<TabsContent value='weekly'>
 								<Submit
-									payruns={payrans.filter(
-										(payrun: any) => payrun.PAY_FREQUENCY === 'Weekly'
-									)}
+									payruns={payruns
+										.filter((payrun: any) => payrun.pay_period === 'WEEKLY')
+										.map((payrun: any) => ({
+											...payrun,
+											PAY_PERIOD: payrun.pay_period || '',
+											NAME: payrun.name || '',
+											TOTAL_EMPLOYEES: payrun.total_employees || 0, //Ask Daniel to add this to the response for this fetch
+											PAYMENT_DATE: payrun.payment_date || '',
+											START_DATE: payrun.start_date || '',
+											STATUS: payrun.status,
+											// Add any other required fields with default values if missing
+										}))}
 									nexts='5th, April 2025'
 								/>
 							</TabsContent>
