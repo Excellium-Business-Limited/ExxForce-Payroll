@@ -35,6 +35,14 @@ interface PayRun {
 	status: string;
 }
 
+interface Summary {
+	payrun_id: number;
+	total_employees: number;
+	total_net_salary: string;
+	total_deductions: string;
+	prorated_employees: number;
+}
+
 interface Employee {
 	benefits: string;
 	deductions: string;
@@ -53,6 +61,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 	const [isLoading, setIsLoading] = useState<Boolean>(false);
 	const [employees, setEmployees] = useState<Employee[]>([]);
 	const [planName, setPlanName] = useState<string>('');
+	const [paySummary, setPaySummary] = useState<Summary>()
 	const [error, setError] = useState<string>('');
 	const [token, setToken] = useState<string>('');
 	const { payrunId } = React.use(params);
@@ -70,7 +79,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 
 		const fetchData = async () => {
 			try {
-				const [payRunRes, employeesRes, planRes] = await Promise.all([
+				const [payRunRes, employeesRes, planRes, paySum] = await Promise.all([
 					axios.get<PayRun>(`${baseURL}/tenant/payrun/${payrunId}`, {
 						headers: { Authorization: `Bearer ${accessToken}` },
 					}),
@@ -83,12 +92,19 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					axios.get<{ plan_name: string }>(`${baseURL}/tenant/payrun/plan`, {
 						headers: { Authorization: `Bearer ${accessToken}` },
 					}),
+					axios.get<Summary>(
+						`${baseURL}/tenant/payrun/${payrunId}/summary`,
+						{
+							headers: { Authorization: `Bearer ${accessToken}` },
+						}
+					),
 				]);
 
 				setPayRun(payRunRes.data);
 				setEmployees(employeesRes.data);
 				setPlanName(planRes.data.plan_name);
-				console.log(payRunRes.data, employeesRes.data, planRes.data);
+				setPaySummary(paySum.data)
+				console.log(payRunRes.data, employeesRes.data, planRes.data, paySum.data);
 			} catch (err: any) {
 				console.error('Error loading data', err);
 				setError(
@@ -138,7 +154,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<h1>Pay Runs</h1>
 					<p className='text-xs'>Create and Mange your Payruns</p>
 				</div>
-				{payRun?.status !== 'APPROVED' ? (
+				{payRun?.status === 'DRAFT' ? (
 					<div>
 						<Button
 							variant={'default'}
@@ -164,9 +180,11 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>{employees.length}</h2>
+						<h2 className='font-bold'>
+							{paySummary?.total_employees || employees.length}
+						</h2>
 						<p className='text-xs text-muted-foreground'>
-							90% of employees are eligible for this run
+							Employees are eligible for this run
 						</p>
 					</span>
 				</Card>
@@ -185,7 +203,9 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<hr />
 					<span>
 						<h2 className='font-bold'>
-							{employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0)}
+							₦
+							{paySummary?.total_net_salary ||
+								employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0)}
 						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Total payroll after deductions
@@ -206,7 +226,11 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>₦3,500,000.00</h2>
+						<h2 className='font-bold'>
+							₦
+							{paySummary?.total_deductions ||
+								employees.reduce((acc, emp) => acc + Number(emp.deductions), 0)}
+						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Deduction from all employees in this run
 						</p>
@@ -226,9 +250,12 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>15 Employees</h2>
+						<h2 className='font-bold'>
+							{`${paySummary?.prorated_employees || 0}
+							 Employees`}
+						</h2>
 						<p className='text-xs text-muted-foreground'>
-							30% of employees had prorated pay
+							Had prorated pay
 						</p>
 					</span>
 				</Card>

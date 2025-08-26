@@ -33,6 +33,9 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { getTenant, getAccessToken } from '@/lib/auth';
+import axios from 'axios';
 // import {payruns} from './payrunData'
 
 interface payrun {
@@ -50,11 +53,69 @@ interface MonthlyProps {
 }
 
 const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
+	const [currentApprovalId, setCurrentApprovalId] = React.useState<number | null>(
+		null
+	);
+	const router = useRouter()
 	useEffect(() => {
 		const tenant = localStorage.getItem('tenant');
 		const accessToken = localStorage.getItem('access_token');
 
 	},[])
+	const handleDraftSubmit = async (id : string) => {
+		const tenant = getTenant();
+		const baseURL = `http://${tenant}.localhost:8000`;
+		const accessToken = getAccessToken();
+
+		try {
+			
+			const res = await axios.post(
+				`http://${tenant}.localhost:8000/tenant/payrun/${id}/submit`,
+				{}, // empty request body
+				{ headers: { Authorization: `Bearer ${accessToken}` } }
+			);
+
+			if (res.status === 200) {
+				console.log(res);
+			}
+			setCurrentApprovalId(null);
+			router.refresh();
+		} catch (err: any) {
+			console.log(err);
+			if (err.response?.status === 401) {
+			    router.push('/login');
+			}
+		} finally {
+			 // Don't forget to reset loading state
+		}
+	}
+	const handleApproval = async(id: number) => {
+		const Url = `tenant/payrun/${id}/approve`;
+		const accessToken = getAccessToken();
+		const tenant = getTenant();
+		try {
+			const res = await axios.post(
+				`http://${tenant}.localhost:8000/${Url}`,
+				{}, // empty request body
+				{ headers: { Authorization: `Bearer ${accessToken}` } }
+			);
+
+			if (res.status === 200) {
+				console.log(res);
+				alert('PayRun Approved')
+				setCurrentApprovalId(null);
+			}
+			router.refresh();
+		} catch (err: any) {
+			console.log(err);
+			if (err.response?.status === 401) {
+				router.push('/login');
+			}
+		} finally {
+			// Don't forget to reset loading state
+		}
+	}
+
 	return (
 		<div>
 			<Card className='w-[250px] p-4 my-4'>
@@ -139,12 +200,24 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 							{payruns.map((payrun) => {
 								return (
 									<TableRow key={payrun.id}>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAY_PERIOD}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.NAME}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.TOTAL_EMPLOYEES}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.PAYMENT_DATE}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.START_DATE}</TableCell>
-										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>{payrun.STATUS}</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.PAY_PERIOD}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.NAME}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.TOTAL_EMPLOYEES}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.PAYMENT_DATE}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.START_DATE}
+										</TableCell>
+										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
+											{payrun.STATUS}
+										</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium bg-white tracking-wider'>
 											<Popover>
 												<PopoverTrigger>
@@ -155,15 +228,19 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 														// payrun.STATUS === 'Approved'
 														// 	? 'bg-green-100 text-green-800'
 														// 	: 'bg-gray-100 text-gray-800'
-														payrun.id ===1 ? 'text-black' : 'text-grey'
+														payrun.id === 1 ? 'text-black' : 'text-grey'
 													}
 													`}>
-													{payrun.STATUS !== 'APPROVED' ? (
+													{payrun.STATUS === 'PENDING' ? (
 														<Button
 															variant={'default'}
 															className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
 															asChild>
-															<Dialog>
+															<Dialog
+																open={currentApprovalId === payrun.id}
+																onOpenChange={(open) =>
+																	setCurrentApprovalId(open ? payrun.id : null)
+																}>
 																<DialogTrigger className='flex bg-white text-black hover:bg-secondary w-fit !text-sm  p-0.5 justify-start'>
 																	<Check
 																		size={18}
@@ -209,13 +286,24 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 																		</Button>
 																		<Button
 																			variant={'default'}
-																			className='bg-blue-600 text-white hover:bg-[#20b49f]'>
+																			className='bg-blue-600 text-white hover:bg-[#20b49f]'
+																			onClick={() => handleApproval(payrun.id)}>
 																			<Check className='text-white' />
 																			Approve Payrun
 																		</Button>
 																	</div>
 																</DialogContent>
 															</Dialog>
+														</Button>
+													) : null}
+													{payrun.STATUS === 'DRAFT' ? (
+														<Button
+															variant={'default'}
+															className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
+															onClick={() =>
+																handleDraftSubmit(payrun.id.toString())
+															}>
+															<p className='font-light'>Submit for Approval</p>
 														</Button>
 													) : null}
 													<Button

@@ -13,6 +13,7 @@ import axios from 'axios';
 import  { useGlobal } from '@/app/Context/page';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import { ST } from 'next/dist/shared/lib/utils';
+import Loading from '@/components/ui/Loading';
 
 
 interface PayRun {
@@ -73,7 +74,7 @@ const page = () => {
 		}, [])
 		if (error) return <p >{error}</p>;
 
-		if (isLoading) return <div className='self-center font-extrabold'>Loading...</div>;
+		if (isLoading) return <div className='self-center font-extrabold'><Loading/></div>;
 
 		
 
