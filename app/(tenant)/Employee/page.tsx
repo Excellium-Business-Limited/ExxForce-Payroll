@@ -418,8 +418,9 @@ const EmployeePage: React.FC = () => {
       await fetchEmployees();
       setLoading(false);
     };
-
-    loadEmployees();
+    if (tenant){
+      loadEmployees();
+    }
   }, []);
 
   const hasEmployees = employees.length > 0;
