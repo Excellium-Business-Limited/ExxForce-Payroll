@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
 import SalarySetupForm from '../components/SalarySetupForm'; // Import the SalarySetupForm
 import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import the SalaryComponentSetup
@@ -9,6 +10,8 @@ import LeaveListDisplay from '../components/LeaveListDisplay'; // Import the Lea
 import LeaveRequestForm from '../components/LeaveRequestForm'; // Import the LeaveRequestForm
 import PayrollBreakdown from '../components/PayrollBreakdown'; // Import the PayrollBreakdown
 import DocumentUploadModal from '../components/DocumentUploadModal'; // Import the DocumentUploadModal
+import { useGlobal } from '@/app/Context/page';
+import axios from 'axios';
 
 interface Employee {
   id?: number;
@@ -48,6 +51,18 @@ interface LeaveRequest {
   reason: string;
 }
 
+interface Loan {
+  loan_number: string;
+  amount: string;
+  balance: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'PENDING' | 'pending' | 'active' | 'completed';
+  start_date: string;
+  end_date?: string;
+  monthly_deduction?: string;
+  interest_rate?: number;
+  loan_type?: string;
+}
+
 interface EmployeeDetailsProps {
   employee: Employee;
   onClose: () => void;
@@ -63,6 +78,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   onSalaryEdit,
   onEndEmployment
 }) => {
+  const router = useRouter();
+  const { tenant, globalState } = useGlobal();
   const [activeTab, setActiveTab] = useState<'general' | 'payroll' | 'document' | 'loan' | 'leave' | 'payment-history'>('general');
   
   // New state for inline editing
@@ -80,6 +97,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   // Payroll-related state
   const [hasPayrollData, setHasPayrollData] = useState<boolean>(false);
   const [isLoadingPayrollData, setIsLoadingPayrollData] = useState<boolean>(false);
+
+  // Loan-related state
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [isLoadingLoans, setIsLoadingLoans] = useState<boolean>(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -135,6 +156,20 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         return 'Biweekly';
       default:
         return frequency;
+    }
+  };
+
+  const getLoanStatus = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'active':
+        return { label: 'Active', color: 'bg-blue-100 text-blue-800' };
+      case 'completed':
+        return { label: 'Completed', color: 'bg-blue-100 text-blue-800' };
+      case 'pending':
+        return { label: 'Pending', color: 'bg-blue-100 text-blue-800' };
+      default:
+        return { label: status, color: 'bg-blue-100 text-blue-800' };
     }
   };
 
@@ -198,24 +233,70 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     
     try {
       setIsLoadingLeaveRequests(true);
-      const response = await fetch(`/api/tenant/leave/leave-request?employee_code=${employee.employee_id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.get(
+        `http://${tenant}.localhost:8000/tenant/leave/employee/${employee.employee_id}/leaves`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${globalState.accessToken}`,
+          },
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch leave requests');
+      console.log('Leave requests fetched:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setLeaveRequests(response.data);
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        setLeaveRequests(response.data.data);
+      } else if (response.data.leaves && Array.isArray(response.data.leaves)) {
+        setLeaveRequests(response.data.leaves);
+      } else {
+        console.warn('Unexpected leave requests API response structure:', response.data);
+        setLeaveRequests([]);
       }
-
-      const data = await response.json();
-      setLeaveRequests(data.data || []);
     } catch (error) {
       console.error('Error fetching leave requests:', error);
       setLeaveRequests([]);
     } finally {
       setIsLoadingLeaveRequests(false);
+    }
+  };
+
+  // Fetch loans for the employee
+  const fetchLoans = async () => {
+    if (!employee.employee_id) return;
+    
+    try {
+      setIsLoadingLoans(true);
+      const response = await axios.get(
+        `http://${tenant}.localhost:8000/tenant/loans/${employee.employee_id}/loans`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${globalState.accessToken}`,
+          },
+        }
+      );
+
+      console.log('Loans fetched:', response.data);
+      
+      // Handle the specific API response structure
+      if (response.data && response.data.loans && Array.isArray(response.data.loans)) {
+        setLoans(response.data.loans);
+      } else if (Array.isArray(response.data)) {
+        setLoans(response.data);
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        setLoans(response.data.data);
+      } else {
+        console.warn('Unexpected loans API response structure:', response.data);
+        setLoans([]);
+      }
+    } catch (error) {
+      console.error('Error fetching loans:', error);
+      setLoans([]);
+    } finally {
+      setIsLoadingLoans(false);
     }
   };
 
@@ -230,6 +311,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   useEffect(() => {
     if (activeTab === 'leave') {
       fetchLeaveRequests();
+    }
+  }, [activeTab, employee.employee_id]);
+
+  // Fetch loans when the loan tab is active
+  useEffect(() => {
+    if (activeTab === 'loan') {
+      fetchLoans();
     }
   }, [activeTab, employee.employee_id]);
 
@@ -278,6 +366,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setShowSalaryForm(false); // Close salary form if open
     setShowSalaryComponentSetup(false); // Close salary component setup if open
     setShowLeaveRequestForm(false); // Close leave request form if open
+  };
+
+  // Handler for Add Loan button
+  const handleAddLoan = () => {
+    router.push('/Loans');
   };
 
   // Handler for closing the inline forms
@@ -477,18 +570,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         Upload important documents for {employee.first_name} {employee.last_name} such as contracts, ID copies, or certificates.
       </p>
 
-      <div className="flex gap-3">
-        <button 
-          onClick={handleUploadDocument}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-        >
-          <Upload className="w-4 h-4" />
-          Upload Document
-        </button>
-        <button className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors">
-          View Templates
-        </button>
-      </div>
+      <button 
+        onClick={handleUploadDocument}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+      >
+        <Upload className="w-4 h-4" />
+        Upload Document
+      </button>
     </div>
   );
 
@@ -525,15 +613,149 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-800 mb-2">No loan records</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">This employee currently has no loan</h3>
       <p className="text-gray-600 max-w-md mb-6 leading-relaxed">
         Track and manage loans for {employee.first_name} {employee.last_name}. Set up salary advances or employee loans here.
       </p>
 
-      <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+      <button 
+        onClick={handleAddLoan}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+      >
         <CreditCard className="w-4 h-4" />
-        Create Loan
+        Add Loan
       </button>
+    </div>
+  );
+
+  const LoanListDisplay: React.FC = () => (
+    <div className="space-y-6">
+      {/* Header with Add Loan button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Loan Records for {employee.first_name} {employee.last_name}
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage and track all loan records for this employee
+          </p>
+        </div>
+        <button 
+          onClick={handleAddLoan}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
+          <CreditCard className="w-4 h-4" />
+          Add Loan
+        </button>
+      </div>
+
+      {/* Loans Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {loans.map((loan) => {
+          const statusInfo = getLoanStatus(loan.status);
+          const loanAmount = parseFloat(loan.amount) || 0;
+          const outstandingBalance = parseFloat(loan.balance) || 0;
+          const monthlyDeduction = parseFloat(loan.monthly_deduction || '0') || 0;
+          const progressPercentage = loanAmount > 0 
+            ? ((loanAmount - outstandingBalance) / loanAmount) * 100 
+            : 0;
+
+          return (
+            <div key={loan.loan_number} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="font-medium text-gray-900">{loan.loan_type || 'Loan'}</span>
+                </div>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                  {statusInfo.label}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Loan Number:</span>
+                  <span className="font-medium text-gray-900 text-xs">{loan.loan_number}</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Loan Amount:</span>
+                  <span className="font-semibold text-gray-900">{formatCurrency(loanAmount)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Outstanding:</span>
+                  <span className="font-semibold text-blue-600">{formatCurrency(outstandingBalance)}</span>
+                </div>
+                
+                {monthlyDeduction > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Monthly Deduction:</span>
+                    <span className="font-medium text-gray-900">{formatCurrency(monthlyDeduction)}</span>
+                  </div>
+                )}
+
+                {loan.interest_rate && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Interest Rate:</span>
+                    <span className="font-medium text-gray-900">{loan.interest_rate}%</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Start: {formatDate(loan.start_date)}</span>
+                  {loan.end_date && <span>End: {formatDate(loan.end_date)}</span>}
+                </div>
+
+                {/* Progress Bar - only show if we have valid amounts */}
+                {loanAmount > 0 && (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>Repayment Progress</span>
+                      <span>{Math.round(progressPercentage)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Summary Card */}
+      {loans.length > 0 && (
+        <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+          <h4 className="text-lg font-semibold text-blue-900 mb-4">Loan Summary</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-900">
+                {formatCurrency(loans.reduce((sum, loan) => sum + (parseFloat(loan.amount) || 0), 0))}
+              </div>
+              <div className="text-sm text-blue-700">Total Loans</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-900">
+                {formatCurrency(loans.reduce((sum, loan) => sum + (parseFloat(loan.balance) || 0), 0))}
+              </div>
+              <div className="text-sm text-blue-700">Outstanding Balance</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-900">
+                {formatCurrency(loans.reduce((sum, loan) => sum + (parseFloat(loan.monthly_deduction || '0') || 0), 0))}
+              </div>
+              <div className="text-sm text-blue-700">Monthly Deductions</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -855,7 +1077,27 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             )}
 
             {activeTab === 'document' && <DocumentEmptyState />}
-            {activeTab === 'loan' && <LoanEmptyState />}
+            
+            {activeTab === 'loan' && (
+              <div>
+                {isLoadingLoans ? (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="flex items-center space-x-2">
+                      <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="text-gray-600">Loading loan data...</span>
+                    </div>
+                  </div>
+                ) : loans.length > 0 ? (
+                  <LoanListDisplay />
+                ) : (
+                  <LoanEmptyState />
+                )}
+              </div>
+            )}
+            
             {activeTab === 'leave' && (
               <div>
                 {isLoadingLeaveRequests ? (
@@ -1045,6 +1287,3 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 };
 
 export default EmployeeDetails;
-// -500">Employee</span>
-//             <span className="text-sm text-gray-400">/</span>
-//             <span className="text-sm text-gray
