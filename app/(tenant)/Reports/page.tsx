@@ -71,6 +71,9 @@ const page = () => {
 									all employees
 								</p>
 							</article>
+							<a
+								href={`/Reports/payroll-summary/all?from_date=2025-01-01&to_date=2026-03-31`}
+								className='text-[#3D56A8]'>{`View Report >`}</a>
 						</Card>
 						<Card className='p-3 w-[300px]'>
 							<article>
@@ -90,7 +93,7 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href='http://'
+								href={`/Reports/tax-summary/all?from_date=2025-01-01&to_date=2026-12-31`}
 								className='text-[#3D56A8]'>{`View Reports >`}</a>
 						</Card>
 						<Card className='p-3 w-[300px]'>
@@ -111,7 +114,7 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href='http://'
+								href={`/Reports/journal-summary/14`}
 								className='text-[#3D56A8]'>{`View Reports >`}</a>
 						</Card>
 						<Card className='p-3 w-[300px]'>
@@ -132,7 +135,7 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href='http://'
+								href={`/Reports/activity-log/all`}
 								className='text-[#3D56A8]'>{`View Reports >`}</a>
 						</Card>
 						<Card className='p-3 w-[300px]'>
@@ -153,7 +156,7 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href='http://'
+								href={`/Reports/loan-report/all`}
 								className='text-[#3D56A8]'>{`View Reports >`}</a>
 						</Card>
 						<Card className='p-3 w-[300px]'>
@@ -174,8 +177,8 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href='http://'
-								className='text-[#3D56A8]'>{`View Reports >`}</a>
+								href={`/Reports/employee-report/all`}
+								className='text-[#3D56A8]'>{`View Report >`}</a>
 						</Card>
 					</div>
 				</Card>

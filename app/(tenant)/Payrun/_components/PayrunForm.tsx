@@ -135,7 +135,7 @@ const PayrunForm = ({
 						</SelectTrigger>
 						<SelectContent>
 							<SelectGroup>
-								<SelectItem value='BI-WEEKLY'>Bi-Weekly</SelectItem>
+								<SelectItem value='BIWEEKLY'>Bi-Weekly</SelectItem>
 								<SelectItem value='MONTHLY'>Monthly</SelectItem>
 								<SelectItem value='WEEKLY'>Weekly</SelectItem>
 								

@@ -24,6 +24,9 @@ import  { useGlobal } from '@/app/Context/page';
 const Dashboard = () => {
 	const { globalState, updateGlobalState, tenant } = useGlobal();
 	const [employees, setEmployees] = React.useState<any>([]);
+	const [paid, setPaid] = React.useState<any>()
+	const [net, setNet] = React.useState<any>()
+	const [deduction, setDeduction] = React.useState<any>()
 	const getSalaries = () => {
 		const Salaries = employees.map((employee: any) => employee.custom_salary);
 		const totalSalary = Salaries.reduce(
@@ -35,6 +38,37 @@ const Dashboard = () => {
 		currency: 'NGN',})	
 		return formattedSalary;
 	}
+
+	useEffect(() => {
+		const fetchPayrollData = async () => {
+			const tenant = getTenant()
+			const baseURL = `http://${tenant}.localhost:8000`
+			const token = getAccessToken()
+			try {
+				// setIsLoading(true);
+				const response = await fetch(
+					`${baseURL}/tenant/reports/payroll-summary/all?from_date=2025-01-01&to_date=2026-03-31`,
+					{
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${token}`,
+						},
+					}
+					
+				);
+				
+				const data = await response.json()
+				setPaid(data.employees_paid)
+				setDeduction(data.totals.deductions)
+				setNet(data.totals.net)
+				console.log(data)
+			 }catch (err){
+					console.error('Error fetching payroll data:', err);
+				}
+		}
+		fetchPayrollData();
+	}, [])
 	
 	
 	useEffect(() => {
@@ -54,6 +88,15 @@ const Dashboard = () => {
 	const timeout = setTimeout(() => {
 		console.log(globalState);
 	}, 2000);
+	const formatCurrency = (amount: number) => {
+		return new Intl.NumberFormat('en-NG', {
+			style: 'currency',
+			currency: 'NGN',
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 0,
+		}).format(amount);
+	};
+
 	console.log(employees)
 	return (
 		<div>
@@ -112,7 +155,7 @@ const Dashboard = () => {
 						</article>
 						<hr />
 						<span>
-							<h2 className='font-bold'>{getSalaries()}</h2>
+							<h2 className='font-bold'>{formatCurrency(net)}</h2>
 							<p className='text-xs text-muted-foreground'>
 								Total payroll after deductions
 							</p>
@@ -132,7 +175,7 @@ const Dashboard = () => {
 						</article>
 						<hr />
 						<span>
-							<h2 className='font-bold'>₦3,500,000.00</h2>
+							<h2 className='font-bold'>{formatCurrency(deduction)}</h2>
 							<p className='text-xs text-muted-foreground'>
 								Deduction from all employees in this run
 							</p>
@@ -152,7 +195,7 @@ const Dashboard = () => {
 						</article>
 						<hr />
 						<span>
-							<h2 className='font-bold'>15 Employees</h2>
+							<h2 className='font-bold'>{paid} Employees</h2>
 							<p className='text-xs text-muted-foreground'>
 								30% of employees had prorated pay
 							</p>

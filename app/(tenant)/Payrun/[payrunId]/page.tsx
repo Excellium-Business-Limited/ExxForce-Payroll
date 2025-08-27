@@ -181,7 +181,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<hr />
 					<span>
 						<h2 className='font-bold'>
-							{paySummary?.total_employees || employees.length}
+							{ employees.length}
 						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Employees are eligible for this run
@@ -305,22 +305,22 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 											{payrun.paygrade}
 										</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
-											₦{payrun.gross}.00
+											₦{payrun.gross}
 										</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
-											₦{payrun.deductions}.00
+											₦{payrun.deductions}
 										</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
-											₦{payrun.benefits}.00
+											₦{payrun.benefits}
 										</TableCell>
 										{/* <TableCell>{payrun.days_worked}</TableCell> */}
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
-											₦{payrun.net_salary}.00
+											₦{payrun.net_salary}
 										</TableCell>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
 											<span
 												className={`${
-													payrun.status === 'Paid'
+													payrun.status === 'PAID'
 														? 'text-green-600  bg-[#e6f6f4] border-green-200 '
 														: 'text-yellow-600 bg-[#fff0de] border-yellow-200'
 												} border-2 px-3 py-1 rounded-xl text-sm font-light`}>

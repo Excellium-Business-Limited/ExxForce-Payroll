@@ -218,7 +218,7 @@ const page = () => {
 								<Submit
 									payruns={payruns
 										.filter(
-											(payrun: any) => payrun.pay_period === 'BI-WEEKLY'
+											(payrun: any) => payrun.pay_period === 'BIWEEKLY'
 										)
 										.map((payrun: any) => ({
 											...payrun,
