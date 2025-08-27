@@ -8,6 +8,7 @@ import EmployeeDetails from '../components/EmployeeDetails';
 import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/page';
+import { getAccessToken } from '@/lib/auth';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -374,13 +375,14 @@ const EmployeePage: React.FC = () => {
   };
 
   const fetchEmployees = async (): Promise<void> => {
+    const token = getAccessToken()
     try {
       console.log(tenant)
       const response = await axios.get<Employee[]>(
 				`http://${tenant}.localhost:8000/tenant/employee/list`,
 				{
 					headers: {
-						Authorization: `Bearer ${globalState.accessToken}`,
+						Authorization: `Bearer ${token}`,
 					},
 				}
 			);

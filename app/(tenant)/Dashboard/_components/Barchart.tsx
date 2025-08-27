@@ -3,6 +3,7 @@
 import { TrendingUp } from 'lucide-react';
 import './Style.module.css';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { useEffect, useState } from 'react';
 
 import {
 	Card,
@@ -20,37 +21,118 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from '@/components/ui/chart';
-const chartData = [
-	{ month: 'January', incomes: 186, deductions: 80, others: 120 },
-	{ month: 'February', incomes: 305, deductions: 200, others: 180 },
-	{ month: 'March', incomes: 237, deductions: 120, others: 110 },
-	{ month: 'April', incomes: 73, deductions: 190, others: 90 },
-	{ month: 'May', incomes: 209, deductions: 130, others: 140 },
-	{ month: 'June', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'July', incomes: 214, deductions: 140, others: 130 },
-	{ month: 'August', incomes: 314, deductions: 120, others: 100 },
-	{ month: 'Sept.', incomes: 262, deductions: 115, others: 70 },
-	{ month: 'Oct.', incomes: 304, deductions: 156, others: 130 },
-	{ month: 'Nov.', incomes: 201, deductions: 50, others: 110 },
-	{ month: 'Dec.', incomes: 90, deductions: 80, others: 122 },
-];
+import { getAccessToken, getTenant } from '@/lib/auth';
+
+interface ApiDataItem {
+	payrun_id: number;
+	month: string;
+	period: string;
+	net: number;
+	paye: number;
+	other_deductions: number;
+}
+
+interface ChartDataItem {
+	month: string;
+	incomes: number;
+	deductions: number;
+	others: number;
+}
 
 const chartConfig = {
 	incomes: {
-		label: 'Incomes',
+		label: 'Net Pay',
 		color: '#3d56a8',
 	},
 	deductions: {
-		label: 'Deductions',
+		label: 'PAYE Tax',
 		color: '#255ec3',
 	},
 	others: {
-		label: 'Others',
+		label: 'Other Deductions',
 		color: '#dee7f6',
-	}
+	},
 } satisfies ChartConfig;
 
-export function Component({className}: { className?: string }) {
+export function Component({ className }: { className?: string }) {
+	const [chartData, setChartData] = useState<ChartDataItem[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchData = async () => {
+			const token = getAccessToken();
+			const tenant = getTenant();
+			try {
+				setLoading(true);
+				setError(null);
+
+				const response = await fetch(
+					`http://${tenant}.localhost:8000/tenant/reports/payroll-summary/stacked`,
+					{
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${token}`,
+						},
+					}
+				);
+
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				const apiData = await response.json();
+
+				// Transform API data to chart format
+				const transformedData: ChartDataItem[] = apiData.results.map(
+					(item: ApiDataItem) => ({
+						month: item.month,
+						incomes: item.net, // Net pay as incomes
+						deductions: item.paye, // PAYE tax as deductions
+						others: item.other_deductions, // Other deductions
+					})
+				);
+
+				setChartData(transformedData);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'Failed to fetch data');
+				console.error('Error fetching payroll data:', err);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		
+		fetchData();
+	}, []);
+
+	if (loading) {
+		return (
+			<Card className={`w-[630px] h-fit ${className}`}>
+				<CardHeader>
+					<CardTitle>Payroll Summary</CardTitle>
+				</CardHeader>
+				<CardContent className='w-full h-[300px] flex items-center justify-center'>
+					<div className='text-gray-500'>Loading...</div>
+				</CardContent>
+			</Card>
+		);
+	}
+
+	if (error) {
+		return (
+			<Card className={`w-[630px] h-fit ${className}`}>
+				<CardHeader>
+					<CardTitle>Payroll Summary</CardTitle>
+				</CardHeader>
+				<CardContent className='w-full h-[300px] flex items-center justify-center'>
+					<div className='text-red-500'>Error: {error}</div>
+				</CardContent>
+			</Card>
+		);
+	}
+
 	return (
 		<Card className={`w-[630px] h-fit ${className}`}>
 			<CardHeader>
@@ -74,8 +156,7 @@ export function Component({className}: { className?: string }) {
 							tickLine={true}
 							axisLine={false}
 							tickMargin={20}
-							ticks={[0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]} // Custom spacing
-							tickFormatter={(value) => `₦${value / 100}M`}
+							tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
 							tick={{ fontSize: 12, fill: '#3D56A8' }}
 						/>
 						<ChartTooltip content={<ChartTooltipContent hideLabel />} />

@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import { fetchEmployees } from '@/lib/api';
 import  { useGlobal } from '@/app/Context/page';
+import { set } from 'date-fns';
 
 
 const Dashboard = () => {
@@ -26,6 +27,7 @@ const Dashboard = () => {
 	const [employees, setEmployees] = React.useState<any>([]);
 	const [paid, setPaid] = React.useState<any>()
 	const [net, setNet] = React.useState<any>()
+	const [tnt, setTnt] = React.useState<string | null >('')
 	const [deduction, setDeduction] = React.useState<any>()
 	const getSalaries = () => {
 		const Salaries = employees.map((employee: any) => employee.custom_salary);
@@ -42,6 +44,7 @@ const Dashboard = () => {
 	useEffect(() => {
 		const fetchPayrollData = async () => {
 			const tenant = getTenant()
+			setTnt(tenant)
 			const baseURL = `http://${tenant}.localhost:8000`
 			const token = getAccessToken()
 			try {
@@ -204,7 +207,7 @@ const Dashboard = () => {
 				</div>
 			</div>
 			<div className='grid grid-cols-3 gap-x-0 gap-y-0 m-8 w-[980px]'>
-				<BarChart className='col-span-2' />
+				<BarChart className='col-span-2' tenant={tnt} />
 				<Piechrt className='col-span-1 w-[340px]' />
 			</div>
 			<div className='grid grid-cols-3 m-8  gap-4'>
