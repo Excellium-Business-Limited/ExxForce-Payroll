@@ -35,11 +35,11 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
 }) => {
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [formData, setFormData] = useState({
-    leave_type_id: "",
+    leave_type_id: 0, // Changed from empty string to 0
     start_date: "",
     end_date: "",
-    reason: "",
-    employee_code: employeeCode,
+    reasons: "",
+    employee_id: employeeCode,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTypes, setIsLoadingTypes] = useState(true);
@@ -90,10 +90,10 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: field === 'leave_type_id' ? Number(value) : value,
     }));
 
     // Clear error when user starts typing
@@ -129,8 +129,8 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       }
     }
 
-    if (!formData.reason.trim()) {
-      newErrors.reason = "Please provide a reason for leave";
+    if (!formData.reasons.trim()) { // Changed from reason
+      newErrors.reasons = "Please provide a reason for leave"; // Changed key to reasons
     }
 
     setErrors(newErrors);
@@ -167,11 +167,13 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
 
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
       const response = await axios.post(
+        
         `${baseUrl}/tenant/leave/leave-request`,
         submitData,
         {
           headers: {
             'Content-Type': 'application/json',
+             Authorization : `Bearer ${localStorage.getItem('access_token')}`,
           },
         }
       );
@@ -211,7 +213,9 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     }
   };
 
-  const selectedLeaveType = leaveTypes.find((type) => type.id === formData.leave_type_id);
+  const selectedLeaveType = leaveTypes.find(
+    (type) => type.id === formData.leave_type_id
+  );
   const leaveDays = calculateLeaveDays();
 
   return (
@@ -225,8 +229,8 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
             Leave type <span className="text-red-500">*</span>
           </label>
           <Select
-            value={formData.leave_type_id.toString()}
-            onValueChange={(val) => handleInputChange("leave_type_id", val)}
+            value={formData.leave_type_id ? formData.leave_type_id.toString() : ""} // Convert number to string for select value
+            onValueChange={(val) => handleInputChange("leave_type_id", Number(val))} // Convert string to number
             disabled={isLoadingTypes}
           >
             <SelectTrigger>
@@ -329,11 +333,11 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           <Textarea
             placeholder="Enter reason here..."
             className="resize-none min-h-[100px]"
-            value={formData.reason}
-            onChange={(e) => handleInputChange("reason", e.target.value)}
+            value={formData.reasons} // Changed from reason
+            onChange={(e) => handleInputChange("reasons", e.target.value)} // Changed from reason
           />
-          {errors.reason && (
-            <p className="text-red-500 text-xs mt-1">{errors.reason}</p>
+          {errors.reasons && ( // Changed from reason
+            <p className="text-red-500 text-xs mt-1">{errors.reasons}</p> // Changed from reason
           )}
         </div>
 

@@ -982,7 +982,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                 {/* Salary & Payment Details */}
                 <div className="bg-white rounded-lg shadow-sm">
                   <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Salary & Payment Details</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Payment Details</h3>
                     <button
                       onClick={handleSalaryEdit}
                       className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"

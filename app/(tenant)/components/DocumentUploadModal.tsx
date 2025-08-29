@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileText, Upload, X } from 'lucide-react';
+import axios from 'axios';
 
 // Define props interface for the DocumentUploadModal component
 interface DocumentUploadModalProps {
@@ -51,31 +52,38 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		
-		if (!selectedFile) {
-			alert('Please select a file to upload');
-			return;
-		}
-
-		if (!documentType) {
-			alert('Please select a document type');
+		if (!selectedFile || !documentType) {
+			alert('Please select a file and document type');
 			return;
 		}
 
 		setIsUploading(true);
 
 		try {
-			// Create FormData for file upload
+			// Create FormData
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 			formData.append('document_type', documentType);
 			formData.append('description', description);
-			if (employeeId) {
-				formData.append('employee_id', employeeId);
-			}
-
-			// Call the parent's onSubmit handler
-			await onSubmit(formData);
 			
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+			const response = await axios.post(
+				`${baseUrl}/tenant/employee/${employeeId}/documents`,
+				formData,
+				{
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+					},
+					onUploadProgress: (progressEvent) => {
+						const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+						console.log('Upload Progress:', percentCompleted, '%');
+					},
+				}
+			);
+
+			console.log('Upload successful:', response.data);
+
 			// Reset form
 			setSelectedFile(null);
 			setDocumentType('');
@@ -84,11 +92,19 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 			if (fileInput) {
 				fileInput.value = '';
 			}
+
+			// Call the parent's onSubmit handler with the response data
+			await onSubmit(response.data);
 			
-			alert('Document uploaded successfully!');
+			onClose();
 		} catch (error) {
 			console.error('Error uploading document:', error);
-			alert('Failed to upload document');
+			
+			if (axios.isAxiosError(error)) {
+				alert(`Upload failed: ${error.response?.data?.message || 'Unknown error occurred'}`);
+			} else {
+				alert('Failed to upload document');
+			}
 		} finally {
 			setIsUploading(false);
 		}
