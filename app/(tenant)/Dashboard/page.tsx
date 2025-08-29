@@ -207,7 +207,7 @@ const Dashboard = () => {
 				</div>
 			</div>
 			<div className='grid grid-cols-3 gap-x-0 gap-y-0 m-8 w-[980px]'>
-				<BarChart className='col-span-2' tenant={tnt} />
+				<BarChart className='col-span-2' />
 				<Piechrt className='col-span-1 w-[340px]' />
 			</div>
 			<div className='grid grid-cols-3 m-8  gap-4'>

@@ -38,6 +38,8 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
   employee,
   onEdit,
   onGeneratePayslip
+}:{
+  employee:any, onEdit?:any, onGeneratePayslip?:any
 }) => {
   const [salaryComponents, setSalaryComponents] = useState<SalaryComponent[]>([]);
   const [deductionComponents, setDeductionComponents] = useState<DeductionComponent[]>([]);
