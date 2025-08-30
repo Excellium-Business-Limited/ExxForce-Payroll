@@ -76,7 +76,7 @@ const loanType = () => {
 	};
 
 	return (
-		<div>
+		<div >
 			<div className='flex flex-row items-center justify-between w-full'>
 				<span>
 					<h1>Loan Type</h1>
@@ -90,7 +90,7 @@ const loanType = () => {
 								Add Loan Type
 							</Button>
 						</DialogTrigger>
-						<DialogContent>
+						<DialogContent className='w-[400px] bg-white'>
 							<DialogTitle className='text-lg font-semibold'>
 								Add Loan Type
 							</DialogTitle>

@@ -3,6 +3,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/page';
 import { DialogClose } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 interface SalaryComponentDetail {
 	component_name: string;
@@ -184,15 +185,15 @@ export default function EditPayGradePage({
 	};
 
 	return (
-		<main className=''>
+		<main className='w-[350px] self-center'>
 			<h1 className='text-2xl font-medium mb-4'>Edit Pay Grade</h1>
 			{error && <p className='text-red-500'>{error}</p>}
 
 			<div className='mb-4'>
 				<div className='mb-2'>
-					<label className='block text-sm font-medium text-gray-700'>
+					<Label className='block text-sm font-medium text-gray-700'>
 						Name
-					</label>
+					</Label>
 					<input
 						className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 						value={payGradeName}
@@ -202,9 +203,9 @@ export default function EditPayGradePage({
 				</div>
 
 				<div className='mb-2'>
-					<label className='block text-sm font-medium text-gray-700'>
+					<Label className='block text-sm font-medium text-gray-700'>
 						Gross Salary
-					</label>
+					</Label>
 					<input
 						className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 						type='number'
@@ -214,9 +215,9 @@ export default function EditPayGradePage({
 				</div>
 
 				<div className='mb-2'>
-					<label className='block text-sm font-medium text-gray-700'>
+					<Label className='block text-sm font-medium text-gray-700'>
 						Gross Salary
-					</label>
+					</Label>
 					<input
 						className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500'
 						type='number'

@@ -148,7 +148,7 @@ export default function LoanForm({ className }: { className?: string }) {
 			);
 
 			alert('Loan created!');
-			router.push(`/loans/${response.data.id}`);
+			router.push(`/Loan/${response.data.id}`);
 		} catch (err: any) {
 			console.error(err);
 			const details = err.response?.data?.detail;

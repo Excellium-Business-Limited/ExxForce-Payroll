@@ -33,6 +33,7 @@ import { set } from 'date-fns';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import AddSs from '../components/addSalaryStruc';
+import CrtDed from '../components/createDeduction'
 
 const salStruc = () => {
 	const [isEmpty, setIsEmpty] = React.useState(true);
@@ -131,16 +132,28 @@ const salStruc = () => {
 			<Card className='border-none shadow-none m-3 p-4'>
 				<div className='flex justify-between w-full'>
 					<h1>Salary Components</h1>
-					<Dialog>
-						<DialogTrigger asChild>
-							<Button className='bg-blue-600 text-white rounded-md px-4 py-2'>
-								+ Add New Component
-							</Button>
-						</DialogTrigger>
-						<DialogContent className='bg-white'>
-							<AddSs/>
-						</DialogContent>
-					</Dialog>
+					<section className='flex flex-col gap-4'>
+						<Dialog>
+							<DialogTrigger asChild>
+								<Button className='bg-blue-600 text-white rounded-md p-2 w-fit'>
+									+ Add New Component
+								</Button>
+							</DialogTrigger>
+							<DialogContent className='bg-white'>
+								<AddSs />
+							</DialogContent>
+						</Dialog>
+						<Dialog>
+							<DialogTrigger asChild>
+								<Button className='bg-blue-600 text-white rounded-md p-2 w-fit'>
+									+ Add New Deduction
+								</Button>
+							</DialogTrigger>
+							<DialogContent className='bg-white'>
+								<CrtDed/>
+							</DialogContent>
+						</Dialog>
+					</section>
 				</div>
 				<Table>
 					<TableHeader>

@@ -14,6 +14,7 @@ import Stanfreq from './pages/stanfreq';
 import { Button } from '@/components/ui/button';
 import Custfreq from './pages/custfreq';
 import Paygrade from './pages/paygrade';
+import PayrunTemp from './pages/payrunTemp'
 import WrkSched from './pages/wrkSched';
 
 const page = () => {
@@ -68,7 +69,9 @@ const page = () => {
 					<TabsContent value='workSch'>
 						<WrkSched/>
 					</TabsContent>
-					<TabsContent value='payComp'></TabsContent>
+					<TabsContent value='payComp'>
+						<PayrunTemp/>
+					</TabsContent>
 					<TabsContent value='payFreq'>
 						<Card className='m-3 p-4'>
 							<Tabs

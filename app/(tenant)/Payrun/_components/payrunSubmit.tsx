@@ -297,14 +297,23 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 														</Button>
 													) : null}
 													{payrun.STATUS === 'DRAFT' ? (
-														<Button
-															variant={'default'}
-															className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'
-															onClick={() =>
-																handleDraftSubmit(payrun.id.toString())
-															}>
-															<p className='font-light'>Submit for Approval</p>
-														</Button>
+														<div className='flex flex-col gap-1 p-0.5 ml-2'>
+															<Button
+																variant={'default'}
+																className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start shadow-none'
+																onClick={() =>
+																	handleDraftSubmit(payrun.id.toString())
+																}>
+																<p className='font-light'>
+																	Submit for Approval
+																</p>
+															</Button>
+															<Button
+																variant={'default'}
+																className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
+																<p className='text-red-600'>Delete Payrun</p>
+															</Button>
+														</div>
 													) : null}
 													<Button
 														variant={'default'}

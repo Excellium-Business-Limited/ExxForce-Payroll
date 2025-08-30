@@ -9,6 +9,7 @@ import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/page';
 import { getAccessToken } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -407,10 +408,16 @@ const EmployeePage: React.FC = () => {
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(1);
       }
-    } catch (err) {
+    } catch (err : any) {
       console.error('Error fetching employees:', err);
       setError('Failed to fetch employees');
       setEmployees([]);
+      if (err.response?.status === 401) {
+                // Redirect to login if unauthorized
+                setTimeout(() => {
+                  redirect('/login');
+                }, 2000);
+              }
     }
   };
 

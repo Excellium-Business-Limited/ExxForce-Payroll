@@ -284,11 +284,12 @@ const createPayGrade = () => {
 					</fieldset>
 				</div>
 				<div className='mt-4 flex justify-end'>
-					<button
+					<Button
 						type='submit'
-						className='bg-[#3D56A8] text-white px-4 py-2 rounded'>
+						variant={'outline'}
+						className='bg-blue-600 text-white px-4 py-2 rounded'>
 						Create
-					</button>
+					</Button>
 				</div>
 			</form>
 		</div>

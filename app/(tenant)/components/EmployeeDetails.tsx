@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Edit2, Trash2, Clock, FileText, DollarSign, Calendar, CreditCard, Upload } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
 import SalarySetupForm from '../components/SalarySetupForm'; // Import the SalarySetupForm
 import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import the SalaryComponentSetup
@@ -233,8 +233,14 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       if (response.data) {
         setEmployee(response.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching employee detail:', error);
+      if (error.response?.status === 401) {
+                // Redirect to login if unauthorized
+                setTimeout(() => {
+                  redirect('/login');
+                }, 2000);
+              }
       // Keep using the initial employee data if API call fails
       setEmployee(initialEmployee);
     } finally {
