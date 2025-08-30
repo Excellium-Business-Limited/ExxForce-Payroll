@@ -40,6 +40,31 @@ interface Employee {
   is_nsitf_applicable: boolean;
 }
 
+interface PayrollComponent {
+  id: string;
+  name: string;
+  type: 'EARNING' | 'DEDUCTION' | 'BENEFIT';
+  amount: number;
+  is_percentage: boolean;
+  percentage_value?: number;
+  is_taxable?: boolean;
+  description?: string;
+}
+
+interface PayrollData {
+  earnings: PayrollComponent[];
+  deductions: PayrollComponent[];
+  benefits: PayrollComponent[];
+  gross_salary: number;
+  net_salary: number;
+  total_deductions: number;
+  total_benefits: number;
+}
+
+interface DetailedEmployee extends Employee {
+  payroll_data?: PayrollData;
+}
+
 interface LeaveRequest {
   id: string;
   leave_type: string;
@@ -72,7 +97,7 @@ interface EmployeeDetailsProps {
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
-  employee,
+  employee: initialEmployee,
   onClose,
   onEdit,
   onSalaryEdit,
@@ -81,6 +106,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const router = useRouter();
   const { tenant, globalState } = useGlobal();
   const [activeTab, setActiveTab] = useState<'general' | 'payroll' | 'document' | 'loan' | 'leave' | 'payment-history'>('general');
+  
+  // Employee data state - using detailed employee data from API
+  const [employee, setEmployee] = useState<DetailedEmployee>(initialEmployee);
+  const [isLoadingEmployeeDetail, setIsLoadingEmployeeDetail] = useState<boolean>(false);
   
   // New state for inline editing
   const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
@@ -93,10 +122,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [showLeaveRequestForm, setShowLeaveRequestForm] = useState<boolean>(false);
   const [isLoadingLeaveRequests, setIsLoadingLeaveRequests] = useState<boolean>(false);
-
-  // Payroll-related state
-  const [hasPayrollData, setHasPayrollData] = useState<boolean>(false);
-  const [isLoadingPayrollData, setIsLoadingPayrollData] = useState<boolean>(false);
 
   // Loan-related state
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -186,55 +211,45 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     setActiveTab(newTab);
   };
 
-  // Check if employee has payroll data
-  const checkPayrollData = async () => {
-    if (!employee.employee_id) return;
+  // Fetch detailed employee information
+  const fetchEmployeeDetail = async () => {
+    if (!initialEmployee.employee_id || !tenant || !globalState.accessToken) return;
     
     try {
-      setIsLoadingPayrollData(true);
+      setIsLoadingEmployeeDetail(true);
       
-      // Check both salary components and deduction components
-      const [salaryResponse, deductionResponse] = await Promise.all([
-        fetch('/api/tenant/payroll-settings/salary-components', {
-          method: 'GET',
+      const response = await axios.get(
+        `http://${tenant}.localhost:8000/tenant/employee/detail/${initialEmployee.employee_id}`,
+        {
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${globalState.accessToken}`,
           },
-        }),
-        fetch('/api/tenant/payroll-settings/deduction-components', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      ]);
+        }
+      );
 
-      const salaryData = salaryResponse.ok ? await salaryResponse.json() : { data: [] };
-      const deductionData = deductionResponse.ok ? await deductionResponse.json() : { data: [] };
-
-      // Check if there are any salary or deduction components, or if employee has a custom salary
-      const hasSalaryComponents = salaryData.data && salaryData.data.length > 0;
-      const hasDeductionComponents = deductionData.data && deductionData.data.length > 0;
-      const hasBasicPay = employee.custom_salary > 0;
-
-      setHasPayrollData(hasSalaryComponents || hasDeductionComponents || hasBasicPay);
+      console.log('Detailed employee data fetched:', response.data);
+      
+      if (response.data) {
+        setEmployee(response.data);
+      }
     } catch (error) {
-      console.error('Error checking payroll data:', error);
-      // If there's an error, assume no payroll data
-      setHasPayrollData(false);
+      console.error('Error fetching employee detail:', error);
+      // Keep using the initial employee data if API call fails
+      setEmployee(initialEmployee);
     } finally {
-      setIsLoadingPayrollData(false);
+      setIsLoadingEmployeeDetail(false);
     }
   };
 
   // Fetch leave requests for the employee
   const fetchLeaveRequests = async () => {
-    if (!employee.employee_id) return;
+    if (!initialEmployee.employee_id) return;
     
     try {
       setIsLoadingLeaveRequests(true);
       const response = await axios.get(
-        `http://${tenant}.localhost:8000/tenant/leave/employee/${employee.employee_id}/leaves`,
+        `http://${tenant}.localhost:8000/tenant/leave/employee/${initialEmployee.employee_id}/leaves`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -265,12 +280,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   // Fetch loans for the employee
   const fetchLoans = async () => {
-    if (!employee.employee_id) return;
+    if (!initialEmployee.employee_id) return;
     
     try {
       setIsLoadingLoans(true);
       const response = await axios.get(
-        `http://${tenant}.localhost:8000/tenant/loans/${employee.employee_id}/loans`,
+        `http://${tenant}.localhost:8000/tenant/loans/${initialEmployee.employee_id}/loans`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -300,26 +315,24 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     }
   };
 
-  // Check payroll data when the payroll tab is active
+  // Fetch detailed employee data on component mount
   useEffect(() => {
-    if (activeTab === 'payroll') {
-      checkPayrollData();
-    }
-  }, [activeTab, employee.employee_id]);
+    fetchEmployeeDetail();
+  }, [initialEmployee.employee_id, tenant, globalState.accessToken]);
 
   // Fetch leave requests when the leave tab is active
   useEffect(() => {
     if (activeTab === 'leave') {
       fetchLeaveRequests();
     }
-  }, [activeTab, employee.employee_id]);
+  }, [activeTab, initialEmployee.employee_id]);
 
   // Fetch loans when the loan tab is active
   useEffect(() => {
     if (activeTab === 'loan') {
       fetchLoans();
     }
-  }, [activeTab, employee.employee_id]);
+  }, [activeTab, initialEmployee.employee_id]);
 
   // Handler for Basic Details and Employment Details edit
   const handleEmployeeEdit = (e: any) => {
@@ -400,6 +413,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       console.log('Updating employee:', employeeFormData);
       // Call the parent's onEdit handler to update the employee
       onEdit(employee, editType);
+      // Refresh employee detail after update
+      await fetchEmployeeDetail();
       // Close the form after successful submission
       setShowEmployeeForm(false);
     } catch (error) {
@@ -413,6 +428,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       console.log('Updating salary:', salaryFormData);
       // Call the parent's onEdit handler to update the salary
       onEdit(employee, 'salary');
+      // Refresh employee detail after update
+      await fetchEmployeeDetail();
       // Close the form after successful submission
       setShowSalaryForm(false);
     } catch (error) {
@@ -426,8 +443,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       console.log('Updating salary component:', salaryComponentData);
       // Handle salary component setup submission
       setShowSalaryComponentSetup(false);
-      // Refresh payroll data after component setup
-      checkPayrollData();
+      // Refresh employee detail after component setup
+      await fetchEmployeeDetail();
     } catch (error) {
       console.error('Error submitting salary component:', error);
     }
@@ -485,6 +502,301 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       <dd className="mt-1 text-sm text-gray-900">{value || '--'}</dd>
     </div>
   );
+
+  // Enhanced Payroll Component Display
+  const PayrollComponentCard: React.FC<{ 
+    title: string; 
+    components: PayrollComponent[]; 
+    type: 'earnings' | 'deductions' | 'benefits';
+    total?: number;
+  }> = ({ title, components, type, total }) => {
+    const getIconColor = () => {
+      switch (type) {
+        case 'earnings': return 'text-green-600 bg-green-100';
+        case 'deductions': return 'text-red-600 bg-red-100';
+        case 'benefits': return 'text-blue-600 bg-blue-100';
+        default: return 'text-gray-600 bg-gray-100';
+      }
+    };
+
+    const getIcon = () => {
+      switch (type) {
+        case 'earnings':
+          return (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" fill="currentColor"/>
+            </svg>
+          );
+        case 'deductions':
+          return (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L13.09 8.26L20 9L14 14L16.18 22L12 18.27L7.82 22L10 14L4 9L10.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" fill="none"/>
+            </svg>
+          );
+        case 'benefits':
+          return (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" fill="none"/>
+            </svg>
+          );
+        default:
+          return <DollarSign className="w-5 h-5" />;
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor()}`}>
+              {getIcon()}
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900">{title}</h4>
+              {total !== undefined && (
+                <p className="text-sm text-gray-600">Total: {formatCurrency(total)}</p>
+              )}
+            </div>
+          </div>
+          {components.length > 0 && (
+            <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+              {components.length} item{components.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        {components.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <div className="mb-2">No {type} configured</div>
+            <p className="text-sm">Add {type} components to calculate payroll</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {components.map((component, index) => (
+              <div key={component.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">{component.name}</span>
+                    <span className="font-semibold text-gray-900">
+                      {component.is_percentage && component.percentage_value 
+                        ? `${component.percentage_value}%` 
+                        : formatCurrency(component.amount)
+                      }
+                    </span>
+                  </div>
+                  {component.description && (
+                    <p className="text-sm text-gray-600 mt-1">{component.description}</p>
+                  )}
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      component.type === 'EARNING' 
+                        ? 'bg-green-100 text-green-800'
+                        : component.type === 'DEDUCTION'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {component.type}
+                    </span>
+                    {component.is_taxable !== undefined && (
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        component.is_taxable ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {component.is_taxable ? 'Taxable' : 'Non-taxable'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Enhanced Payroll Display Component
+  const PayrollDisplay: React.FC = () => {
+    const payrollData = employee.payroll_data;
+
+    if (!payrollData) {
+      return <PayrollEmptyState />;
+    }
+
+    const hasAnyComponents = 
+      (payrollData.earnings && payrollData.earnings.length > 0) ||
+      (payrollData.deductions && payrollData.deductions.length > 0) ||
+      (payrollData.benefits && payrollData.benefits.length > 0);
+
+    if (!hasAnyComponents) {
+      return <PayrollEmptyState />;
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Payroll Summary */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Payroll Summary - {employee.first_name} {employee.last_name}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Complete breakdown of salary components and calculations
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleProcessPayroll}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <DollarSign className="w-4 h-4" />
+                Process Payroll
+              </button>
+              <button 
+                onClick={handleGeneratePayslip}
+                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Generate Payslip
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-700">
+                {formatCurrency(payrollData.gross_salary || 0)}
+              </div>
+              <div className="text-sm text-gray-600">Gross Salary</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-700">
+                {formatCurrency(payrollData.total_deductions || 0)}
+              </div>
+              <div className="text-sm text-gray-600">Total Deductions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-700">
+                {formatCurrency(payrollData.total_benefits || 0)}
+              </div>
+              <div className="text-sm text-gray-600">Total Benefits</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">
+                {formatCurrency(payrollData.net_salary || 0)}
+              </div>
+              <div className="text-sm text-gray-600">Net Salary</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Payroll Components Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Earnings */}
+          <PayrollComponentCard 
+            title="Earnings" 
+            components={payrollData.earnings || []} 
+            type="earnings"
+            total={payrollData.gross_salary}
+          />
+
+          {/* Deductions */}
+          <PayrollComponentCard 
+            title="Deductions" 
+            components={payrollData.deductions || []} 
+            type="deductions"
+            total={payrollData.total_deductions}
+          />
+
+          {/* Benefits */}
+          <PayrollComponentCard 
+            title="Benefits" 
+            components={payrollData.benefits || []} 
+            type="benefits"
+            total={payrollData.total_benefits}
+          />
+        </div>
+
+        {/* Detailed Breakdown */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Payroll Calculation Breakdown</h4>
+          <div className="space-y-4">
+            {/* Base Salary */}
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="font-medium text-gray-900">Base Salary</span>
+              <span className="font-semibold text-gray-900">{formatCurrency(employee.custom_salary)}</span>
+            </div>
+
+            {/* Earnings breakdown */}
+            {payrollData.earnings && payrollData.earnings.length > 0 && (
+              <div>
+                <h5 className="font-medium text-green-700 mb-2">Earnings</h5>
+                {payrollData.earnings.map((earning, index) => (
+                  <div key={earning.id || index} className="flex justify-between items-center py-1 pl-4 text-sm">
+                    <span className="text-gray-600">+ {earning.name}</span>
+                    <span className="text-green-600">
+                      {earning.is_percentage && earning.percentage_value 
+                        ? `+${earning.percentage_value}%` 
+                        : `+${formatCurrency(earning.amount)}`
+                      }
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Gross Salary */}
+            <div className="flex justify-between items-center py-2 border-y border-gray-200 font-semibold">
+              <span className="text-gray-900">Gross Salary</span>
+              <span className="text-green-600">{formatCurrency(payrollData.gross_salary || 0)}</span>
+            </div>
+
+            {/* Deductions breakdown */}
+            {payrollData.deductions && payrollData.deductions.length > 0 && (
+              <div>
+                <h5 className="font-medium text-red-700 mb-2">Deductions</h5>
+                {payrollData.deductions.map((deduction, index) => (
+                  <div key={deduction.id || index} className="flex justify-between items-center py-1 pl-4 text-sm">
+                    <span className="text-gray-600">- {deduction.name}</span>
+                    <span className="text-red-600">
+                      {deduction.is_percentage && deduction.percentage_value 
+                        ? `-${deduction.percentage_value}%` 
+                        : `-${formatCurrency(deduction.amount)}`
+                      }
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Benefits breakdown */}
+            {payrollData.benefits && payrollData.benefits.length > 0 && (
+              <div>
+                <h5 className="font-medium text-blue-700 mb-2">Benefits</h5>
+                {payrollData.benefits.map((benefit, index) => (
+                  <div key={benefit.id || index} className="flex justify-between items-center py-1 pl-4 text-sm">
+                    <span className="text-gray-600">+ {benefit.name}</span>
+                    <span className="text-blue-600">
+                      {benefit.is_percentage && benefit.percentage_value 
+                        ? `+${benefit.percentage_value}%` 
+                        : `+${formatCurrency(benefit.amount)}`
+                      }
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Net Salary */}
+            <div className="flex justify-between items-center py-3 border-t-2 border-gray-300 font-bold text-lg">
+              <span className="text-gray-900">Net Salary</span>
+              <span className="text-blue-600">{formatCurrency(payrollData.net_salary || 0)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Updated Empty State Components (all blue now)
   const PayrollEmptyState: React.FC = () => (
@@ -884,6 +1196,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           </button>
           <div className="flex items-center space-x-2 ml-4">
             <span className="text-sm text-gray-900 font-medium">Employee Details</span>
+            {isLoadingEmployeeDetail && (
+              <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
           </div>
         </div>
         
@@ -930,131 +1248,120 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           <div className="max-w-7xl mx-auto p-6">
             {activeTab === 'general' && (
               <div className="space-y-6">
-                {/* Basic Details */}
-                <div className="bg-white rounded-lg shadow-sm">
-                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Basic Details</h3>
-                    <button
-                      onClick={handleEmployeeEdit}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit
-                    </button>
+                {isLoadingEmployeeDetail ? (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="flex items-center space-x-2">
+                      <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="text-gray-600">Loading employee details...</span>
+                    </div>
                   </div>
-                  <div className="p-6">
-                    <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-                      <DetailField label="First Name" value={employee.first_name} />
-                      <DetailField label="Last Name" value={employee.last_name} />
-                      <DetailField label="Gender" value={employee.gender === 'MALE' ? 'M' : 'F'} />
-                      <DetailField label="Phone number" value={employee.phone_number} />
-                      <DetailField label="Email Address" value={employee.email} />
-                      <DetailField label="Date of Birth" value={formatDate(employee.date_of_birth)} />
-                      <DetailField label="Address" value={employee.address} fullWidth />
-                    </dl>
-                  </div>
-                </div>
-
-                {/* Employment Details */}
-                <div className="bg-white rounded-lg shadow-sm">
-                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Employment Details</h3>
-                    <button
-                      onClick={handleEmployeeEdit}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-                      <DetailField label="Employee ID" value={employee.employee_id} />
-                      <DetailField label="Job Title" value={employee.job_title} />
-                      <DetailField label="Department" value={employee.department_name} />
-                      <DetailField label="Employee Type" value={getEmployeeType(employee.employment_type)} />
-                      <DetailField label="Start Date" value={formatDate(employee.start_date)} />
-                      <DetailField label="Tax Start Date" value={formatDate(employee.tax_start_date)} />
-                    </dl>
-                  </div>
-                </div>
-
-                {/* Salary & Payment Details */}
-                <div className="bg-white rounded-lg shadow-sm">
-                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Payment Details</h3>
-                    <button
-                      onClick={handleSalaryEdit}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-                      <DetailField label="Account Number" value={employee.account_number} />
-                      <DetailField label="Bank Name" value={employee.bank_name} />
-                      <DetailField label="Account Name" value={employee.account_name} />
-                      <DetailField label="Salary Amount (NGN)" value={formatCurrency(employee.custom_salary)} />
-                      <DetailField label="Pay Frequency" value={getPayFrequency(employee.pay_frequency)} />
-                    </dl>
-                  </div>
-                </div>
-
-                {/* Statutory Deduction */}
-                <div className="bg-white rounded-lg shadow-sm">
-                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Statutory Deduction</h3>
-                    <button
-                      onClick={handleSalaryEdit}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-2 gap-8">
-                      {/* Deductions Column */}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-4">Deductions</h4>
-                        <dl className="space-y-3">
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">PAYE (Tax)</dt>
-                            <dd className="text-sm text-gray-900 font-medium">
-                              {employee.is_paye_applicable ? 'Yes' : 'No'}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">Pension</dt>
-                            <dd className="text-sm text-gray-900 font-medium">
-                              {employee.is_pension_applicable ? 'Yes' : 'No'}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NHF</dt>
-                            <dd className="text-sm text-gray-900 font-medium">
-                              {employee.is_nhf_applicable ? 'Yes' : 'No'}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-sm text-gray-600">NSITF</dt>
-                            <dd className="text-sm text-gray-900 font-medium">
-                              {employee.is_nsitf_applicable ? 'Yes' : 'No'}
-                            </dd>
-                          </div>
+                ) : (
+                  <>
+                    {/* Basic Details */}
+                    <div className="bg-white rounded-lg shadow-sm">
+                      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900">Basic Details</h3>
+                        <button
+                          onClick={handleEmployeeEdit}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <Edit2 className="w-4 h-4 mr-1" />
+                          Edit
+                        </button>
+                      </div>
+                      <div className="p-6">
+                        <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
+                          <DetailField label="Employee ID" value={employee.employee_id} />
+                          <DetailField label="Job Title" value={employee.job_title} />
+                          <DetailField label="Department" value={employee.department_name} />
+                          <DetailField label="Employee Type" value={getEmployeeType(employee.employment_type)} />
+                          <DetailField label="Start Date" value={formatDate(employee.start_date)} />
+                          <DetailField label="Tax Start Date" value={formatDate(employee.tax_start_date)} />
                         </dl>
                       </div>
                     </div>
-                  </div>
-                </div>
+
+                    {/* Salary & Payment Details */}
+                    <div className="bg-white rounded-lg shadow-sm">
+                      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900">Payment Details</h3>
+                        <button
+                          onClick={handleSalaryEdit}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <Edit2 className="w-4 h-4 mr-1" />
+                          Edit
+                        </button>
+                      </div>
+                      <div className="p-6">
+                        <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
+                          <DetailField label="Account Number" value={employee.account_number} />
+                          <DetailField label="Bank Name" value={employee.bank_name} />
+                          <DetailField label="Account Name" value={employee.account_name} />
+                          <DetailField label="Salary Amount (NGN)" value={formatCurrency(employee.custom_salary)} />
+                          <DetailField label="Pay Frequency" value={getPayFrequency(employee.pay_frequency)} />
+                        </dl>
+                      </div>
+                    </div>
+
+                    {/* Statutory Deduction */}
+                    <div className="bg-white rounded-lg shadow-sm">
+                      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900">Statutory Deduction</h3>
+                        <button
+                          onClick={handleSalaryEdit}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <Edit2 className="w-4 h-4 mr-1" />
+                          Edit
+                        </button>
+                      </div>
+                      <div className="p-6">
+                        <div className="grid grid-cols-2 gap-8">
+                          {/* Deductions Column */}
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-4">Deductions</h4>
+                            <dl className="space-y-3">
+                              <div className="flex justify-between">
+                                <dt className="text-sm text-gray-600">PAYE (Tax)</dt>
+                                <dd className="text-sm text-gray-900 font-medium">
+                                  {employee.is_paye_applicable ? 'Yes' : 'No'}
+                                </dd>
+                              </div>
+                              <div className="flex justify-between">
+                                <dt className="text-sm text-gray-600">Pension</dt>
+                                <dd className="text-sm text-gray-900 font-medium">
+                                  {employee.is_pension_applicable ? 'Yes' : 'No'}
+                                </dd>
+                              </div>
+                              <div className="flex justify-between">
+                                <dt className="text-sm text-gray-600">NHF</dt>
+                                <dd className="text-sm text-gray-900 font-medium">
+                                  {employee.is_nhf_applicable ? 'Yes' : 'No'}
+                                </dd>
+                              </div>
+                              <div className="flex justify-between">
+                                <dt className="text-sm text-gray-600">NSITF</dt>
+                                <dd className="text-sm text-gray-900 font-medium">
+                                  {employee.is_nsitf_applicable ? 'Yes' : 'No'}
+                                </dd>
+                              </div>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
             {activeTab === 'payroll' && (
               <div>
-                {isLoadingPayrollData ? (
+                {isLoadingEmployeeDetail ? (
                   <div className="flex items-center justify-center min-h-[400px]">
                     <div className="flex items-center space-x-2">
                       <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
@@ -1064,14 +1371,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
                       <span className="text-gray-600">Loading payroll data...</span>
                     </div>
                   </div>
-                ) : hasPayrollData ? (
+                ) : (
                   <PayrollBreakdown
                     employee={employee}
                     onProcessPayroll={handleProcessPayroll}
                     onGeneratePayslip={handleGeneratePayslip}
                   />
-                ) : (
-                  <PayrollEmptyState />
                 )}
               </div>
             )}
