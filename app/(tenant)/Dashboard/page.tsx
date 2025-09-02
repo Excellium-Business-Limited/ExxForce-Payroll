@@ -10,7 +10,7 @@ import {
 import { DTable } from './_components/Table';
 import data1 from './_components/data1.json';
 import { Payrun, columns } from './_components/TableSchema';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import BarChart from './_components/Barchart';
 import { Bar } from 'recharts';
 import Piechrt from './_components/Piechart';
@@ -20,10 +20,12 @@ import { getAccessToken, getTenant } from '@/lib/auth';
 import { fetchEmployees } from '@/lib/api';
 import  { useGlobal } from '@/app/Context/page';
 import { set } from 'date-fns';
+import Loading from '@/components/ui/Loading';
 
 
 const Dashboard = () => {
 	const { globalState, updateGlobalState, tenant } = useGlobal();
+	const [isLoading, setIsLoading] = useState(true);
 	const [employees, setEmployees] = React.useState<any>([]);
 	const [paid, setPaid] = React.useState<any>()
 	const [net, setNet] = React.useState<any>()
@@ -48,7 +50,7 @@ const Dashboard = () => {
 			const baseURL = `http://${tenant}.localhost:8000`
 			const token = getAccessToken()
 			try {
-				// setIsLoading(true);
+				setIsLoading(true);
 				const response = await fetch(
 					`${baseURL}/tenant/reports/payroll-summary/all?from_date=2025-01-01&to_date=2026-03-31`,
 					{
@@ -65,6 +67,7 @@ const Dashboard = () => {
 				setPaid(data.employees_paid)
 				setDeduction(data.totals.deductions)
 				setNet(data.totals.net)
+				setIsLoading(false)
 				console.log(data)
 			 }catch (err){
 					console.error('Error fetching payroll data:', err);
@@ -87,6 +90,7 @@ const Dashboard = () => {
 			});
 		}
 		timeout;
+		setIsLoading(false)
 	}, []);
 	const timeout = setTimeout(() => {
 		console.log(globalState);
@@ -99,6 +103,18 @@ const Dashboard = () => {
 			maximumFractionDigits: 0,
 		}).format(amount);
 	};
+	if (isLoading) {
+		return (
+			<div className='p-6'>
+				<Loading
+					message='Loading Dashboard...'
+					size='medium'
+					variant='bars'
+					overlay={false}
+				/>
+			</div>
+		);
+	}
 
 	console.log(employees)
 	return (
