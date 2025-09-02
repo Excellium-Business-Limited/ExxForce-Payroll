@@ -81,7 +81,7 @@ const Dashboard = () => {
 			fetchEmployees(tenant).then((data) => {
 				setEmployees(data);
 				// updateGlobalState({ employees: data });
-				console.log(employees);
+				console.log(employees, data);
 			}).catch((error) => {
 				console.error("Error fetching employees:", error);
 			});

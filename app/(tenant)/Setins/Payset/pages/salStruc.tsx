@@ -1,24 +1,10 @@
 'use client';
+import React, { useEffect, useState } from 'react';
 import { useGlobal } from '@/app/Context/page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-	DialogClose,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectSeparator,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info, Plus } from 'lucide-react';
 import {
 	Table,
 	TableBody,
@@ -27,20 +13,29 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { set } from 'date-fns';
-
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 import AddSs from '../components/addSalaryStruc';
-import CrtDed from '../components/createDeduction'
+import CrtDed from '../components/createDeduction';
+import Loading from '@/components/ui/Loading';
 
-const salStruc = () => {
-	const [isEmpty, setIsEmpty] = React.useState(true);
-	const [add, setAdd] = React.useState(false);
-	const [value, setValue] = React.useState('');
-	const [components, setComponents] = useState<any[]>([]);
+interface SalaryComponent {
+	id: string;
+	name: string;
+	calculation_type: string;
+	is_taxable: boolean;
+	is_pensionable: boolean;
+}
+
+const SalaryStructure = () => {
+	const [isEmpty, setIsEmpty] = useState(true);
+	const [components, setComponents] = useState<SalaryComponent[]>([]);
 	const [error, setError] = useState('');
+	const [isLoading, setIsLoading] = useState(true);
 	const { tenant } = useGlobal();
 
 	useEffect(() => {
@@ -59,68 +54,61 @@ const salStruc = () => {
 
 				const data = await res.json();
 				setComponents(data);
-				setIsEmpty(false);
+				setIsEmpty(data.length === 0);
 			} catch (err: any) {
 				console.error(err);
 				setError(err.message || 'Something went wrong');
+			} finally {
+				setIsLoading(false);
 			}
 		};
 
 		fetchComponents();
 	}, [tenant]);
 
-	const ShowAdd = (e: React.FormEvent) => {
-		e.preventDefault();
-		setAdd(true);
-		if (add) {
-			return (
-				<div className='flex flex-col items-center justify-center h-full'>
-					<h1 className='text-2xl font-bold mb-4'>Add Salary Structure</h1>
-					{/* Add your form or content for adding salary structure here */}
-				</div>
-			);
-		}
-		setIsEmpty(false);
-	};
+	if (isLoading) {
+		return (
+			<div className='p-6'>
+				<Loading
+					message='Loading Salary Components...'
+					size='medium'
+					variant='spinner'
+					overlay={false}
+				/>
+			</div>
+		);
+	}
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-	};
 	if (isEmpty) {
 		return (
-			<div>
-				<div className='flex flex-row items-center justify-between h-full'>
-					<h1 className='text-2xl font-bold mb-4'>Salary Structure</h1>
+			<div className='p-6 max-w-6xl mx-auto'>
+				<div className='flex justify-between items-center mb-6'>
+					<h1 className='text-2xl font-semibold'>Salary Structure</h1>
 					<Button
-						onClick={() => {
-							setIsEmpty(false);
-							setAdd(true);
-						}}
-						variant={'outline'}
-						className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-						+ Create Salary Structure
+						onClick={() => setIsEmpty(false)}
+						className='flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700'>
+						<Plus className='h-4 w-4' />
+						Create Salary Structure
 					</Button>
 				</div>
-				<div className='text-center max-w-2xl mx-auto mt-[120px]'>
+
+				<div className='text-center max-w-2xl mx-auto mt-20'>
 					<img
 						src='/Salary-img.jpg'
-						alt='Team Illustration'
+						alt='Salary Structure Illustration'
 						className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
 					/>
-					<h2 className='text-2xl md:text-3xl  mb-4'>
+					<h2 className='text-2xl md:text-3xl font-medium mb-4'>
 						No Salary Structure Yet
 					</h2>
-					<pre className='text-base text-muted-foreground mb-8'>
-						Create and Manage reusable salary structure <br /> templates.
-					</pre>
+					<p className='text-base text-gray-600 mb-8'>
+						Create and manage reusable salary structure templates.
+					</p>
 					<Button
-						onClick={() => {
-							setIsEmpty(false);
-							setAdd(true);
-						}}
-						variant={'outline'}
-						className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-						+ Create Salary Structure
+						onClick={() => setIsEmpty(false)}
+						className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto'>
+						<Plus className='h-4 w-4' />
+						Create Salary Structure
 					</Button>
 				</div>
 			</div>
@@ -128,82 +116,110 @@ const salStruc = () => {
 	}
 
 	return (
-		<div>
-			<Card className='border-none shadow-none m-3 p-4'>
-				<div className='flex justify-between w-full'>
-					<h1>Salary Components</h1>
-					<section className='flex flex-col gap-4'>
-						<Dialog>
-							<DialogTrigger asChild>
-								<Button className='bg-blue-600 text-white rounded-md p-2 w-fit'>
-									+ Add New Component
-								</Button>
-							</DialogTrigger>
-							<DialogContent className='bg-white'>
-								<AddSs />
-							</DialogContent>
-						</Dialog>
-						<Dialog>
-							<DialogTrigger asChild>
-								<Button className='bg-blue-600 text-white rounded-md p-2 w-fit'>
-									+ Add New Deduction
-								</Button>
-							</DialogTrigger>
-							<DialogContent className='bg-white'>
-								<CrtDed/>
-							</DialogContent>
-						</Dialog>
-					</section>
+		<div className='p-6 max-w-6xl mx-auto'>
+			<div className='flex justify-between items-center mb-6'>
+				<div>
+					<h1 className='text-2xl font-semibold mb-2'>Salary Components</h1>
+					<p className='text-gray-600'>
+						Manage salary components and deductions for your organization.
+					</p>
 				</div>
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								NAME
-							</TableHead>
-							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								CALCULATION TYPE
-							</TableHead>
-							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								TAXABLE
-							</TableHead>
-							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								PENSIONABLE
-							</TableHead>
-							<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								STATUS
-							</TableHead>
+				<div className='flex gap-3'>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button className='flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700'>
+								<Plus className='h-4 w-4' />
+								Add New Component
+							</Button>
+						</DialogTrigger>
+						<DialogContent className='bg-white w-fit h-[500px] scroll-auto'>
+							<DialogTitle hidden>Add Salary Component</DialogTitle>
+							<AddSs />
+						</DialogContent>
+					</Dialog>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button className='flex items-center gap-2 bg-green-600 text-white hover:bg-green-700'>
+								<Plus className='h-4 w-4' />
+								Add New Deduction
+							</Button>
+						</DialogTrigger>
+						<DialogContent className='bg-white w-fit h-[500px] scroll-auto	'>
+							<DialogTitle>Add Deduction</DialogTitle>
+							<CrtDed />
+						</DialogContent>
+					</Dialog>
+				</div>
+			</div>
+
+			{error && (
+				<Alert className='mb-6 bg-red-50 border-red-200'>
+					<AlertDescription className='text-red-800'>{error}</AlertDescription>
+				</Alert>
+			)}
+
+			<Table>
+				<TableHeader>
+					<TableRow>
+						<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Name
+						</TableHead>
+						<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Calculation Type
+						</TableHead>
+						<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Taxable
+						</TableHead>
+						<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Pensionable
+						</TableHead>
+						<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Status
+						</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{components.map((component) => (
+						<TableRow
+							key={component.id}
+							className='hover:bg-gray-50'>
+							<TableCell className='px-6 py-4 font-medium'>
+								{component.name}
+							</TableCell>
+							<TableCell className='px-6 py-4 capitalize'>
+								{component.calculation_type}
+							</TableCell>
+							<TableCell className='px-6 py-4'>
+								<span
+									className={`px-2 py-1 rounded text-sm ${
+										component.is_taxable
+											? 'bg-green-100 text-green-800'
+											: 'bg-gray-100 text-gray-800'
+									}`}>
+									{component.is_taxable ? 'Taxable' : 'Not Taxable'}
+								</span>
+							</TableCell>
+							<TableCell className='px-6 py-4'>
+								<span
+									className={`px-2 py-1 rounded text-sm ${
+										component.is_pensionable
+											? 'bg-green-100 text-green-800'
+											: 'bg-gray-100 text-gray-800'
+									}`}>
+									{component.is_pensionable ? 'Pensionable' : 'Not Pensionable'}
+								</span>
+							</TableCell>
+							<TableCell className='px-6 py-4'>
+								<span className='px-2 py-1 rounded text-sm bg-green-100 text-green-800'>
+									Active
+								</span>
+							</TableCell>
 						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{components.map((component) => {
-							return (
-								<TableRow key={component.id}>
-									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
-										{component.name}
-									</TableCell>
-									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
-										{component.calculation_type}
-									</TableCell>
-									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
-										{component.is_taxable ? 'Taxable' : 'Not Taxable'}
-									</TableCell>
-									<TableCell className='uppercase font-extralight px-6 py-3 text-left text-gray-600 tracking-wider'>
-										{component.is_pensionable
-											? 'Pensionable'
-											: 'Not Pensionable'}
-									</TableCell>
-									<TableCell className={`text-center text-[#47aa9c]`}>
-										<p className='bg-[#e6f6f4] rounded-2xl p-1'>Active</p>
-									</TableCell>
-								</TableRow>
-							);
-						})}
-					</TableBody>
-				</Table>
-			</Card>
+					))}
+				</TableBody>
+			</Table>
 		</div>
 	);
 };
 
-export default salStruc;
+export default SalaryStructure;

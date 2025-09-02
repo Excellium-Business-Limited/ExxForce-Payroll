@@ -142,7 +142,7 @@ const sidebar = ({ className }: { className?: string }) => {
 								</CollapsibleTrigger>
 								<CollapsibleContent className='overflow-visible'>
 									<SidebarMenuSub className='overflow-visible'>
-										<SidebarMenuSubItem>
+										<SidebarMenuSubItem className='font-light text-sm'>
 											<Link href={'/Setins/CompSet'}>
 												<div
 													className={`${
@@ -156,7 +156,7 @@ const sidebar = ({ className }: { className?: string }) => {
 										</SidebarMenuSubItem>
 									</SidebarMenuSub>
 									<SidebarMenuSub className='overflow-visible'>
-										<SidebarMenuSubItem>
+										<SidebarMenuSubItem className='font-light'>
 											<Link href={'/Setins/Payset'}>
 												<div
 													className={`${
@@ -170,7 +170,7 @@ const sidebar = ({ className }: { className?: string }) => {
 										</SidebarMenuSubItem>
 									</SidebarMenuSub>
 									<SidebarMenuSub className='overflow-visible'>
-										<SidebarMenuSubItem>
+										<SidebarMenuSubItem className='font-light'>
 											<Link href={'/Setins/Userrole'}>
 												<div
 													className={`${
