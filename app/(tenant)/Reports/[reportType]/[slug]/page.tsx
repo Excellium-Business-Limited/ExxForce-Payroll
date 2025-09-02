@@ -121,7 +121,7 @@ export default function ReportPage({
 
 		try {
 			console.log(`Fetching Tax Summary: ${reportType}`);
-			setLoading(true)
+			setLoading(true);
 			const res = await axios.get(
 				`${baseURL}/tenant/reports/tax-summary/all?from_date=2025-01-01&to_date=2026-12-31`,
 				{
@@ -159,7 +159,8 @@ export default function ReportPage({
 	}, [tenant, token, reportType]); // Only run when these values change
 
 	// Handle loading state
-	if (loading) return (
+	if (loading)
+		return (
 			<Loading
 				message='Loading Report...'
 				size='medium'
