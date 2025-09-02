@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/page';
 import { getAccessToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import Loading from '@/components/ui/Loading';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -873,137 +874,142 @@ const EmployeePage: React.FC = () => {
   );
 
   return (
-    <div className='flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden'>
-      {/* Show Employee Details Full Screen */}
-      {showEmployeeDetails && selectedEmployee ? (
-        <div className='flex-1 bg-white overflow-auto'>
-          <EmployeeDetails
-            employee={selectedEmployee}
-            onClose={handleCloseEmployeeDetails}
-            onEdit={handleEditFromDetails}
-            onSalaryEdit={handleEditFromDetails}
-            onEndEmployment={handleEndEmployment}
-          />
-        </div>
-      ) : (
-        /* Main Content + Overlay Layout */
-        <div className='flex-1 relative overflow-hidden'>
-          {/* Main Content Area - Always Full Width */}
-          <div className='w-full h-full overflow-auto bg-[#EFF5FF] p-6 md:p-8'>
-            {loading ? (
-              <div className='flex items-center justify-center min-h-[400px]'>
-                <div className='text-gray-600'>Loading...</div>
-              </div>
-            ) : error ? (
-              <div className='flex items-center justify-center min-h-[400px]'>
-                <div className='text-red-600'>{error}</div>
-              </div>
-            ) : hasEmployees ? (
-              <EmployeeTable />
-            ) : (
-              <EmptyEmployeeState />
-            )}
-          </div>
+		<div className='flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden'>
+			{/* Show Employee Details Full Screen */}
+			{showEmployeeDetails && selectedEmployee ? (
+				<div className='flex-1 bg-white overflow-auto'>
+					<EmployeeDetails
+						employee={selectedEmployee}
+						onClose={handleCloseEmployeeDetails}
+						onEdit={handleEditFromDetails}
+						onSalaryEdit={handleEditFromDetails}
+						onEndEmployment={handleEndEmployment}
+					/>
+				</div>
+			) : (
+				/* Main Content + Overlay Layout */
+				<div className='flex-1 relative overflow-hidden'>
+					{/* Main Content Area - Always Full Width */}
+					<div className='w-full h-full overflow-auto bg-[#EFF5FF] p-6 md:p-8'>
+						{loading ? (
+							<div className='flex items-center justify-center min-h-[400px]'>
+								<Loading
+									message='Loading Employees...'
+									size='medium'
+									variant='spinner'
+									overlay={false}
+								/>
+							</div>
+						) : error ? (
+							<div className='flex items-center justify-center min-h-[400px]'>
+								<div className='text-red-600'>{error}</div>
+							</div>
+						) : hasEmployees ? (
+							<EmployeeTable />
+						) : (
+							<EmptyEmployeeState />
+						)}
+					</div>
 
-          {/* Right Side Form Panel - Overlay for Employee Form */}
-          {showEmployeeForm && (
-            <div className='absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10'>
-              {/* Form Header */}
-              <div className='flex items-center justify-between p-4 border-b border-gray-200 bg-white'>
-                <h2 className='text-lg font-semibold text-gray-900'>
-                  {isEdit ? 'Edit Employee' : 'Add New Employee'}
-                </h2>
-                <button
-                  onClick={handleCloseEmployeeForm}
-                  className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
-                  aria-label='Close form'>
-                  <svg
-                    className='w-5 h-5 text-gray-500'
-                    viewBox='0 0 24 24'
-                    fill='none'>
-                    <path
-                      d='M18 6L6 18M6 6L18 18'
-                      stroke='currentColor'
-                      strokeWidth='2'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                    />
-                  </svg>
-                </button>
-              </div>
+					{/* Right Side Form Panel - Overlay for Employee Form */}
+					{showEmployeeForm && (
+						<div className='absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10'>
+							{/* Form Header */}
+							<div className='flex items-center justify-between p-4 border-b border-gray-200 bg-white'>
+								<h2 className='text-lg font-semibold text-gray-900'>
+									{isEdit ? 'Edit Employee' : 'Add New Employee'}
+								</h2>
+								<button
+									onClick={handleCloseEmployeeForm}
+									className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+									aria-label='Close form'>
+									<svg
+										className='w-5 h-5 text-gray-500'
+										viewBox='0 0 24 24'
+										fill='none'>
+										<path
+											d='M18 6L6 18M6 6L18 18'
+											stroke='currentColor'
+											strokeWidth='2'
+											strokeLinecap='round'
+											strokeLinejoin='round'
+										/>
+									</svg>
+								</button>
+							</div>
 
-              {/* Form Content */}
-              <div className='flex-1 overflow-auto'>
-                <EmployeeForm
-                  isOpen={showEmployeeForm}
-                  isEdit={isEdit}
-                  employeeData={employeeData}
-                  onClose={handleCloseEmployeeForm}
-                  onSubmit={handleEmployeeSubmit}
-                  onShowSalaryForm={handleShowSalaryForm}
-                />
-              </div>
-            </div>
-          )}
+							{/* Form Content */}
+							<div className='flex-1 overflow-auto'>
+								<EmployeeForm
+									isOpen={showEmployeeForm}
+									isEdit={isEdit}
+									employeeData={employeeData}
+									onClose={handleCloseEmployeeForm}
+									onSubmit={handleEmployeeSubmit}
+									onShowSalaryForm={handleShowSalaryForm}
+								/>
+							</div>
+						</div>
+					)}
 
-          {/* Right Side Form Panel - Overlay for Salary Form */}
-          {showSalaryForm && pendingEmployeeData && (
-            <div className='absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10'>
-              {/* Form Header */}
-              <div className='flex items-center justify-between p-4 border-b border-gray-200 bg-white'>
-                <h2 className='text-lg font-semibold text-gray-900'>
-                  Salary Setup
-                </h2>
-                <button
-                  onClick={handleCloseSalaryForm}
-                  className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
-                  aria-label='Close form'>
-                  <svg
-                    className='w-5 h-5 text-gray-500'
-                    viewBox='0 0 24 24'
-                    fill='none'>
-                    <path
-                      d='M18 6L6 18M6 6L18 18'
-                      stroke='currentColor'
-                      strokeWidth='2'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                    />
-                  </svg>
-                </button>
-              </div>
+					{/* Right Side Form Panel - Overlay for Salary Form */}
+					{showSalaryForm && pendingEmployeeData && (
+						<div className='absolute top-0 right-0 w-1/2 min-w-[600px] h-full bg-white border-l border-gray-200 flex flex-col overflow-hidden shadow-2xl transform transition-transform duration-300 ease-in-out z-10'>
+							{/* Form Header */}
+							<div className='flex items-center justify-between p-4 border-b border-gray-200 bg-white'>
+								<h2 className='text-lg font-semibold text-gray-900'>
+									Salary Setup
+								</h2>
+								<button
+									onClick={handleCloseSalaryForm}
+									className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+									aria-label='Close form'>
+									<svg
+										className='w-5 h-5 text-gray-500'
+										viewBox='0 0 24 24'
+										fill='none'>
+										<path
+											d='M18 6L6 18M6 6L18 18'
+											stroke='currentColor'
+											strokeWidth='2'
+											strokeLinecap='round'
+											strokeLinejoin='round'
+										/>
+									</svg>
+								</button>
+							</div>
 
-              {/* Form Content */}
-              <div className='flex-1 overflow-auto'>
-                <SalarySetupForm
-                  employeeData={pendingEmployeeData}
-                  isEdit={isEdit}
-                  existingEmployeeId={employeeData?.id}
-                  onClose={handleCloseSalaryForm}
-                  onSubmit={handleSalarySubmit}
-                  onBack={handleBackToEmployeeForm}
-                  parentOnSubmit={handleEmployeeSubmit}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+							{/* Form Content */}
+							<div className='flex-1 overflow-auto'>
+								<SalarySetupForm
+									employeeData={pendingEmployeeData}
+									isEdit={isEdit}
+									existingEmployeeId={employeeData?.id}
+									onClose={handleCloseSalaryForm}
+									onSubmit={handleSalarySubmit}
+									onBack={handleBackToEmployeeForm}
+									parentOnSubmit={handleEmployeeSubmit}
+								/>
+							</div>
+						</div>
+					)}
+				</div>
+			)}
 
-      {/* Import Modal Dialog - Keep as modal since it's simpler */}
-      <Dialog
-        open={showImportModal}
-        onOpenChange={handleCloseImportModal}>
-        <DialogContent className='sm:max-w-[500px]'>
-          <ImportModal
-            isOpen={showImportModal}
-            onClose={handleCloseImportModal}
-            onSubmit={handleImportSubmit}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+			{/* Import Modal Dialog - Keep as modal since it's simpler */}
+			<Dialog
+				open={showImportModal}
+				onOpenChange={handleCloseImportModal}>
+				<DialogContent className='sm:max-w-[500px]'>
+					<ImportModal
+						isOpen={showImportModal}
+						onClose={handleCloseImportModal}
+						onSubmit={handleImportSubmit}
+					/>
+				</DialogContent>
+			</Dialog>
+		</div>
+	);
 };
 
 export default EmployeePage;
