@@ -1,117 +1,127 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+'use client';
 import React from 'react';
-import SalStruc from './pages/salStruc';
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table';
-import { Card } from '@/components/ui/card';
-import Stanfreq from './pages/stanfreq';
-import { Button } from '@/components/ui/button';
-import Custfreq from './pages/custfreq';
-import Paygrade from './pages/paygrade';
-import PayrunTemp from './pages/payrunTemp'
-import WrkSched from './pages/wrkSched';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SalaryStructure from './pages/salStruc';
+import StandardFrequencies from './pages/stanfreq';
+import CustomFrequencies from './pages/custfreq';
+import PayGrades from './pages/paygrade';
+import PayScheduleTemplates from './pages/payrunTemp';
+import WorkSchedule from './pages/wrkSched';
 
-const page = () => {
+const PayrollSettingsPage = () => {
 	return (
-		<div className='h-[1600px]'>
-			<div className='mx-4'>
-				<h1>Payroll Settings</h1>
-				<h5 className='text-sm'>
-					Configure all payroll-related settings for your <br /> organization.
-				</h5>
-			</div>
-			<div className=' bg-white rounded-lg m-5'>
-				<Tabs
-					className='self-center h-[1080px]'
-					defaultValue='payG'>
-					<TabsList className='no-design'>
-						<div className='m-2'>
-							<TabsTrigger
+		<div className='min-h-screen bg-gray-50'>
+			<div className='p-6'>
+				<div className='mb-6'>
+					<h1 className='text-3xl font-bold text-gray-900 mb-2'>
+						Payroll Settings
+					</h1>
+					<p className='text-gray-600'>
+						Configure all payroll-related settings for your organization.
+					</p>
+				</div>
+
+				<div className='bg-white rounded-lg shadow-sm'>
+					<Tabs
+						defaultValue='payG'
+						className='w-full'>
+						<TabsList className='w-full justify-start border-b bg-transparent h-auto p-0 rounded-none'>
+							<div className='flex gap-8 px-6 py-4'>
+								<TabsTrigger
+									value='salaryst'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
+									Salary Structure
+								</TabsTrigger>
+								<TabsTrigger
+									value='payG'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2  data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
+									Pay Grade
+								</TabsTrigger>
+								<TabsTrigger
+									value='workSch'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
+									Work Schedule
+								</TabsTrigger>
+								<TabsTrigger
+									value='payComp'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
+									Pay Schedule
+								</TabsTrigger>
+								<TabsTrigger
+									value='payFreq'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
+									Pay Frequencies
+								</TabsTrigger>
+							</div>
+						</TabsList>
+
+						<div className='min-h-[600px]'>
+							<TabsContent
 								value='salaryst'
-								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Salary Structure
-							</TabsTrigger>
-							<TabsTrigger
+								className='mt-0'>
+								<SalaryStructure />
+							</TabsContent>
+
+							<TabsContent
 								value='payG'
-								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Pay Grade
-							</TabsTrigger>
-							<TabsTrigger
+								className='mt-0'>
+								<PayGrades />
+							</TabsContent>
+
+							<TabsContent
 								value='workSch'
-								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Work Schedule
-							</TabsTrigger>
-							<TabsTrigger
+								className='mt-0'>
+								<WorkSchedule />
+							</TabsContent>
+
+							<TabsContent
 								value='payComp'
-								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Pay Schedule
-							</TabsTrigger>
-							<TabsTrigger
+								className='mt-0'>
+								<PayScheduleTemplates />
+							</TabsContent>
+
+							<TabsContent
 								value='payFreq'
-								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
-								Leave
-							</TabsTrigger>
-						</div>
-					</TabsList>
-					<hr className=' h-[2px]' />
-					<TabsContent value='salaryst'>
-						<SalStruc />
-					</TabsContent>
-					<TabsContent value='payG'>
-						<Paygrade/>
-					</TabsContent>
-					<TabsContent value='workSch'>
-						<WrkSched/>
-					</TabsContent>
-					<TabsContent value='payComp'>
-						<PayrunTemp/>
-					</TabsContent>
-					<TabsContent value='payFreq'>
-						<Card className='m-3 p-4'>
-							<Tabs
-								defaultValue='stanfreq'
-								className='rounded-lg'>
-								<div className='flex'>
-									<TabsList>
-										<TabsTrigger
+								className='mt-0'>
+								<div className='p-6'>
+									<Tabs
+										defaultValue='stanfreq'
+										className='w-full'>
+										<div className='flex justify-between items-center mb-6'>
+											<TabsList className='bg-gray-100'>
+												<TabsTrigger
+													value='stanfreq'
+													className='data-[state=active]:bg-white data-[state=active]:text-blue-600 text-gray-600'>
+													Standard Frequencies
+												</TabsTrigger>
+												<TabsTrigger
+													value='custoFreq'
+													className='data-[state=active]:bg-white data-[state=active]:text-blue-600 text-gray-600'>
+													Custom Frequencies
+												</TabsTrigger>
+											</TabsList>
+										</div>
+
+										<TabsContent
 											value='stanfreq'
-											className='data-[state=active]:text-[#3d56a8] text-muted-foreground'>
-											Standard Frequencies
-										</TabsTrigger>
-										<TabsTrigger
+											className='mt-0'>
+											<StandardFrequencies />
+										</TabsContent>
+
+										<TabsContent
 											value='custoFreq'
-											className='data-[state=active]:text-[#3d56a8] text-muted-foreground'>
-											Custom Frequencies
-										</TabsTrigger>
-									</TabsList>
-									{<div>{/* Add your content here */}</div>}
-									<article className='self-end ml-auto'>
-										<Button
-											variant={'default'}
-											className=' bg-[#3d56a8] self-end hover:bg-white hover:text-[#3d56a8]'>
-											<span className='text-xs'> +Add Custom Frequency</span>
-										</Button>
-									</article>
+											className='mt-0'>
+											<CustomFrequencies />
+										</TabsContent>
+									</Tabs>
 								</div>
-								<TabsContent value='stanfreq'>
-									<Stanfreq />
-								</TabsContent>
-								<TabsContent value='custoFreq'>
-									<Custfreq />{' '}
-								</TabsContent>
-							</Tabs>
-						</Card>
-					</TabsContent>
-				</Tabs>
+							</TabsContent>
+						</div>
+					</Tabs>
+				</div>
 			</div>
 		</div>
 	);
 };
 
-export default page;
+export default PayrollSettingsPage;

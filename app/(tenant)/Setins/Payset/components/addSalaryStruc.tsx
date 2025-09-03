@@ -72,9 +72,9 @@ const AddSs = () => {
 		}
 	};
 	return (
-		<div className='min-h-screen  flex items-center justify-center p-4'>
-			<div className='bg-white p-8 rounded-lg w-full max-w-md'>
-				<DialogTitle>Add Salary Component</DialogTitle>
+		<div className='  flex items-center justify-center p-4'>
+			<div className='bg-white p-4 rounded-lg w-full max-w-md'>
+				<DialogTitle className='p-5'>Add Salary Component</DialogTitle>
 				<form
 					onSubmit={handleSubmit}
 					className='space-y-5'>

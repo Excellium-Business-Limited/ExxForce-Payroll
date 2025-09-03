@@ -4,6 +4,7 @@ import axios from 'axios';
 import React, { use, useEffect, useState } from 'react';
 import PayrollSummaryReport from '../[slug]/_components/payrollSum';
 import TaxSummaryReport from '../[slug]/_components/taxSum';
+import Loading from '@/components/ui/Loading';
 
 // Payroll Data interfaces
 interface PayrollTotals {
@@ -120,7 +121,7 @@ export default function ReportPage({
 
 		try {
 			console.log(`Fetching Tax Summary: ${reportType}`);
-
+			setLoading(true);
 			const res = await axios.get(
 				`${baseURL}/tenant/reports/tax-summary/all?from_date=2025-01-01&to_date=2026-12-31`,
 				{
@@ -158,19 +159,15 @@ export default function ReportPage({
 	}, [tenant, token, reportType]); // Only run when these values change
 
 	// Handle loading state
-	// if (loading) {
-	// 	return (
-	// 		<div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-	// 			<div className='text-center'>
-	// 				<div className='animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto'></div>
-	// 				<p className='mt-4 text-lg text-gray-600'>
-	// 					Loading {reportType === 'payroll-summary' ? 'payroll' : 'tax'}{' '}
-	// 					summary...
-	// 				</p>
-	// 			</div>
-	// 		</div>
-	// 	);
-	// }
+	if (loading)
+		return (
+			<Loading
+				message='Loading Report...'
+				size='medium'
+				variant='spinner'
+				overlay={false}
+			/>
+		);
 
 	// Handle error state
 	if (error) {

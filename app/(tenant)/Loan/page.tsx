@@ -45,6 +45,7 @@ import { redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LoanReq from './components/loanReq';
 import LoanType from './components/loanType';
+import Loading from '@/components/ui/Loading';
 
 interface Loan {
 	monthly_deduction: ReactNode;
@@ -116,7 +117,14 @@ export default function Home() {
 	// };
 
 	
-	  if (loading) return <p className='m-0 h-2 uppercase font-bold'>Loading loans…</p>;
+	  if (loading) return (
+			<Loading
+				message='Loading Loans...'
+				size='medium'
+				variant='spinner'
+				overlay={false}
+			/>
+		);
 	if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
 	if (isloan === false) {
