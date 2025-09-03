@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2, FileText, DollarSign } from 'lucide-react';
+import { SalaryCalculator } from './SalaryCalculator';
 
 interface SalaryComponent {
   id: number;
@@ -34,14 +35,61 @@ interface Employee {
   // Additional fields from the actual API response
   department?: string;
   job_title?: string;
-  employment_type?: string;
+  employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN'; // Fixed: Make required to match SalaryCalculator
   pay_frequency?: string;
+  // Required fields for SalaryCalculator
+  email: string;
+  phone_number: string;
+  gender: 'MALE' | 'FEMALE';
+  date_of_birth: string;
+  address: string;
+  start_date: string;
+  tax_start_date: string;
+  department_name: string;
+  pay_grade_name: string;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  is_paye_applicable: boolean;
+  is_pension_applicable: boolean;
+  is_nhf_applicable: boolean;
+  is_nsitf_applicable: boolean;
 }
 
 interface PayrollBreakdownProps {
   employee: Employee;
-  onProcessPayroll?: () => void;
+  onProcessPayroll?: (employee: Employee) => void;
   onGeneratePayslip?: () => void;
+}
+
+interface NetSalaryCalculation {
+  grossSalary: number;
+  basicSalary: number;
+  allowances: number;
+  totalIncome: number;
+  pensionEmployeeContribution: number;
+  pensionEmployerContribution: number;
+  nhfDeduction: number;
+  nsitfDeduction: number;
+  payeTax: number;
+  totalDeductions: number;
+  netSalary: number;
+  annualGrossSalary: number;
+  annualPensionableAmount: number;
+  annualTaxableAmount: number;
+  annualPensionContribution: number;
+  annualNhfDeduction: number;
+  annualNsitfDeduction: number;
+  adjustedGrossIncome: number;
+  consolidatedReliefAllowance: number;
+  taxableIncome: number;
+  annualPayeTax: number;
+  effectiveTaxRate: number;
+  marginalTaxRate: number;
+  hasPensionableComponents: boolean;
+  hasTaxableComponents: boolean;
+  pensionableAmount: number;
+  taxableAmount: number;
 }
 
 const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
@@ -49,6 +97,9 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
   onProcessPayroll,
   onGeneratePayslip
 }) => {
+  const [netCalculation, setNetCalculation] = useState<NetSalaryCalculation | null>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
+
   const formatCurrency = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-NG', {
@@ -68,9 +119,9 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
   const totalSalaryComponents = salaryComponents.reduce((sum, comp) => sum + parseFloat(comp.amount || '0'), 0);
   const totalDeductions = deductionComponents.reduce((sum, comp) => sum + parseFloat(comp.amount || '0'), 0);
   const totalBenefits = benefits.reduce((sum, comp) => sum + parseFloat(comp.amount || '0'), 0);
-  const netSalary = effectiveGross - totalDeductions;
+  const netSalary = netCalculation?.netSalary || (effectiveGross - totalDeductions);
 
-  // Check if employee has any payroll components - fix the logic
+  // Check if employee has any payroll components
   const hasPayrollData = salaryComponents.length > 0 || deductionComponents.length > 0 || benefits.length > 0;
   
   console.log('Debug - PayrollBreakdown data:', {
@@ -81,6 +132,19 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
     effectiveGross,
     employee
   });
+
+  // Handle calculation completion
+  const handleCalculationComplete = (calculation: NetSalaryCalculation) => {
+    setNetCalculation(calculation);
+  };
+
+  // Auto-calculate net salary when component mounts or data changes
+  useEffect(() => {
+    if (hasPayrollData && effectiveGross > 0) {
+      // Auto-trigger calculation
+      setShowCalculator(true);
+    }
+  }, [hasPayrollData, effectiveGross]);
 
   // If no payroll data, show empty state
   if (!hasPayrollData) {
@@ -118,7 +182,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
         </p>
 
         <button 
-          onClick={onProcessPayroll}
+          onClick={() => onProcessPayroll?.(employee)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
         >
           <DollarSign className="w-4 h-4" />
@@ -131,77 +195,61 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
   return (
     <div className="space-y-6">
       {/* Salary Components Summary Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+      <div className="bg-blue-100 rounded-lg p-6 border border-blue-600">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-black">
               Salary Components - {employee.first_name} {employee.last_name}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-black mt-1">
               Complete breakdown of salary components and deductions
             </p>
-          </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={onProcessPayroll}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
-              <DollarSign className="w-4 h-4" />
-              Manage Components
-            </button>
-            <button 
-              onClick={onGeneratePayslip}
-              className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              Generate Payslip
-            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-700">
+            <div className="text-2xl font-bold text-black">
               {formatCurrency(effectiveGross)}
             </div>
-            <div className="text-sm text-gray-600">Gross Salary</div>
+            <div className="text-sm text-black">Gross Salary</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-700">
+            <div className="text-2xl font-bold text-black">
               {formatCurrency(totalDeductions)}
             </div>
-            <div className="text-sm text-gray-600">Total Deductions</div>
+            <div className="text-sm text-black">Total Deductions</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-700">
+            <div className="text-2xl font-bold text-black">
               {formatCurrency(totalBenefits)}
             </div>
-            <div className="text-sm text-gray-600">Total Benefits</div>
+            <div className="text-sm text-black">Total Benefits</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-black">
               {formatCurrency(netSalary)}
             </div>
-            <div className="text-sm text-gray-600">Net Salary</div>
+            <div className="text-sm text-black">Net Salary {netCalculation ? "(Calculated)" : "(Estimated)"}</div>
           </div>
         </div>
       </div>
 
       {/* Main Components Breakdown */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Salary Components Breakdown</h3>
+      <div className="bg-blue-50 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-blue-600">
+          <h3 className="text-lg font-medium text-black">Salary Components Breakdown</h3>
           <div className="flex items-center space-x-2">
             <button
-              onClick={onProcessPayroll}
-              className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              onClick={() => onProcessPayroll?.(employee)}
+              className="inline-flex items-center px-3 py-1.5 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-black bg-blue-50 hover:bg-blue-100"
             >
               <Edit2 className="w-4 h-4 mr-1" />
               Edit Components
             </button>
             <button
               onClick={onGeneratePayslip}
-              className="inline-flex items-center px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md"
+              className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
             >
               <FileText className="w-4 h-4 mr-1" />
               Generate Payslip
@@ -213,9 +261,9 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Salary Components Section */}
             <div>
-              <div className="bg-green-50 rounded-lg p-4 mb-4">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <div className="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center mr-2">
+              <div className="bg-blue-100 rounded-lg p-4 mb-4">
+                <h4 className="text-lg font-semibold text-black mb-4 flex items-center">
+                  <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center mr-2">
                     <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
                     </svg>
@@ -225,12 +273,12 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                 
                 <div className="space-y-3">
                   {/* Header */}
-                  <div className="flex justify-between items-center py-2 border-b border-green-100">
+                  <div className="flex justify-between items-center py-2 border-b border-blue-600">
                     <div>
-                      <span className="text-sm font-medium text-gray-700">COMPONENT NAME</span>
+                      <span className="text-sm font-medium text-black">COMPONENT NAME</span>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-700">AMOUNT (₦)</span>
+                      <span className="text-sm font-medium text-black">AMOUNT (₦)</span>
                     </div>
                   </div>
 
@@ -239,35 +287,35 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                     salaryComponents.map((component) => (
                       <div key={component.id} className="flex justify-between items-center py-2">
                         <div>
-                          <span className="text-sm text-gray-600">{component.name}</span>
-                          <div className="text-xs text-gray-500">
+                          <span className="text-sm text-black">{component.name}</span>
+                          <div className="text-xs text-black">
                             Component ID: {component.id}
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-black">
                           {formatCurrency(component.amount)}
                         </span>
                       </div>
                     ))
                   ) : (
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-gray-500 italic">No salary components</span>
-                      <span className="text-sm font-medium text-gray-900">₦0.00</span>
+                      <span className="text-sm text-black italic">No salary components</span>
+                      <span className="text-sm font-medium text-black">₦0.00</span>
                     </div>
                   )}
 
                   {/* Total Salary Components */}
-                  <div className="flex justify-between items-center py-3 mt-4 border-t border-green-200 font-semibold">
-                    <span className="text-sm text-gray-900">Total Salary Components</span>
-                    <span className="text-sm text-green-600">
+                  <div className="flex justify-between items-center py-3 mt-4 border-t border-blue-600 font-semibold">
+                    <span className="text-sm text-black">Total Salary Components</span>
+                    <span className="text-sm text-black">
                       {formatCurrency(totalSalaryComponents)}
                     </span>
                   </div>
 
                   {/* Effective Gross */}
-                  <div className="flex justify-between items-center py-3 border-t border-green-300 font-bold">
-                    <span className="text-sm text-gray-900">Effective Gross Salary</span>
-                    <span className="text-sm text-green-600">
+                  <div className="flex justify-between items-center py-3 border-t border-blue-600 font-bold">
+                    <span className="text-sm text-black">Effective Gross Salary</span>
+                    <span className="text-sm text-black">
                       {formatCurrency(effectiveGross)}
                     </span>
                   </div>
@@ -277,9 +325,9 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
 
             {/* Deductions Section */}
             <div>
-              <div className="bg-red-50 rounded-lg p-4 mb-4">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <div className="w-6 h-6 bg-red-500 rounded-lg flex items-center justify-center mr-2">
+              <div className="bg-blue-100 rounded-lg p-4 mb-4">
+                <h4 className="text-lg font-semibold text-black mb-4 flex items-center">
+                  <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center mr-2">
                     <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M18 6L6 18M6 6L18 18"/>
                     </svg>
@@ -289,12 +337,12 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                 
                 <div className="space-y-3">
                   {/* Header */}
-                  <div className="flex justify-between items-center py-2 border-b border-red-100">
+                  <div className="flex justify-between items-center py-2 border-b border-blue-600">
                     <div>
-                      <span className="text-sm font-medium text-gray-700">COMPONENT NAME</span>
+                      <span className="text-sm font-medium text-black">COMPONENT NAME</span>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-700">AMOUNT (₦)</span>
+                      <span className="text-sm font-medium text-black">AMOUNT (₦)</span>
                     </div>
                   </div>
 
@@ -303,27 +351,27 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                     deductionComponents.map((component) => (
                       <div key={component.id} className="flex justify-between items-center py-2">
                         <div>
-                          <span className="text-sm text-gray-600">{component.name}</span>
-                          <div className="text-xs text-gray-500">
+                          <span className="text-sm text-black">{component.name}</span>
+                          <div className="text-xs text-black">
                             Component ID: {component.id}
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-black">
                           -{formatCurrency(component.amount)}
                         </span>
                       </div>
                     ))
                   ) : (
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-gray-500 italic">No deductions configured</span>
-                      <span className="text-sm font-medium text-gray-900">₦0.00</span>
+                      <span className="text-sm text-black italic">No deductions configured</span>
+                      <span className="text-sm font-medium text-black">₦0.00</span>
                     </div>
                   )}
 
                   {/* Total Deductions */}
-                  <div className="flex justify-between items-center py-3 mt-4 border-t border-red-200 font-semibold">
-                    <span className="text-sm text-gray-900">Total Deductions</span>
-                    <span className="text-sm text-red-600">
+                  <div className="flex justify-between items-center py-3 mt-4 border-t border-blue-600 font-semibold">
+                    <span className="text-sm text-black">Total Deductions</span>
+                    <span className="text-sm text-black">
                       -{formatCurrency(totalDeductions)}
                     </span>
                   </div>
@@ -335,9 +383,9 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
           {/* Company Benefits Section */}
           {benefits.length > 0 && (
             <div className="mt-8">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center mr-2">
+              <div className="bg-green-100 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-black mb-4 flex items-center">
+                  <div className="w-6 h-6 bg-green-600 rounded-lg flex items-center justify-center mr-2">
                     <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -347,34 +395,34 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                 
                 <div className="space-y-3">
                   {/* Header */}
-                  <div className="flex justify-between items-center py-2 border-b border-blue-100">
+                  <div className="flex justify-between items-center py-2 border-b border-green-600">
                     <div>
-                      <span className="text-sm font-medium text-gray-700">COMPONENT NAME</span>
+                      <span className="text-sm font-medium text-black">BENEFIT NAME</span>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-700">AMOUNT (₦)</span>
+                      <span className="text-sm font-medium text-black">AMOUNT (₦)</span>
                     </div>
                   </div>
 
                   {/* Benefit Components */}
-                  {benefits.map((component) => (
-                    <div key={component.id} className="flex justify-between items-center py-2">
+                  {benefits.map((benefit) => (
+                    <div key={benefit.id} className="flex justify-between items-center py-2">
                       <div>
-                        <span className="text-sm text-gray-600">{component.name}</span>
-                        <div className="text-xs text-gray-500">
-                          Component ID: {component.id}
+                        <span className="text-sm text-black">{benefit.name}</span>
+                        <div className="text-xs text-black">
+                          Benefit ID: {benefit.id}
                         </div>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatCurrency(component.amount)}
+                      <span className="text-sm font-medium text-black">
+                        {formatCurrency(benefit.amount)}
                       </span>
                     </div>
                   ))}
 
                   {/* Total Benefits */}
-                  <div className="flex justify-between items-center py-3 mt-4 border-t border-blue-200 font-semibold">
-                    <span className="text-sm text-gray-900">Total Benefits</span>
-                    <span className="text-sm text-blue-600">
+                  <div className="flex justify-between items-center py-3 mt-4 border-t border-green-600 font-semibold">
+                    <span className="text-sm text-black">Total Benefits</span>
+                    <span className="text-sm text-black">
                       {formatCurrency(totalBenefits)}
                     </span>
                   </div>
@@ -383,48 +431,138 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
             </div>
           )}
 
+          {/* Net Salary Calculator Integration */}
+          {effectiveGross > 0 && (
+            <div className="mt-8">
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-black flex items-center">
+                    <div className="w-6 h-6 bg-gray-600 rounded-lg flex items-center justify-center mr-2">
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2l3.09 6.26L22 9l-5 4.74L18.18 21 12 17.77 5.82 21 7 13.74 2 9l6.91-1.26L12 2z"/>
+                      </svg>
+                    </div>
+                    Net Salary Calculation (Finance Act 2023 Compliant)
+                  </h4>
+                  <button
+                    onClick={() => setShowCalculator(!showCalculator)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    {showCalculator ? 'Hide Calculator' : 'Show Calculator'}
+                  </button>
+                </div>
+
+                {showCalculator && (
+                  <SalaryCalculator
+                    employee={{
+                      ...employee,
+                      employment_type: employee.employment_type || 'FULL_TIME' // Provide default if undefined
+                    }}
+                    grossSalary={effectiveGross}
+                    earningComponents={[]}
+                    onCalculationComplete={handleCalculationComplete}
+                    showDetailedBreakdown={false}
+                    className=""
+                  />
+                )}
+
+                {/* Quick Net Salary Display */}
+                {netCalculation && (
+                  <div className="bg-white rounded-lg p-4 border">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-xl font-bold text-green-900">
+                          {formatCurrency(netCalculation.grossSalary)}
+                        </div>
+                        <div className="text-sm text-green-600">Gross Salary</div>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-red-900">
+                          {formatCurrency(netCalculation.totalDeductions)}
+                        </div>
+                        <div className="text-sm text-red-600">Total Statutory Deductions</div>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-blue-900">
+                          {formatCurrency(netCalculation.netSalary)}
+                        </div>
+                        <div className="text-sm text-blue-600">Net Take-Home Pay</div>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> This net salary calculation includes statutory deductions (PAYE, Pension, NHF, NSITF) 
+                        as per Finance Act 2023. Component-based deductions shown above are separate.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Detailed Calculation Summary */}
-          <div className="mt-8 bg-gray-50 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Final Calculation Summary</h4>
+          <div className="mt-8 bg-blue-50 rounded-lg p-6">
+            <h4 className="text-lg font-semibold text-black mb-4">Final Calculation Summary</h4>
             <div className="space-y-3">
               {/* Effective Gross */}
               <div className="flex justify-between items-center py-2">
-                <span className="text-gray-700">Effective Gross Salary</span>
-                <span className="font-medium text-gray-900">{formatCurrency(effectiveGross)}</span>
+                <span className="text-black">Effective Gross Salary</span>
+                <span className="font-medium text-black">{formatCurrency(effectiveGross)}</span>
               </div>
 
-              {/* Total Deductions */}
+              {/* Component-based Deductions */}
               {totalDeductions > 0 && (
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-700">Total Deductions</span>
-                  <span className="font-medium text-red-600">
+                  <span className="text-black">Component-based Deductions</span>
+                  <span className="font-medium text-black">
                     -{formatCurrency(totalDeductions)}
                   </span>
                 </div>
               )}
 
+              {/* Statutory Deductions (if calculated) */}
+              {netCalculation && (
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-black">Statutory Deductions (PAYE, Pension, etc.)</span>
+                  <span className="font-medium text-black">
+                    -{formatCurrency(netCalculation.totalDeductions)}
+                  </span>
+                </div>
+              )}
+
               {/* Net Salary */}
-              <div className="flex justify-between items-center py-3 border-t-2 border-gray-300 font-bold text-lg">
-                <span className="text-gray-900">Net Salary</span>
-                <span className="text-blue-600">{formatCurrency(netSalary)}</span>
+              <div className="flex justify-between items-center py-3 border-t-2 border-blue-600 font-bold text-lg">
+                <span className="text-black">Net Take-Home Salary</span>
+                <span className="text-black">{formatCurrency(netSalary)}</span>
               </div>
 
               {/* Benefits Note */}
               {totalBenefits > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="text-sm text-blue-800">
-                    <strong>Note:</strong> Benefits worth {formatCurrency(totalBenefits)} are provided 
-                    in addition to the net salary above.
+                <div className="mt-4 p-3 bg-green-100 rounded-lg border border-green-300">
+                  <div className="text-sm text-green-800">
+                    <strong>Additional Benefits:</strong> Benefits worth {formatCurrency(totalBenefits)} are provided 
+                    in addition to the salary above.
                   </div>
                 </div>
               )}
 
               {/* Component Summary */}
-              <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                <div className="text-sm text-green-800">
+              <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                <div className="text-sm text-black">
                   <strong>Component Summary:</strong> {salaryComponents.length} salary component(s), {deductionComponents.length} deduction(s), and {benefits.length} benefit(s) configured.
                 </div>
               </div>
+
+              {/* Calculation Method Note */}
+              {netCalculation && (
+                <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="text-sm text-yellow-800">
+                    <strong>Calculation Method:</strong> Net salary uses Finance Act 2023 compliant calculations. 
+                    Effective tax rate: {netCalculation.effectiveTaxRate.toFixed(2)}%
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

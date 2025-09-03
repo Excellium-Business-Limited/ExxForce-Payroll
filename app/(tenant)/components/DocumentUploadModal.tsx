@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileText, Upload, X } from 'lucide-react';
 import axios from 'axios';
+import { useGlobal } from '@/app/Context/page';
 
 // Define props interface for the DocumentUploadModal component
 interface DocumentUploadModalProps {
@@ -13,8 +14,13 @@ interface DocumentUploadModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSubmit: (uploadData: any) => Promise<void>;
-	employeeId?: string;
-	employeeName?: string;
+	employee?: {
+		id?: number;
+		employee_id: string;
+		first_name: string;
+		last_name: string;
+		[key: string]: any;
+	};
 }
 
 const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
@@ -22,13 +28,15 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 	isOpen,
 	onClose,
 	onSubmit,
-	employeeId,
-	employeeName
+	employee
 }) => {
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [documentType, setDocumentType] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
 	const [isUploading, setIsUploading] = useState<boolean>(false);
+
+	// Get global context for tenant and auth (same as SalaryComponentSetup)
+	const { tenant, globalState } = useGlobal();
 
 	const documentTypes = [
 		{ value: 'contract', label: 'Employment Contract' },
@@ -57,6 +65,11 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 			return;
 		}
 
+		if (!employee?.employee_id) {
+			alert('Employee ID is required for document upload');
+			return;
+		}
+
 		setIsUploading(true);
 
 		try {
@@ -64,16 +77,19 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 			formData.append('document_type', documentType);
-			formData.append('description', description);
+			// Map the description to title for the backend
+			formData.append('title', description || selectedFile.name);
+			// Use description as notes as well, or leave empty
+			formData.append('notes', description || '');
 			
-			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+			// Use the same pattern as SalaryComponentSetup for API endpoint
 			const response = await axios.post(
-				`${baseUrl}/tenant/employee/${employeeId}/documents`,
+				`http://${tenant}.localhost:8000/tenant/employee/${employee.employee_id}/documents`,
 				formData,
 				{
 					headers: {
 						'Content-Type': 'multipart/form-data',
-						Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+						Authorization: `Bearer ${globalState.accessToken}`,
 					},
 					onUploadProgress: (progressEvent) => {
 						const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
@@ -148,8 +164,10 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 					</div>
 					<div>
 						<h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-						{employeeName && (
-							<p className="text-sm text-gray-600">for {employeeName}</p>
+						{employee && (
+							<p className="text-sm text-gray-600">
+								for {employee.first_name} {employee.last_name}
+							</p>
 						)}
 					</div>
 				</div>
@@ -271,7 +289,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 					</Button>
 					<Button
 						type="submit"
-						disabled={!selectedFile || !documentType || isUploading}
+						disabled={!selectedFile || !documentType || isUploading || !employee?.employee_id}
 						className="bg-blue-600 hover:bg-blue-700 text-white"
 					>
 						{isUploading ? (
