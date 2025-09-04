@@ -1,7 +1,6 @@
 'use client';
 
 import { TrendingUp } from 'lucide-react';
-import './Style.module.css';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { useEffect, useState } from 'react';
 
