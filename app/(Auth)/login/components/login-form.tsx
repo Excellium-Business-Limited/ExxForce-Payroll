@@ -18,11 +18,11 @@ export function LoginForm({ className }: { className?: string }) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [isSuccess, setIsSuccess] = useState(false);
 	const router = useRouter();
 	const [showPassword, setShowPassword] = useState(false);
 	const { updateGlobalState } = useGlobal();
 
-	
 	const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setEmail(e.target.value);
 		console.log('Email changed:', e.target.value);
@@ -35,18 +35,35 @@ export function LoginForm({ className }: { className?: string }) {
 		e.preventDefault();
 		setError('');
 		setIsLoading(true);
+		setIsSuccess(false);
+
 		try {
+			console.log('Attempting login to server...');
 			const response = await login(email, password);
-			console.log(response);
+			console.log('Login successful:', response);
+
 			const { access, refresh, redirect, tenant } = response;
+
+			setIsSuccess(true);
+			setError('');
+
 			saveTokens(access, refresh);
-			const redirectPath = new URL(redirect).pathname;
-			// const address = redirectPath.charAt(1).toUpperCase() + redirectPath.slice(2);
 			setTenant(tenant);
-			updateGlobalState({ tenant: tenant, access: access, refresh: refresh });
-			router.push(redirectPath);
+			updateGlobalState({
+				tenant: tenant,
+				access: access,
+				refresh: refresh,
+			});
+
+			setTimeout(() => {
+				const redirectPath = new URL(redirect).pathname;
+				router.push(redirectPath);
+			}, 500);
 		} catch (err: any) {
+			console.error('Login failed:', err);
 			setError(err.message || 'Invalid credentials. Please try again.');
+			setIsSuccess(false);
+		} finally {
 			setIsLoading(false);
 		}
 	};
@@ -97,10 +114,21 @@ export function LoginForm({ className }: { className?: string }) {
 									onChange={handlePasswordChange}
 								/>
 							</div>
+							{error && (
+								<div className='text-red-500 text-sm mt-2 text-center'>
+									{error}
+								</div>
+							)}
+							{isSuccess && (
+								<div className='text-green-500 text-sm mt-2 text-center'>
+									Login successful! Redirecting...
+								</div>
+							)}
 							<Button
 								type='submit'
-								className='w-full bg-[#3D56A8]'>
-								Login
+								className='w-full bg-[#3D56A8]'
+								disabled={isLoading}>
+								{isLoading ? 'Logging in...' : 'Login'}
 							</Button>
 							<div className='relative flex items-center py-4'>
 								<Input
