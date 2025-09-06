@@ -25,7 +25,7 @@ import {
 import { SelectTrigger } from '@radix-ui/react-select';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import axios from 'axios';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { se } from 'date-fns/locale';
 interface Employee {
 	id?: number;
@@ -54,7 +54,7 @@ interface Employee {
 	is_nsitf_applicable: boolean;
 }
 
-export default function LoanDetails({ item, id }: { item: any, id: string }) {
+export default function LoanDetails({ item, id }: { item: any; id: string }) {
 	const details = {
 		employeeDetails: {
 			fullName: 'John Smith',
@@ -118,10 +118,11 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 	const { globalState } = useGlobal();
 	const fetchEmployees = async (): Promise<void> => {
 		const tenant = getTenant();
+		const baseURL = `${tenant}.exxforce.com`;
 		try {
 			console.log(tenant);
 			const response = await axios.get<Employee[]>(
-				`http://${tenant}.localhost:8000/tenant/employee/list`,
+				`https://${baseURL}/tenant/employee/list`,
 				{
 					headers: {
 						Authorization: `Bearer ${getAccessToken()}`,
@@ -133,7 +134,6 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 
 			setEmployees(response.data);
 			setError(null);
-			
 		} catch (err) {
 			console.error('Error fetching employees:', err);
 		}
@@ -141,8 +141,7 @@ export default function LoanDetails({ item, id }: { item: any, id: string }) {
 
 	React.useEffect(() => {
 		fetchEmployees();
-		
-	},[]);
+	}, []);
 	React.useEffect(() => {
 		if (employees) {
 			console.log('Updated employees:', employees);

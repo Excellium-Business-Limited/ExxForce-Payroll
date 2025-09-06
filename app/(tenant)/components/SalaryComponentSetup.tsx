@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, AlertCircle } from "lucide-react";
 import axios from 'axios';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 
 // Import the SalaryCalculator component
 import { SalaryCalculator, calculateNetSalary } from './SalaryCalculator';
@@ -176,10 +176,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   const fetchEarningComponents = async (): Promise<void> => {
     setLoadingEarnings(true);
     setEarningError('');
+    const baseURL = `${tenant}.exxforce.com`
     
     try {
       const response = await axios.get(
-        `http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components`,
+        `https://${baseURL}/tenant/payroll-settings/salary-components`,
         {
           headers: {
             Authorization: `Bearer ${globalState.accessToken}`,
@@ -239,10 +240,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   const fetchDeductionComponents = async (): Promise<void> => {
     setLoadingDeductions(true);
     setDeductionError('');
+    const baseURL = `${tenant}.exxforce.com`
     
     try {
       const response = await axios.get(
-        `http://${tenant}.localhost:8000/tenant/payroll-settings/deduction-components`,
+        `https://${baseURL}/tenant/payroll-settings/deduction-components`,
         {
           headers: {
             Authorization: `Bearer ${globalState.accessToken}`,
@@ -585,9 +587,10 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
           payload.percentage_override = comp.percentageValue;
         }
+        const baseURL = `${tenant}.exxforce.com`
 
         return axios.post(
-          `http://${tenant}.localhost:8000/tenant/employee/${employee?.employee_id}/salary-components/create`,
+          `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
           payload,
           {
             headers: {
@@ -615,8 +618,9 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           payload.percentage_override = comp.percentageValue;
         }
 
+        const baseURL = `${tenant}.exxforce.com`
         return axios.post(
-          `http://${tenant}.localhost:8000/tenant/employee/${employee?.employee_id}/deduction-components/create`,
+          `http://${baseURL}/tenant/employee/${employee?.employee_id}/deduction-components/create`,
           payload,
           {
             headers: {

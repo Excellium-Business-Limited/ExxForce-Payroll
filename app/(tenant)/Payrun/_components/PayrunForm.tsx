@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 // import { formatDate } from 'date-fns';
 const PayrunForm = ({
 	className,
@@ -73,9 +73,10 @@ const PayrunForm = ({
 		try {
 			const token = localStorage.getItem('access_token');
 			// Format dates to YYYY-MM-DD
+			const baseURL =`${tenant}.exxforce.com`
 
 			await axios.post(
-				`http://${tenant}.localhost:8000/tenant/payrun/create`,
+				`https://${baseURL}/tenant/payrun/create`,
 				{
 					name,
 					pay_period: payPeriod,

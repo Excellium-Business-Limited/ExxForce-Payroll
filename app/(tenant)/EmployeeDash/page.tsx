@@ -6,7 +6,7 @@ import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
 import EmployeeDetails from '../components/EmployeeDetails';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -344,9 +344,10 @@ const EmployeePage: React.FC = () => {
 	};
 
 	const fetchEmployees = async (): Promise<void> => {
+		const baseURL = `${tenant}.exxforce.com`
 		try {
 			const response = await axios.get<Employee[]>(
-				`http://${tenant}.localhost:8000/tenant/employee/list`
+				`https://${baseURL}/tenant/employee/list`
 			);
 
 			console.log('Raw employee data from API:', response.data);

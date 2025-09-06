@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -49,9 +49,10 @@ const AddSs = () => {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		console.log(formData);
+		const baseURL = `${tenant}.exxforce.com`
 		try {
 			await axios.post(
-				`http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components/create`,
+				`https://${baseURL}/tenant/payroll-settings/salary-components/create`,
 				{
 					...formData,
 					is_basic: false,

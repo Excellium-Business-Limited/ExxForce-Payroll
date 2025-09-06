@@ -10,7 +10,7 @@ import Submit from './_components/payrunSubmit';
 import {payrans} from './_components/payrunData'
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
-import  { useGlobal } from '@/app/Context/page';
+import  { useGlobal } from '@/app/Context/context';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import { ST } from 'next/dist/shared/lib/utils';
 import Loading from '@/components/ui/Loading';
@@ -46,8 +46,9 @@ const page = () => {
 				try {
 					setIsLoading(true);
 						const token = getAccessToken()
+						const baseURL = `${tenant}.exxforce.com`
 						const res = await axios.get<PayRun[]>(
-							`http://${tenant}.localhost:8000/tenant/payrun/list`,
+							`https://${baseURL}/tenant/payrun/list`,
 							{ headers: { Authorization: `Bearer ${token}` } }
 						);
 					setPayruns(res.data);

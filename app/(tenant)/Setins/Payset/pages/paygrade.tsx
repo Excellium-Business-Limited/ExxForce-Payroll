@@ -10,7 +10,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import axios from 'axios';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import {
 	Table,
 	TableBody,
@@ -63,10 +63,11 @@ const paygrade = () => {
 		const tenant = getTenant();
 		const token = getAccessToken();
 		console.log(`Fetching pay grades for tenant: ${tenant}`);
+		const baseURL = `${tenant}.exxforce.com`
 		const fetchPayGrades = async () => {
 			try {
 				const res = await axios.get(
-					`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades`,
+					`https://${baseURL}/tenant/payroll-settings/pay-grades`,
 					{
 						headers: {
 							Authorization: `Bearer ${token}`,

@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -41,8 +41,9 @@ const SalaryStructure = () => {
 	useEffect(() => {
 		const fetchComponents = async () => {
 			try {
+				const baseURL = `${tenant}.exxforce.com`
 				const res = await fetch(
-					`http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components`,
+					`http://${baseURL}/tenant/payroll-settings/salary-components`,
 					{
 						headers: {
 							Authorization: `Bearer ${localStorage.getItem('access_token')}`,

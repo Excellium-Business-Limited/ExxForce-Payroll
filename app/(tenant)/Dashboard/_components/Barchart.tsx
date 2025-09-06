@@ -59,15 +59,17 @@ export function Component({ className }: { className?: string }) {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
+		setLoading(true)
 		const fetchData = async () => {
 			const token = getAccessToken();
 			const tenant = getTenant();
+			const baseURL = `https://${tenant}.exxforce.com`
 			try {
 				setLoading(true);
 				setError(null);
 
 				const response = await fetch(
-					`http://${tenant}.localhost:8000/tenant/reports/payroll-summary/stacked`,
+					`${baseURL}/tenant/reports/payroll-summary/stacked`,
 					{
 						method: 'GET',
 						headers: {

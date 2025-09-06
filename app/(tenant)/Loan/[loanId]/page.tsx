@@ -54,7 +54,7 @@ export default function LoanDetails({
 
 	useEffect(() => {
 		const tenant = getTenant();
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 
 		const fetchLoan = async () => {
 			try {

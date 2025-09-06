@@ -74,12 +74,13 @@ export const login = async (email: string, password: string) => {
 // 🔽 ADD THIS: Fetch employees from tenant schema
 export async function fetchEmployees(tenant: string) {
   const token = getAccessToken();
+  const baseURL = `https://${tenant}.exxforce.com`;
 
   if (!token) {
     throw new Error("No access token found");
   }
 
-  const apiUrl = `http://${tenant}.${API_BASE_URL.replace('http://', '').replace('https://', '')}/tenant/employee/list`;
+  const apiUrl = `${baseURL}/tenant/employee/list`;
 
   const res = await axios.get(apiUrl, {
     headers: {

@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import React, { useState } from 'react';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { login } from '@/lib/api';
 import { setTenant, saveTokens } from '@/lib/auth';
 

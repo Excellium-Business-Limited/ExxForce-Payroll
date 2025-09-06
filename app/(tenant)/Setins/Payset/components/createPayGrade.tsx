@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import {
 	Table,
 	TableBody,
@@ -54,15 +54,16 @@ const createPayGrade = () => {
 			const tenant = getTenant();
 			try {
 				const token = localStorage.getItem('access_token');
+				const baseURL = `${tenant}.exxforce.com`
 				const [salaryRes, deductionRes] = await Promise.all([
 					axios.get(
-						`http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components`,
+						`https://${baseURL}/tenant/payroll-settings/salary-components`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						}
 					),
 					axios.get(
-						`http://${tenant}.localhost:8000/tenant/payroll-settings/deduction-components`,
+						`https://${baseURL}/tenant/payroll-settings/deduction-components`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						}
@@ -131,8 +132,9 @@ const createPayGrade = () => {
 	const handleSubmit = async () => {
 		try {
 			const token = localStorage.getItem('access_token');
+			const baseURL = `${tenant}.exxforce.com`
 			await axios.post(
-				`http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades/create`,
+				`https://${baseURL}/tenant/payroll-settings/pay-grades/create`,
 				{
 					name,
 					gross_salary: grossSalary,

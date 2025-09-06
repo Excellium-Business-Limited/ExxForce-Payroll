@@ -15,7 +15,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import axios from 'axios';
 import { format, parseISO, isValid } from 'date-fns';
 import SalarySetupForm from './SalarySetupForm';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 
 // Define the Employee interface to match your API
 interface Employee {
@@ -236,10 +236,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	const fetchDepartments = async () => {
 		setLoadingDepartments(true);
 		setDepartmentError('');
+		const baseURL=`${tenant}.exxforce.com`
 		
 		try {
 			const response = await axios.get(
-				`http://${tenant}.localhost:8000/tenant/employee/departments`,
+				`https://${baseURL}/tenant/employee/departments`,
 				{
 					headers: {
 						Authorization: `Bearer ${globalState.accessToken}`,

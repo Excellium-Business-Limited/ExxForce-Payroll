@@ -109,7 +109,7 @@ export default function PieChrt({ className }: { className?: string }) {
 	useEffect(() => {
 		const fetchPayrollData = async () => {
 			const tenant = getTenant()
-			const baseURL = `http://${tenant}.localhost:8000`
+			const baseURL = `https://${tenant}.exxforce.com`;
 			const token = getAccessToken()
 			try {
 				setIsLoading(true);

@@ -20,7 +20,7 @@ import LeaveListDisplay from '../components/LeaveListDisplay'; // Import the Lea
 import LeaveRequestForm from '../components/LeaveRequestForm'; // Import the LeaveRequestForm
 import PayrollBreakdown from '../components/PayrollBreakdown'; // Import the PayrollBreakdown
 import DocumentUploadModal from '../components/DocumentUploadModal'; // Import the DocumentUploadModal
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
 interface Employee {
@@ -245,7 +245,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		}
 		setActiveTab(newTab);
 	};
-  
+
 	// Fetch detailed employee information
 	const fetchEmployeeDetail = async () => {
 		if (!initialEmployee.employee_id || !tenant || !globalState.accessToken)
@@ -253,9 +253,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 		try {
 			setIsLoadingEmployeeDetail(true);
+			const baseURL = `${tenant}.exxforce.com`;
 
 			const response = await axios.get(
-				`http://${tenant}.localhost:8000/tenant/employee/detail/${initialEmployee.employee_id}`,
+				`https://${baseURL}/tenant/employee/detail/${initialEmployee.employee_id}`,
 				{
 					headers: {
 						'Content-Type': 'application/json',
@@ -1659,11 +1660,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 										</div>
 									</div>
 								) : (
-									<PayrollBreakdown
-										employee={employee}
-										onProcessPayroll={handleProcessPayroll}
-										onGeneratePayslip={handleGeneratePayslip}
-									/>
+									// <PayrollBreakdown
+									// 	employee={employee}
+									// 	onProcessPayroll={handleProcessPayroll}
+									// 	onGeneratePayslip={handleGeneratePayslip}
+									// />
+									<div></div>
 								)}
 							</div>
 						)}
@@ -1815,11 +1817,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 						{/* Form Content */}
 						<div className='flex-1 overflow-auto'>
 							<SalarySetupForm
-								isOpen={showSalaryForm}
+								// isOpen={showSalaryForm}
 								isEdit={true}
 								employeeData={employee}
 								onClose={handleCloseSalaryForm}
 								onSubmit={handleSalarySubmit}
+								onBack={function (): void {
+									throw new Error('Function not implemented.');
+								}}
+								parentOnSubmit={function (
+									employeeFormData: any
+								): Promise<void> {
+									throw new Error('Function not implemented.');
+								}}
 							/>
 						</div>
 					</div>
@@ -1931,13 +1941,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 						{/* Form Content */}
 						<div className='flex-1 overflow-auto'>
-							<DocumentUploadModal
+							{/* <DocumentUploadModal
 								isOpen={showDocumentUpload}
 								onClose={handleCloseDocumentUpload}
 								onSubmit={handleDocumentUploadSubmit}
-								employeeId={employee.id?.toString()}
+								employee={employee.id?.toString()}
 								employeeName={`${employee.first_name} ${employee.last_name}`}
-							/>
+							/> */}
 						</div>
 					</div>
 				)}

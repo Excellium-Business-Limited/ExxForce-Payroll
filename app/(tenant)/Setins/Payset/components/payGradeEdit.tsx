@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 

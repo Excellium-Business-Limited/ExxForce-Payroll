@@ -5,459 +5,554 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectTrigger,
-    SelectValue,
-    SelectItem,
+	Select,
+	SelectContent,
+	SelectTrigger,
+	SelectValue,
+	SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
 interface SalarySetupFormProps {
-    employeeData: any;
-    isEdit?: boolean;
-    existingEmployeeId?: number;
-    onClose: () => void;
-    onSubmit: (salaryData: any) => Promise<void>;
-    onBack: () => void;
-    parentOnSubmit: (employeeFormData: any) => Promise<void>;
+	employeeData: any;
+	isEdit?: boolean;
+	existingEmployeeId?: number;
+	onClose: () => void;
+	onSubmit: (salaryData: any) => Promise<void>;
+	onBack: () => void;
+	parentOnSubmit: (employeeFormData: any) => Promise<void>;
 }
 
 interface SalaryFormData {
-    payGradeName: string;
-    payFrequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
-    customSalary: number;
-    bankName: string;
-    accountNumber: string;
-    accountName: string;
-    isPayeApplicable: boolean;
-    isPensionApplicable: boolean;
-    isNhfApplicable: boolean;
-    isNsitfApplicable: boolean;
+	payGradeName: string;
+	payFrequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
+	customSalary: number;
+	bankName: string;
+	accountNumber: string;
+	accountName: string;
+	isPayeApplicable: boolean;
+	isPensionApplicable: boolean;
+	isNhfApplicable: boolean;
+	isNsitfApplicable: boolean;
 }
 
 interface PayGrade {
-    id: number;
-    name: string;
-    base_salary?: number;
-    gross_salary?: number;
-    // Add other pay grade properties as needed
+	id: number;
+	name: string;
+	base_salary?: number;
+	gross_salary?: number;
+	// Add other pay grade properties as needed
 }
 
 const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
-    employeeData,
-    isEdit = false,
-    existingEmployeeId,
-    onClose,
-    onSubmit,
-    onBack,
-    parentOnSubmit
+	employeeData,
+	isEdit = false,
+	existingEmployeeId,
+	onClose,
+	onSubmit,
+	onBack,
 }) => {
-    const { tenant, globalState } = useGlobal();
-    const [formData, setFormData] = useState<SalaryFormData>({
-        payGradeName: '',
-        payFrequency: 'MONTHLY',
-        customSalary: 0,
-        bankName: '',
-        accountNumber: '',
-        accountName: '',
-        isPayeApplicable: true,
-        isPensionApplicable: true,
-        isNhfApplicable: true,
-        isNsitfApplicable: true,
-    });
+	const { tenant, globalState } = useGlobal();
+	const [formData, setFormData] = useState<SalaryFormData>({
+		payGradeName: '',
+		payFrequency: 'MONTHLY',
+		customSalary: 0,
+		bankName: '',
+		accountNumber: '',
+		accountName: '',
+		isPayeApplicable: true,
+		isPensionApplicable: true,
+		isNhfApplicable: true,
+		isNsitfApplicable: true,
+	});
 
-    const [payGrades, setPayGrades] = useState<PayGrade[]>([]);
-    const [isLoadingPayGrades, setIsLoadingPayGrades] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+	const [payGrades, setPayGrades] = useState<PayGrade[]>([]);
+	const [isLoadingPayGrades, setIsLoadingPayGrades] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch pay grades from API
-    const fetchPayGrades = async () => {
-        setIsLoadingPayGrades(true);
-        try {
-            const response = await axios.get(
-                `http://${tenant}.localhost:8000/tenant/payroll-settings/pay-grades`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${globalState.accessToken}`,
-                    }
-                }
-            );
-            
-            console.log('Pay grades fetched:', response.data);
-            setPayGrades(response.data.data || response.data || []);
-        } catch (error) {
-            console.error('Error fetching pay grades:', error);
-            // Don't show alert for this error as it's not critical
-            setPayGrades([]);
-        } finally {
-            setIsLoadingPayGrades(false);
-        }
-    };
+	// Fetch pay grades from API
+	const fetchPayGrades = async () => {
+		setIsLoadingPayGrades(true);
+		const baseURL = `${tenant}.exxforce.com`;
+		try {
+			const response = await axios.get(
+				`https://${baseURL}/tenant/payroll-settings/pay-grades`,
+				{
+					headers: {
+						Authorization: `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
 
-    // Pre-populate account name with employee's full name and fetch pay grades
-    useEffect(() => {
-        if (employeeData) {
-            setFormData(prev => ({
-                ...prev,
-                accountName: `${employeeData.first_name} ${employeeData.last_name}`.trim()
-            }));
-        }
-        
-        fetchPayGrades();
-    }, [employeeData, tenant, globalState.accessToken]);
+			console.log('Pay grades fetched:', response.data);
+			setPayGrades(response.data.data || response.data || []);
+		} catch (error) {
+			console.error('Error fetching pay grades:', error);
+			// Don't show alert for this error as it's not critical
+			setPayGrades([]);
+		} finally {
+			setIsLoadingPayGrades(false);
+		}
+	};
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [id]: type === 'number' ? parseFloat(value) || 0 : value
-        }));
-    };
+	// Pre-populate account name with employee's full name and fetch pay grades
+	useEffect(() => {
+		if (employeeData) {
+			setFormData((prev) => ({
+				...prev,
+				accountName:
+					`${employeeData.first_name} ${employeeData.last_name}`.trim(),
+			}));
+		}
 
-    const handleSelectChange = (key: keyof SalaryFormData, value: string) => {
-        setFormData(prev => ({ ...prev, [key]: value }));
-    };
+		fetchPayGrades();
+	}, [employeeData, tenant, globalState.accessToken]);
 
-    const handlePayGradeChange = (value: string) => {
-        setFormData(prev => ({ ...prev, payGradeName: value }));
-        
-        // If a pay grade with gross_salary is selected, update the salary field
-        if (value && value !== 'no-paygrade') {
-            const selectedPayGrade = payGrades.find(pg => pg.name === value);
-            if (selectedPayGrade && selectedPayGrade.gross_salary) {
-                setFormData(prev => ({ 
-                    ...prev, 
-                    customSalary: selectedPayGrade.gross_salary || 0
-                }));
-            }
-        } else if (value === 'no-paygrade') {
-            // Reset salary to 0 when no pay grade is selected
-            setFormData(prev => ({ ...prev, customSalary: 0 }));
-        }
-    };
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { id, value, type } = e.target;
+		setFormData((prev) => ({
+			...prev,
+			[id]: type === 'number' ? parseFloat(value) || 0 : value,
+		}));
+	};
 
-    const handleCheckboxChange = (key: keyof SalaryFormData, checked: boolean) => {
-        setFormData(prev => ({ ...prev, [key]: checked }));
-    };
+	const handleSelectChange = (key: keyof SalaryFormData, value: string) => {
+		setFormData((prev) => ({ ...prev, [key]: value }));
+	};
 
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            minimumFractionDigits: 0
-        }).format(amount);
-    };
+	const handlePayGradeChange = (value: string) => {
+		setFormData((prev) => ({ ...prev, payGradeName: value }));
 
-    const getEmploymentTypeDisplay = (type: string): string => {
-        switch (type) {
-            case 'FULL_TIME': return 'Full Time';
-            case 'PART_TIME': return 'Part Time';
-            case 'CONTRACT': return 'Contract';
-            case 'INTERN': return 'Intern';
-            default: return type;
-        }
-    };
+		// If a pay grade with gross_salary is selected, update the salary field
+		if (value && value !== 'no-paygrade') {
+			const selectedPayGrade = payGrades.find((pg) => pg.name === value);
+			if (selectedPayGrade && selectedPayGrade.gross_salary) {
+				setFormData((prev) => ({
+					...prev,
+					customSalary: selectedPayGrade.gross_salary || 0,
+				}));
+			}
+		} else if (value === 'no-paygrade') {
+			// Reset salary to 0 when no pay grade is selected
+			setFormData((prev) => ({ ...prev, customSalary: 0 }));
+		}
+	};
 
-    const getDeductionsText = (): string => {
-        const deductions = [];
-        if (formData.isPayeApplicable) deductions.push('PAYE');
-        if (formData.isPensionApplicable) deductions.push('Pension');
-        if (formData.isNhfApplicable) deductions.push('NHF');
-        if (formData.isNsitfApplicable) deductions.push('NSITF');
-        return deductions.length > 0 ? deductions.join(', ') : 'None';
-    };
+	const handleCheckboxChange = (
+		key: keyof SalaryFormData,
+		checked: boolean
+	) => {
+		setFormData((prev) => ({ ...prev, [key]: checked }));
+	};
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        // Basic validation - removed payGradeName from required fields since it can be empty
-        const requiredFields = ['payFrequency', 'customSalary', 'bankName', 'accountNumber', 'accountName'];
-        const missingFields = requiredFields.filter(field => {
-            const value = formData[field as keyof SalaryFormData];
-            return !value || (typeof value === 'string' && value.trim() === '');
-        });
+	const formatCurrency = (amount: number): string => {
+		return new Intl.NumberFormat('en-NG', {
+			style: 'currency',
+			currency: 'NGN',
+			minimumFractionDigits: 0,
+		}).format(amount);
+	};
 
-        if (missingFields.length > 0) {
-            alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
-            return;
-        }
+	const getEmploymentTypeDisplay = (type: string): string => {
+		switch (type) {
+			case 'FULL_TIME':
+				return 'Full Time';
+			case 'PART_TIME':
+				return 'Part Time';
+			case 'CONTRACT':
+				return 'Contract';
+			case 'INTERN':
+				return 'Intern';
+			default:
+				return type;
+		}
+	};
 
-        setIsSubmitting(true);
+	const getDeductionsText = (): string => {
+		const deductions = [];
+		if (formData.isPayeApplicable) deductions.push('PAYE');
+		if (formData.isPensionApplicable) deductions.push('Pension');
+		if (formData.isNhfApplicable) deductions.push('NHF');
+		if (formData.isNsitfApplicable) deductions.push('NSITF');
+		return deductions.length > 0 ? deductions.join(', ') : 'None';
+	};
 
-        try {
-            // Prepare salary data for API
-            // Send empty string for pay grade if "no-paygrade" is selected
-            const payGradeValue = formData.payGradeName === 'no-paygrade' ? '' : formData.payGradeName;
-            
-            const salaryData = {
-                pay_grade_name: payGradeValue,
-                pay_frequency: formData.payFrequency,
-                custom_salary: formData.customSalary,
-                bank_name: formData.bankName,
-                account_number: formData.accountNumber,
-                account_name: formData.accountName,
-                is_paye_applicable: formData.isPayeApplicable,
-                is_pension_applicable: formData.isPensionApplicable,
-                is_nhf_applicable: formData.isNhfApplicable,
-                is_nsitf_applicable: formData.isNsitfApplicable
-            };
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-            console.log('Submitting salary data for employee_id:', employeeData.employee_id, salaryData);
+		// Basic validation - removed payGradeName from required fields since it can be empty
+		const requiredFields = [
+			'payFrequency',
+			'customSalary',
+			'bankName',
+			'accountNumber',
+			'accountName',
+		];
+		const missingFields = requiredFields.filter((field) => {
+			const value = formData[field as keyof SalaryFormData];
+			return !value || (typeof value === 'string' && value.trim() === '');
+		});
 
-            // Update the existing employee with salary data using employee_id (not numeric id)
-            const response = await axios.put(
-                `http://${tenant}.localhost:8000/tenant/employee/update/${employeeData.employee_id}`,
-                salaryData,
-                { 
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${globalState.accessToken}`,
-                    } 
-                }
-            );
+		if (missingFields.length > 0) {
+			alert(
+				`Please fill in the following required fields: ${missingFields.join(
+					', '
+				)}`
+			);
+			return;
+		}
 
-            console.log('Employee updated with salary data:', response.data);
-            
-            // Call the salary form's onSubmit
-            await onSubmit(salaryData);
+		setIsSubmitting(true);
 
-            console.log('Success! Salary data saved.');
-            alert('Salary information updated successfully!');
-            onClose();
+		try {
+			// Prepare salary data for API
+			// Send empty string for pay grade if "no-paygrade" is selected
+			const payGradeValue =
+				formData.payGradeName === 'no-paygrade' ? '' : formData.payGradeName;
 
-        } catch (error) {
-            console.error('Error saving salary data:', error);
-            
-            if (axios.isAxiosError(error)) {
-                console.error('Response status:', error.response?.status);
-                console.error('Response data:', error.response?.data);
-                
-                if (error.response?.status === 422) {
-                    alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
-                } else {
-                    alert(`Failed to save salary data: ${error.response?.data?.message || error.message}`);
-                }
-            } else {
-                alert('Failed to save salary data: Unknown error');
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+			const salaryData = {
+				pay_grade_name: payGradeValue,
+				pay_frequency: formData.payFrequency,
+				custom_salary: formData.customSalary,
+				bank_name: formData.bankName,
+				account_number: formData.accountNumber,
+				account_name: formData.accountName,
+				is_paye_applicable: formData.isPayeApplicable,
+				is_pension_applicable: formData.isPensionApplicable,
+				is_nhf_applicable: formData.isNhfApplicable,
+				is_nsitf_applicable: formData.isNsitfApplicable,
+			};
 
-    return (
-        <div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
-            <div className='mb-8'>
-                <div className='flex items-center gap-4 mb-4'>
-                    <Button
-                        type='button'
-                        variant='ghost'
-                        onClick={onBack}
-                        className='p-2 hover:bg-gray-100 rounded-full'
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                    </Button>
-                    <div>
-                        <h1 className='text-2xl font-bold'>Salary Setup</h1>
-                        <p className='text-sm text-muted-foreground'>
-                            Configure salary and bank details for {employeeData?.first_name} {employeeData?.last_name}
-                        </p>
-                    </div>
-                </div>
-            </div>
+			console.log(
+				'Submitting salary data for employee_id:',
+				employeeData.employee_id,
+				salaryData
+			);
 
-            <form onSubmit={handleSubmit} className='space-y-8'>
-                <div className='space-y-4'>
-                    <Label htmlFor='payGradeName'>Pay grade</Label>
-                    <Select 
-                        value={formData.payGradeName}
-                        onValueChange={handlePayGradeChange}
-                        disabled={isLoadingPayGrades}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder={
-                                isLoadingPayGrades 
-                                    ? 'Loading pay grades...' 
-                                    : 'Select a pay grade or choose no pay grade'
-                            } />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="no-paygrade">
-                                <div className="flex flex-col">
-                                    <span>No Pay Grade</span>
-                                    <span className="text-xs text-muted-foreground">Employee has no assigned pay grade</span>
-                                </div>
-                            </SelectItem>
-                            {payGrades.map((payGrade) => (
-                                <SelectItem key={payGrade.id} value={payGrade.name}>
-                                    <div className="flex flex-col">
-                                        <span>{payGrade.name}</span>
-                                        {payGrade.gross_salary && (
-                                            <span className="text-xs text-muted-foreground">
-                                                Gross: {formatCurrency(payGrade.gross_salary)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <p className='text-xs text-muted-foreground'>
-                        Pay grades are templates for employees with the same pay components. You can select an existing pay grade or choose "No Pay Grade" for custom salary arrangements.
-                    </p>
-                </div>
+			// Update the existing employee with salary data using employee_id (not numeric id)
+			const baseURL = `${tenant}.exxforce.com`;
+			const response = await axios.put(
+				`https://${baseURL}/tenant/employee/update/${employeeData.employee_id}`,
+				salaryData,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                    <div className='space-y-2'>
-                        <Label>Pay Frequency</Label>
-                        <Select 
-                            value={formData.payFrequency}
-                            onValueChange={(val) => handleSelectChange('payFrequency', val as 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY')}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder='Select pay frequency' />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value='MONTHLY'>Monthly</SelectItem>
-                                <SelectItem value='BIWEEKLY'>Bi-weekly</SelectItem>
-                                <SelectItem value='WEEKLY'>Weekly</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <p className='text-xs text-muted-foreground'>
-                            Pay frequency determines how the salary is split and paid out.
-                        </p>
-                    </div>
+			console.log('Employee updated with salary data:', response.data);
 
-                    <div className='space-y-2'>
-                        
-                        <p className='text-xs text-muted-foreground'>
-                            
-                            {formData.payGradeName && formData.payGradeName !== 'no-paygrade' && (
-                                <span className="block text-blue-600">Salary is set by selected pay grade</span>
-                            )}
-                        </p>
-                    </div>
-                </div>
+			// Call the salary form's onSubmit
+			await onSubmit(salaryData);
 
-                <div className='space-y-4'>
-                    <h2 className='text-lg font-semibold'>Bank Details</h2>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                        <div className='space-y-2'>
-                            <Label htmlFor='bankName'>Bank name</Label>
-                            <Input 
-                                id='bankName' 
-                                value={formData.bankName}
-                                onChange={handleInputChange}
-                                placeholder="Enter bank name (e.g., Access Bank, Zenith Bank)"
-                                required 
-                            />
-                        </div>
+			console.log('Success! Salary data saved.');
+			alert('Salary information updated successfully!');
+			onClose();
+		} catch (error) {
+			console.error('Error saving salary data:', error);
 
-                        <div className='space-y-2'>
-                            <Label htmlFor='accountNumber'>Account number</Label>
-                            <Input 
-                                id='accountNumber' 
-                                value={formData.accountNumber}
-                                onChange={handleInputChange}
-                                maxLength={10}
-                                pattern="[0-9]{10}"
-                                placeholder="Enter 10-digit account number"
-                                required 
-                            />
-                        </div>
+			if (axios.isAxiosError(error)) {
+				console.error('Response status:', error.response?.status);
+				console.error('Response data:', error.response?.data);
 
-                        <div className='space-y-2 md:col-span-2'>
-                            <Label htmlFor='accountName'>Account name</Label>
-                            <Input 
-                                id='accountName' 
-                                value={formData.accountName}
-                                onChange={handleInputChange}
-                                required 
-                            />
-                        </div>
-                    </div>
-                </div>
+				if (error.response?.status === 422) {
+					alert(
+						`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`
+					);
+				} else {
+					alert(
+						`Failed to save salary data: ${
+							error.response?.data?.message || error.message
+						}`
+					);
+				}
+			} else {
+				alert('Failed to save salary data: Unknown error');
+			}
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
-                <div className='space-y-4'>
-                    <h2 className='text-lg font-semibold'>Tax & Deductions</h2>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                        <div className='flex items-center space-x-2'>
-                            <Checkbox 
-                                id='isPayeApplicable'
-                                checked={formData.isPayeApplicable}
-                                onCheckedChange={(checked) => handleCheckboxChange('isPayeApplicable', checked as boolean)}
-                            />
-                            <Label htmlFor='isPayeApplicable'>PAYE (Pay As You Earn)</Label>
-                        </div>
+	return (
+		<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
+			<div className='mb-8'>
+				<div className='flex items-center gap-4 mb-4'>
+					<Button
+						type='button'
+						variant='ghost'
+						onClick={onBack}
+						className='p-2 hover:bg-gray-100 rounded-full'>
+						<svg
+							className='w-5 h-5'
+							viewBox='0 0 24 24'
+							fill='none'>
+							<path
+								d='M15 18L9 12L15 6'
+								stroke='currentColor'
+								strokeWidth='2'
+								strokeLinecap='round'
+								strokeLinejoin='round'
+							/>
+						</svg>
+					</Button>
+					<div>
+						<h1 className='text-2xl font-bold'>Salary Setup</h1>
+						<p className='text-sm text-muted-foreground'>
+							Configure salary and bank details for {employeeData?.first_name}{' '}
+							{employeeData?.last_name}
+						</p>
+					</div>
+				</div>
+			</div>
 
-                        <div className='flex items-center space-x-2'>
-                            <Checkbox 
-                                id='isPensionApplicable'
-                                checked={formData.isPensionApplicable}
-                                onCheckedChange={(checked) => handleCheckboxChange('isPensionApplicable', checked as boolean)}
-                            />
-                            <Label htmlFor='isPensionApplicable'>Pension Contribution</Label>
-                        </div>
+			<form
+				onSubmit={handleSubmit}
+				className='space-y-8'>
+				<div className='space-y-4'>
+					<Label htmlFor='payGradeName'>Pay grade</Label>
+					<Select
+						value={formData.payGradeName}
+						onValueChange={handlePayGradeChange}
+						disabled={isLoadingPayGrades}>
+						<SelectTrigger>
+							<SelectValue
+								placeholder={
+									isLoadingPayGrades
+										? 'Loading pay grades...'
+										: 'Select a pay grade or choose no pay grade'
+								}
+							/>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value='no-paygrade'>
+								<div className='flex flex-col'>
+									<span>No Pay Grade</span>
+									<span className='text-xs text-muted-foreground'>
+										Employee has no assigned pay grade
+									</span>
+								</div>
+							</SelectItem>
+							{payGrades.map((payGrade) => (
+								<SelectItem
+									key={payGrade.id}
+									value={payGrade.name}>
+									<div className='flex flex-col'>
+										<span>{payGrade.name}</span>
+										{payGrade.gross_salary && (
+											<span className='text-xs text-muted-foreground'>
+												Gross: {formatCurrency(payGrade.gross_salary)}
+											</span>
+										)}
+									</div>
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<p className='text-xs text-muted-foreground'>
+						Pay grades are templates for employees with the same pay components.
+						You can select an existing pay grade or choose "No Pay Grade" for
+						custom salary arrangements.
+					</p>
+				</div>
 
-                        <div className='flex items-center space-x-2'>
-                            <Checkbox 
-                                id='isNhfApplicable'
-                                checked={formData.isNhfApplicable}
-                                onCheckedChange={(checked) => handleCheckboxChange('isNhfApplicable', checked as boolean)}
-                            />
-                            <Label htmlFor='isNhfApplicable'>NHF (National Housing Fund)</Label>
-                        </div>
+				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+					<div className='space-y-2'>
+						<Label>Pay Frequency</Label>
+						<Select
+							value={formData.payFrequency}
+							onValueChange={(val) =>
+								handleSelectChange(
+									'payFrequency',
+									val as 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY'
+								)
+							}>
+							<SelectTrigger>
+								<SelectValue placeholder='Select pay frequency' />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value='MONTHLY'>Monthly</SelectItem>
+								<SelectItem value='BIWEEKLY'>Bi-weekly</SelectItem>
+								<SelectItem value='WEEKLY'>Weekly</SelectItem>
+							</SelectContent>
+						</Select>
+						<p className='text-xs text-muted-foreground'>
+							Pay frequency determines how the salary is split and paid out.
+						</p>
+					</div>
 
-                        <div className='flex items-center space-x-2'>
-                            <Checkbox 
-                                id='isNsitfApplicable'
-                                checked={formData.isNsitfApplicable}
-                                onCheckedChange={(checked) => handleCheckboxChange('isNsitfApplicable', checked as boolean)}
-                            />
-                            <Label htmlFor='isNsitfApplicable'>NSITF (Industrial Training Fund)</Label>
-                        </div>
-                    </div>
-                </div>
+					<div className='space-y-2'>
+						<p className='text-xs text-muted-foreground'>
+							{formData.payGradeName &&
+								formData.payGradeName !== 'no-paygrade' && (
+									<span className='block text-blue-600'>
+										Salary is set by selected pay grade
+									</span>
+								)}
+						</p>
+					</div>
+				</div>
 
-                <div className='rounded-md bg-blue-50 p-4 space-y-1 text-sm'>
-                    <h3 className='font-semibold text-blue-700'>Summary</h3>
-                    <p><span className='font-medium'>Employee</span>: {employeeData?.first_name} {employeeData?.last_name}</p>
-                    <p><span className='font-medium'>Position</span>: {employeeData?.job_title}</p>
-                    <p><span className='font-medium'>Employment Type</span>: {getEmploymentTypeDisplay(employeeData?.employment_type)}</p>
-                    <p><span className='font-medium'>Pay Grade</span>: {formData.payGradeName === 'no-paygrade' ? 'No Pay Grade' : formData.payGradeName || 'Not selected'}</p>
-                    <p><span className='font-medium'>Salary</span>: {formatCurrency(formData.customSalary)}</p>
-                    <p><span className='font-medium'>Pay Frequency</span>: {formData.payFrequency.charAt(0) + formData.payFrequency.slice(1).toLowerCase().replace('_', '-')}</p>
-                    <p><span className='font-medium'>Deductions</span>: {getDeductionsText()}</p>
-                    <p><span className='font-medium'>Bank</span>: {formData.bankName}</p>
-                    <p><span className='font-medium'>Account</span>: {formData.accountNumber} - {formData.accountName}</p>
-                </div>
+				<div className='space-y-4'>
+					<h2 className='text-lg font-semibold'>Bank Details</h2>
+					<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+						<div className='space-y-2'>
+							<Label htmlFor='bankName'>Bank name</Label>
+							<Input
+								id='bankName'
+								value={formData.bankName}
+								onChange={handleInputChange}
+								placeholder='Enter bank name (e.g., Access Bank, Zenith Bank)'
+								required
+							/>
+						</div>
 
-                <div className='flex justify-end gap-4 pt-4'>
-                    <Button 
-                        variant='outline' 
-                        type='button' 
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                        className='text-muted-foreground'
-                    >
-                        Close
-                    </Button>
-                    <Button 
-                        type='submit' 
-                        disabled={isSubmitting || isLoadingPayGrades}
-                        className='bg-[#3D56A8] hover:bg-[#2E4299]'
-                    >
-                        {isSubmitting ? 'Saving...' : 'Save Salary Details'}
-                    </Button>
-                </div>
-            </form>
-        </div>
-    );
+						<div className='space-y-2'>
+							<Label htmlFor='accountNumber'>Account number</Label>
+							<Input
+								id='accountNumber'
+								value={formData.accountNumber}
+								onChange={handleInputChange}
+								maxLength={10}
+								pattern='[0-9]{10}'
+								placeholder='Enter 10-digit account number'
+								required
+							/>
+						</div>
+
+						<div className='space-y-2 md:col-span-2'>
+							<Label htmlFor='accountName'>Account name</Label>
+							<Input
+								id='accountName'
+								value={formData.accountName}
+								onChange={handleInputChange}
+								required
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div className='space-y-4'>
+					<h2 className='text-lg font-semibold'>Tax & Deductions</h2>
+					<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+						<div className='flex items-center space-x-2'>
+							<Checkbox
+								id='isPayeApplicable'
+								checked={formData.isPayeApplicable}
+								onCheckedChange={(checked) =>
+									handleCheckboxChange('isPayeApplicable', checked as boolean)
+								}
+							/>
+							<Label htmlFor='isPayeApplicable'>PAYE (Pay As You Earn)</Label>
+						</div>
+
+						<div className='flex items-center space-x-2'>
+							<Checkbox
+								id='isPensionApplicable'
+								checked={formData.isPensionApplicable}
+								onCheckedChange={(checked) =>
+									handleCheckboxChange(
+										'isPensionApplicable',
+										checked as boolean
+									)
+								}
+							/>
+							<Label htmlFor='isPensionApplicable'>Pension Contribution</Label>
+						</div>
+
+						<div className='flex items-center space-x-2'>
+							<Checkbox
+								id='isNhfApplicable'
+								checked={formData.isNhfApplicable}
+								onCheckedChange={(checked) =>
+									handleCheckboxChange('isNhfApplicable', checked as boolean)
+								}
+							/>
+							<Label htmlFor='isNhfApplicable'>
+								NHF (National Housing Fund)
+							</Label>
+						</div>
+
+						<div className='flex items-center space-x-2'>
+							<Checkbox
+								id='isNsitfApplicable'
+								checked={formData.isNsitfApplicable}
+								onCheckedChange={(checked) =>
+									handleCheckboxChange('isNsitfApplicable', checked as boolean)
+								}
+							/>
+							<Label htmlFor='isNsitfApplicable'>
+								NSITF (Industrial Training Fund)
+							</Label>
+						</div>
+					</div>
+				</div>
+
+				<div className='rounded-md bg-blue-50 p-4 space-y-1 text-sm'>
+					<h3 className='font-semibold text-blue-700'>Summary</h3>
+					<p>
+						<span className='font-medium'>Employee</span>:{' '}
+						{employeeData?.first_name} {employeeData?.last_name}
+					</p>
+					<p>
+						<span className='font-medium'>Position</span>:{' '}
+						{employeeData?.job_title}
+					</p>
+					<p>
+						<span className='font-medium'>Employment Type</span>:{' '}
+						{getEmploymentTypeDisplay(employeeData?.employment_type)}
+					</p>
+					<p>
+						<span className='font-medium'>Pay Grade</span>:{' '}
+						{formData.payGradeName === 'no-paygrade'
+							? 'No Pay Grade'
+							: formData.payGradeName || 'Not selected'}
+					</p>
+					<p>
+						<span className='font-medium'>Salary</span>:{' '}
+						{formatCurrency(formData.customSalary)}
+					</p>
+					<p>
+						<span className='font-medium'>Pay Frequency</span>:{' '}
+						{formData.payFrequency.charAt(0) +
+							formData.payFrequency.slice(1).toLowerCase().replace('_', '-')}
+					</p>
+					<p>
+						<span className='font-medium'>Deductions</span>:{' '}
+						{getDeductionsText()}
+					</p>
+					<p>
+						<span className='font-medium'>Bank</span>: {formData.bankName}
+					</p>
+					<p>
+						<span className='font-medium'>Account</span>:{' '}
+						{formData.accountNumber} - {formData.accountName}
+					</p>
+				</div>
+
+				<div className='flex justify-end gap-4 pt-4'>
+					<Button
+						variant='outline'
+						type='button'
+						onClick={onClose}
+						disabled={isSubmitting}
+						className='text-muted-foreground'>
+						Close
+					</Button>
+					<Button
+						type='submit'
+						disabled={isSubmitting || isLoadingPayGrades}
+						className='bg-[#3D56A8] hover:bg-[#2E4299]'>
+						{isSubmitting ? 'Saving...' : 'Save Salary Details'}
+					</Button>
+				</div>
+			</form>
+		</div>
+	);
 };
 
 export default SalarySetupForm;

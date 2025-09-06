@@ -7,7 +7,7 @@ import ImportModal from '../components/Import';
 import EmployeeDetails from '../components/EmployeeDetails';
 import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { getAccessToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Loading from '@/components/ui/Loading';

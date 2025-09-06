@@ -190,7 +190,10 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       console.error('Error submitting leave request:', error);
       
       if (axios.isAxiosError(error)) {
-        console.error('Request that failed:', JSON.stringify(submitData, null, 2));
+        // console.error(
+				// 	'Request that failed:',
+				// 	JSON.stringify(submitData, null, 2)
+				// );
         console.error('Response status:', error.response?.status);
         console.error('Response data:', error.response?.data);
         

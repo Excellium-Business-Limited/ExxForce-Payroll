@@ -18,7 +18,7 @@ import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import { fetchEmployees } from '@/lib/api';
-import  { useGlobal } from '@/app/Context/page';
+import  { useGlobal } from '@/app/Context/context';
 import { set } from 'date-fns';
 import Loading from '@/components/ui/Loading';
 
@@ -47,7 +47,7 @@ const Dashboard = () => {
 		const fetchPayrollData = async () => {
 			const tenant = getTenant()
 			setTnt(tenant)
-			const baseURL = `http://${tenant}.localhost:8000`
+			const baseURL = `https://${tenant}.exxforce.com`;
 			const token = getAccessToken()
 			try {
 				setIsLoading(true);
