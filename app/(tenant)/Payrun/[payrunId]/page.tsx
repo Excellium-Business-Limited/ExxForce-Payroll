@@ -18,7 +18,7 @@ import { EllipsisVertical, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import axios from 'axios';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 import { getAccessToken, getTenant } from '@/lib/auth';
 // import { Router } from 'next/router';
 import { useRouter } from 'next/navigation';
