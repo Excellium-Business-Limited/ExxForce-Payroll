@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
 import styles from './payGradeDetail.module.css';
-import { useGlobal } from '@/app/Context/page';
+import { useGlobal } from '@/app/Context/context';
 
 interface ComponentDetail {
 	component_name: string;

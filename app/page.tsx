@@ -260,8 +260,70 @@ export default function Home() {
 						reducing errors, and keeping your team happy with timely, accurate
 						pay.
 					</p>
+					<img
+						src='/homeimage.jpg'
+						alt='Team Illustration'
+						className='w-[483px] h-[483px] opacity-100 object-cover mt-6'
+					/>
 				</div>
-				<div></div>
+				<div className='grid grid-cols-2 grid-rows-2 h-fit gap-1'>
+					<Card className='p-4 m-2 h-[214px] justify-start'>
+						<img
+							src='/money-bag.png'
+							alt=''
+							className='h-8 w-8 p-1 bg-[#758cd5] rounded-xl'
+						/>
+						<h3 className='text-[#707478] max-w-2xl mt-2 font-bold'>
+							Easy Salary Updates
+						</h3>
+						<p className='text-xs text-muted-foreground'>
+							Quickly update salaries, bonuses, and adjustments with just a few
+							clicks.
+						</p>
+					</Card>
+					<Card className='p-4 m-2 h-[214px] justify-start'>
+						<img
+							src='/money-bag.png'
+							alt=''
+							className='h-8 w-8 p-1 bg-[#758cd5] rounded-xl'
+						/>
+						<h3 className='text-[#707478]  max-w-2xl mt-2 font-bold'>
+							Configureable Work Calenders
+						</h3>
+						<p className='text-xs text-muted-foreground'>
+							Set up custom work calendars to handle various work schedules and
+							holidays.
+						</p>
+					</Card>
+					<Card className='p-2 m-2 h-[214px] justify-start'>
+						<img
+							src='/money-bag.png'
+							alt=''
+							className='h-8 w-8 p-1 bg-[#758cd5] rounded-xl'
+						/>
+						<h3 className='text-[#707478]  max-w-2xl mt-2 font-bold'>
+							Advanced Reporting
+						</h3>
+						<p className='text-xs text-muted-foreground'>
+							Generate detailed reports for payroll history, tax filings, cost
+							centers, and compliance.
+						</p>
+					</Card>
+					<Card className='p-2 m-2 h-[214px] justify-start'>
+						<img
+							src='/money-bag.png'
+							alt=''
+							className='h-8 w-8 p-1 bg-[#758cd5] rounded-xl'
+						/>
+						<h3 className='text-[#707478]  max-w-2xl mt-2 font-bold'>
+							Flexible Deductions/Benefits Setup
+						</h3>
+						<p className='text-xs text-muted-foreground'>
+							Create custom deductions and benefits tailored to your company
+							policies.
+						</p>
+					</Card>
+				</div>
 			</section>
 			<section></section>
 			<section></section>
