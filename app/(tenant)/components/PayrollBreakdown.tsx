@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Edit2, FileText, DollarSign } from 'lucide-react';
-import { SalaryCalculator } from './SalaryCalculator';
+import SalaryCalculator from './SalaryCalculator';
 // import SalaryCalculator, { calculateNetSalary } from './SalaryCalculator';
 
 
@@ -454,7 +454,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                   </button>
                 </div>
 
-                {showCalculator && (
+                {/* {showCalculator && (
                   <SalaryCalculator
                     employee={{
                       ...employee,
@@ -466,7 +466,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                     showDetailedBreakdown={false}
                     className=""
                   />
-                )}
+                )} */}
 
                 {/* Quick Net Salary Display */}
                 {netCalculation && (

@@ -18,7 +18,8 @@ import axios from 'axios';
 import { useGlobal } from '@/app/Context/context';
 
 // Import the SalaryCalculator component
-import { SalaryCalculator, calculateNetSalary } from './SalaryCalculator';
+// import { SalaryCalculator, calculateNetSalary } from './SalaryCalculator';
+import SalaryCalculator from './SalaryCalculator';
 
 type ComponentType = "earning" | "deduction" | "benefit";
 

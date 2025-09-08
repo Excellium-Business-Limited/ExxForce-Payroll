@@ -1,5 +1,5 @@
 // hooks/useSalaryCalculator.ts
-import { useState, useCallback, useMemo, useReducer } from 'react';
+import { useState, useCallback, useMemo, useReducer, useEffect } from 'react';
 import { Employee, SalaryComponent, NetSalaryCalculation } from '../types/employee';
 import { calculateNetSalaryDetailed } from '../utils/salaryCalculations';
 import { validateSalaryInput, sanitizeEmployee } from '../utils/validation';
@@ -143,7 +143,7 @@ export const useSalaryCalculator = ({
   }, [grossSalary]);
 
   // Set initial show details state
-  React.useEffect(() => {
+  useEffect(() => {
     dispatch({ type: 'SET_SHOW_DETAILS', payload: showDetailedBreakdown });
   }, [showDetailedBreakdown]);
 

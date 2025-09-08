@@ -196,32 +196,51 @@ interface PayScheduleData {
 	is_active: boolean;
 }
 
+interface PayTempFormProps {
+	initialData?: {
+		name: string;
+		pay_period: string;
+		start_day: number;
+		payment_rule: string;
+		payment_day: number;
+		week_start_day: number;
+		is_active: boolean;
+	};
+	onSubmit: (data: any) => void;
+	onCancel: () => void;
+	isEditing: boolean;
+}
 
-const payTempForm = () => {
-    function setShowForm(arg0: boolean) {
-        throw new Error('Function not implemented.');
-    }
 
-    function handleSubmit(e:any): void {
-        throw new Error('Function not implemented.');
-    }
+const PayTempForm: React.FC<PayTempFormProps> = ({
+	initialData,
+	onSubmit,
+	onCancel,
+	isEditing,
+}) => {
+	function setShowForm(arg0: boolean) {
+		throw new Error('Function not implemented.');
+	}
 
-    function handleInputChange(p0: string, value: string) {
-        throw new Error('Function not implemented.');
-    }
+	function handleSubmit(e: any): void {
+		throw new Error('Function not implemented.');
+	}
 
-    const [payScheduleData, setPayScheduleData] = useState<PayScheduleData>({
-        name:'',
-        pay_period: '',
-        start_day: 0,
-        payment_rule: '',
-        payment_day: 0,
-        week_start_day: 0,
-        is_active: false,
-        
-    })
+	function handleInputChange(p0: string, value: string) {
+		throw new Error('Function not implemented.');
+	}
 
-  return (
+	const [payScheduleData, setPayScheduleData] = useState<PayScheduleData>({
+		name: '',
+		pay_period: '',
+		start_day: 0,
+		payment_rule: '',
+		payment_day: 0,
+		week_start_day: 0,
+		is_active: false,
+	});
+
+	return (
 		<div className='p-6 max-w-2xl mx-auto'>
 			<h1 className='text-2xl font-semibold mb-6'>Create Pay Schedule</h1>
 
@@ -258,7 +277,7 @@ const payTempForm = () => {
 							value={payScheduleData.pay_period}
 							onChange={(e) => handleInputChange('pay_period', e.target.value)}
 							className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-							<option value="opt1">Opt1</option>
+							<option value='opt1'>Opt1</option>
 						</select>
 					</div>
 
@@ -271,7 +290,7 @@ const payTempForm = () => {
 								handleInputChange('payment_rule', e.target.value)
 							}
 							className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-							<option value="opt1">Opt1</option>
+							<option value='opt1'>Opt1</option>
 						</select>
 					</div>
 				</div>
@@ -315,7 +334,7 @@ const payTempForm = () => {
 							// 	handleInputChange('week_start_day', parseInt(e.target.value))
 							// }
 							className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-							<option value="opt1">opt1</option>
+							<option value='opt1'>opt1</option>
 						</select>
 					</div>
 				</div>
@@ -346,7 +365,7 @@ const payTempForm = () => {
 			</div>
 		</div>
 	);
-}
+};
 
-export default payTempForm
+export default PayTempForm
 // >>>>>>> 93dd465eb83414f37a9a0d89afc8f4c898e978d8
