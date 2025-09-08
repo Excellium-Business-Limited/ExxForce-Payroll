@@ -1,29 +1,32 @@
-// types/employee.ts
 export interface Employee {
   id?: number;
   employee_id: string;
   first_name: string;
   last_name: string;
-  email?: string;
-  phone_number?: string;
+  email: string; // Required (was email?: string)
+  phone_number: string; // Required (was phone_number?: string)
   gender: 'MALE' | 'FEMALE';
-  date_of_birth?: string;
-  address?: string;
+  date_of_birth: string;
+  address: string;
   employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
-  start_date?: string;
-  tax_start_date?: string;
-  job_title?: string;
-  department_name?: string;
-  pay_grade_name?: string;
+  start_date: string;
+  tax_start_date: string;
+  job_title: string;
+  department_name: string;
+  pay_grade_name: string;
   custom_salary: number;
-  bank_name?: string;
-  account_number?: string;
-  account_name?: string;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
   pay_frequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
   is_paye_applicable: boolean;
   is_pension_applicable: boolean;
   is_nhf_applicable: boolean;
   is_nsitf_applicable: boolean;
+}
+
+export interface DetailedEmployee extends Employee {
+  payroll_data?: PayrollData;
 }
 
 export interface SalaryComponent {
@@ -107,7 +110,6 @@ export interface SalaryCalculatorProps {
   disabled?: boolean;
 }
 
-// Additional types for EmployeeDetails
 export interface PayrollComponent {
   id: string;
   name: string;
@@ -127,10 +129,6 @@ export interface PayrollData {
   net_salary: number;
   total_deductions: number;
   total_benefits: number;
-}
-
-export interface DetailedEmployee extends Employee {
-  payroll_data?: PayrollData;
 }
 
 export interface LeaveRequest {

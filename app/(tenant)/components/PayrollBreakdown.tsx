@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, FileText, DollarSign } from 'lucide-react';
 import { SalaryCalculator } from './SalaryCalculator';
+// import SalaryCalculator, { calculateNetSalary } from './SalaryCalculator';
+
 
 interface SalaryComponent {
   id: number;
