@@ -13,102 +13,31 @@ import {
 	Upload,
 } from 'lucide-react';
 import { redirect, useRouter } from 'next/navigation';
-import EmployeeForm from '../components/EmployeeForm'; // Import the EmployeeForm
-import SalarySetupForm from '../components/SalarySetupForm'; // Import the SalarySetupForm
-import SalaryComponentSetup from '../components/SalaryComponentSetup'; // Import the SalaryComponentSetup
-import LeaveListDisplay from '../components/LeaveListDisplay'; // Import the LeaveListDisplay
-import LeaveRequestForm from '../components/LeaveRequestForm'; // Import the LeaveRequestForm
-import PayrollBreakdown from '../components/PayrollBreakdown'; // Import the PayrollBreakdown
-import DocumentUploadModal from '../components/DocumentUploadModal'; // Import the DocumentUploadModal
+import EmployeeForm from '../components/EmployeeForm';
+import SalarySetupForm from '../components/SalarySetupForm';
+import SalaryComponentSetup from '../components/SalaryComponentSetup';
+import LeaveListDisplay from '../components/LeaveListDisplay';
+import LeaveRequestForm from '../components/LeaveRequestForm';
+import PayrollBreakdown from '../components/PayrollBreakdown';
+import DocumentUploadModal from '../components/DocumentUploadModal';
 import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
-interface Employee {
-	id?: number;
-	employee_id: string;
-	first_name: string;
-	last_name: string;
-	email: string;
-	phone_number: string;
-	gender: 'MALE' | 'FEMALE';
-	date_of_birth: string;
-	address: string;
-	employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
-	start_date: string;
-	tax_start_date: string;
-	job_title: string;
-	department_name: string;
-	pay_grade_name: string;
-	custom_salary: number;
-	bank_name: string;
-	account_number: string;
-	account_name: string;
-	pay_frequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
-	is_paye_applicable: boolean;
-	is_pension_applicable: boolean;
-	is_nhf_applicable: boolean;
-	is_nsitf_applicable: boolean;
-}
-
-interface PayrollComponent {
-	id: string;
-	name: string;
-	type: 'EARNING' | 'DEDUCTION' | 'BENEFIT';
-	amount: number;
-	is_percentage: boolean;
-	percentage_value?: number;
-	is_taxable?: boolean;
-	description?: string;
-}
-
-interface PayrollData {
-	earnings: PayrollComponent[];
-	deductions: PayrollComponent[];
-	benefits: PayrollComponent[];
-	gross_salary: number;
-	net_salary: number;
-	total_deductions: number;
-	total_benefits: number;
-}
-
-interface DetailedEmployee extends Employee {
-	payroll_data?: PayrollData;
-}
-
-interface LeaveRequest {
-	id: string;
-	leave_type: string;
-	days: number;
-	start_date: string;
-	end_date: string;
-	submitted_date: string;
-	status: 'PENDING' | 'APPROVED' | 'REJECTED';
-	reason: string;
-}
-
-interface Loan {
-	loan_number: string;
-	amount: string;
-	balance: string;
-	status:
-		| 'ACTIVE'
-		| 'COMPLETED'
-		| 'PENDING'
-		| 'pending'
-		| 'active'
-		| 'completed';
-	start_date: string;
-	end_date?: string;
-	monthly_deduction?: string;
-	interest_rate?: number;
-	loan_type?: string;
-}
+// Import types from the centralized types file
+import { 
+	Employee, 
+	PayrollComponent, 
+	PayrollData, 
+	DetailedEmployee, 
+	LeaveRequest, 
+	Loan 
+} from '../types/employee';
 
 interface EmployeeDetailsProps {
 	employee: Employee;
 	onClose: () => void;
 	onEdit: (employee: Employee, editType?: 'general' | 'salary') => void;
-	onSalaryEdit: (employee: Employee) => void; // For salary details
+	onSalaryEdit: (employee: Employee) => void;
 	onEndEmployment?: (employee: Employee) => void;
 }
 
@@ -157,7 +86,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		}).format(amount);
 	};
 
-	const formatDate = (dateString: string) => {
+	const formatDate = (dateString: string | undefined) => {
 		if (!dateString || dateString === 'null' || dateString === 'undefined') {
 			return '--';
 		}
@@ -272,12 +201,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 			}
 		} catch (error: any) {
 			console.error('Error fetching employee detail:', error);
-			// if (error.response?.status === 401) {
-			//           // Redirect to login if unauthorized
-			//           setTimeout(() => {
-			//             redirect('/login');
-			//           }, 2000);
-			//         }
 			// Keep using the initial employee data if API call fails
 			setEmployee(initialEmployee);
 		} finally {
@@ -389,46 +312,46 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		e.preventDefault();
 		setEditType('general');
 		setShowEmployeeForm(true);
-		setShowSalaryForm(false); // Close salary form if open
-		setShowSalaryComponentSetup(false); // Close salary component setup if open
-		setShowLeaveRequestForm(false); // Close leave request form if open
-		setShowDocumentUpload(false); // Close document upload if open
+		setShowSalaryForm(false);
+		setShowSalaryComponentSetup(false);
+		setShowLeaveRequestForm(false);
+		setShowDocumentUpload(false);
 	};
 
 	// Handler for Salary & Payment Details edit
 	const handleSalaryEdit = () => {
 		setShowSalaryForm(true);
-		setShowEmployeeForm(false); // Close employee form if open
-		setShowSalaryComponentSetup(false); // Close salary component setup if open
-		setShowLeaveRequestForm(false); // Close leave request form if open
-		setShowDocumentUpload(false); // Close document upload if open
+		setShowEmployeeForm(false);
+		setShowSalaryComponentSetup(false);
+		setShowLeaveRequestForm(false);
+		setShowDocumentUpload(false);
 	};
 
 	// Handler for Process Payroll button
 	const handleProcessPayroll = () => {
 		setShowSalaryComponentSetup(true);
-		setShowEmployeeForm(false); // Close employee form if open
-		setShowSalaryForm(false); // Close salary form if open
-		setShowLeaveRequestForm(false); // Close leave request form if open
-		setShowDocumentUpload(false); // Close document upload if open
+		setShowEmployeeForm(false);
+		setShowSalaryForm(false);
+		setShowLeaveRequestForm(false);
+		setShowDocumentUpload(false);
 	};
 
 	// Handler for Leave Request button
 	const handleRequestLeave = () => {
 		setShowLeaveRequestForm(true);
-		setShowEmployeeForm(false); // Close employee form if open
-		setShowSalaryForm(false); // Close salary form if open
-		setShowSalaryComponentSetup(false); // Close salary component setup if open
-		setShowDocumentUpload(false); // Close document upload if open
+		setShowEmployeeForm(false);
+		setShowSalaryForm(false);
+		setShowSalaryComponentSetup(false);
+		setShowDocumentUpload(false);
 	};
 
 	// Handler for Document Upload button
 	const handleUploadDocument = () => {
 		setShowDocumentUpload(true);
-		setShowEmployeeForm(false); // Close employee form if open
-		setShowSalaryForm(false); // Close salary form if open
-		setShowSalaryComponentSetup(false); // Close salary component setup if open
-		setShowLeaveRequestForm(false); // Close leave request form if open
+		setShowEmployeeForm(false);
+		setShowSalaryForm(false);
+		setShowSalaryComponentSetup(false);
+		setShowLeaveRequestForm(false);
 	};
 
 	// Handler for Add Loan button
@@ -544,7 +467,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 	const DetailField: React.FC<{
 		label: string;
-		value: string | number;
+		value: string | number | undefined;
 		fullWidth?: boolean;
 	}> = ({ label, value, fullWidth = false }) => (
 		<div className={fullWidth ? 'col-span-3' : ''}>
@@ -1660,12 +1583,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 										</div>
 									</div>
 								) : (
-									// <PayrollBreakdown
-									// 	employee={employee}
-									// 	onProcessPayroll={handleProcessPayroll}
-									// 	onGeneratePayslip={handleGeneratePayslip}
-									// />
-									<div></div>
+									<PayrollDisplay />
 								)}
 							</div>
 						)}
@@ -1775,14 +1693,25 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 						{/* Form Content */}
 						<div className='flex-1 overflow-auto'>
-							<EmployeeForm
+							{/* <EmployeeForm
 								isOpen={showEmployeeForm}
 								isEdit={true}
 								employeeData={employee}
 								editType={editType}
 								onClose={handleCloseEmployeeForm}
 								onSubmit={handleEmployeeSubmit}
-							/>
+							// /> */}
+							<EmployeeForm
+  isOpen={showEmployeeForm}
+  isEdit={true}
+  employeeData={{
+    ...employee,
+    email: employee.email ?? ''  // Default to empty string if undefined
+  }}
+  editType={editType}
+  onClose={handleCloseEmployeeForm}
+  onSubmit={handleEmployeeSubmit}
+/>
 						</div>
 					</div>
 				)}
@@ -1817,19 +1746,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 						{/* Form Content */}
 						<div className='flex-1 overflow-auto'>
 							<SalarySetupForm
-								// isOpen={showSalaryForm}
 								isEdit={true}
 								employeeData={employee}
 								onClose={handleCloseSalaryForm}
 								onSubmit={handleSalarySubmit}
-								onBack={function (): void {
-									throw new Error('Function not implemented.');
-								}}
-								parentOnSubmit={function (
-									employeeFormData: any
-								): Promise<void> {
-									throw new Error('Function not implemented.');
-								}}
+								onBack={() => {}}
+								parentOnSubmit={async (data: any) => {}}
 							/>
 						</div>
 					</div>
@@ -1941,6 +1863,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 						{/* Form Content */}
 						<div className='flex-1 overflow-auto'>
+							{/* Uncomment when DocumentUploadModal is available */}
 							{/* <DocumentUploadModal
 								isOpen={showDocumentUpload}
 								onClose={handleCloseDocumentUpload}

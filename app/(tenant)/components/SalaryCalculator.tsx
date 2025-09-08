@@ -1,140 +1,42 @@
-import React, { useState } from 'react';
-import type { JSX } from "react";
+// components/SalaryCalculator.tsx
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, Info, AlertCircle } from "lucide-react";
+import { SalaryCalculatorProps } from '../types/employee';
+import { useSalaryCalculator } from '../hooks/useSalaryCalculator';
+import { TAX_BRACKETS, PAY_FREQUENCY_MULTIPLIERS } from '../constants/salary';
 
-interface SalaryComponent {
-  id: string;
-  name: string;
-  componentId?: number | string;
-  calculationType?: 'fixed' | 'percentage';
-  defaultValue?: number;
-  fixedValue?: number;
-  percentageValue?: number;
-  calculatedAmount?: number;
-  isBasic?: boolean;
-  isEditable?: boolean;
-  isPensionable?: boolean;
-  isTaxable?: boolean;
-}
-
-interface Employee {
-  id?: number;
-  employee_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone_number: string;
-  gender: 'MALE' | 'FEMALE';
-  date_of_birth: string;
-  address: string;
-  employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
-  start_date: string;
-  tax_start_date: string;
-  job_title: string;
-  department_name: string;
-  pay_grade_name: string;
-  custom_salary: number;
-  bank_name: string;
-  account_number: string;
-  account_name: string;
-  pay_frequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
-  is_paye_applicable: boolean;
-  is_pension_applicable: boolean;
-  is_nhf_applicable: boolean;
-  is_nsitf_applicable: boolean;
-}
-
-interface TaxBracket {
-  min: number;
-  max: number;
-  rate: number;
-}
-
-interface NetSalaryCalculation {
-  // Monthly amounts (display)
-  grossSalary: number;
-  basicSalary: number;
-  allowances: number;
-  totalIncome: number;
-  
-  // Monthly deductions
-  pensionEmployeeContribution: number;
-  pensionEmployerContribution: number;
-  nhfDeduction: number;
-  nsitfDeduction: number;
-  payeTax: number;
-  totalDeductions: number;
-  netSalary: number;
-  
-  // Annual amounts (calculation basis)
-  annualGrossSalary: number;
-  annualPensionableAmount: number;
-  annualTaxableAmount: number;
-  annualPensionContribution: number;
-  annualNhfDeduction: number;
-  annualNsitfDeduction: number;
-  
-  // Tax calculation details
-  adjustedGrossIncome: number;
-  consolidatedReliefAllowance: number;
-  taxableIncome: number;
-  annualPayeTax: number;
-  
-  // Additional info
-  effectiveTaxRate: number;
-  marginalTaxRate: number;
-  
-  // Enhanced fields for component validation
-  hasPensionableComponents: boolean;
-  hasTaxableComponents: boolean;
-  pensionableAmount: number;
-  taxableAmount: number;
-}
-
-interface SalaryCalculatorProps {
-  employee: Employee;
-  grossSalary: number;
-  earningComponents?: SalaryComponent[];
-  onCalculationComplete?: (calculation: NetSalaryCalculation) => void;
-  showDetailedBreakdown?: boolean;
-  className?: string;
-}
-
-// Nigerian PAYE tax brackets for 2025 (Annual amounts)
-const TAX_BRACKETS: TaxBracket[] = [
-  { min: 0, max: 300000, rate: 7 },        // First ₦300,000 at 7%
-  { min: 300001, max: 600000, rate: 11 },  // Next ₦300,000 at 11%
-  { min: 600001, max: 1100000, rate: 15 }, // Next ₦500,000 at 15%
-  { min: 1100001, max: 1600000, rate: 19 }, // Next ₦500,000 at 19%
-  { min: 1600001, max: 3200000, rate: 21 }, // Next ₦1,600,000 at 21%
-  { min: 3200001, max: Infinity, rate: 24 }  // Above ₦3,200,000 at 24%
-];
-
-// Relief and allowances constants
-const BASE_RELIEF_ALLOWANCE = 200000; // ₦200,000 base
-const PENSION_RATE = 0.08; // 8% employee contribution
-const PENSION_EMPLOYER_RATE = 0.10; // 10% employer contribution
-const NHF_RATE = 0.025; // 2.5% of gross salary (Finance Act 2023)
-const NSITF_RATE = 0.01; // 1% of gross salary
-
-export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
+const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
   employee,
   grossSalary,
   earningComponents = [],
   onCalculationComplete,
+  onCalculationError,
   showDetailedBreakdown = true,
-  className = ""
+  className = "",
+  disabled = false
 }) => {
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [calculation, setCalculation] = useState<NetSalaryCalculation | null>(null);
-  const [hasCalculated, setHasCalculated] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  
-  // Refs to track last calculated values
-  const lastCalculatedGrossSalary = React.useRef<number | null>(null);
-  const lastCalculatedComponents = React.useRef<string | null>(null);
+  const {
+    calculation,
+    isCalculating,
+    hasCalculated,
+    showDetails,
+    error,
+    isCalculationOutdated,
+    canCalculate,
+    validationMessage,
+    calculate,
+    toggleDetails,
+    resetCalculation
+  } = useSalaryCalculator({
+    employee,
+    grossSalary,
+    earningComponents,
+    showDetailedBreakdown,
+    onCalculationComplete,
+    onCalculationError
+  });
 
   // Utility Functions
   const formatCurrency = (amount: number): string => {
@@ -150,237 +52,25 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
   };
 
   const getPayFrequencyMultiplier = (): number => {
-    switch (employee.pay_frequency) {
-      case 'WEEKLY': return 52;
-      case 'BIWEEKLY': return 26;
-      case 'MONTHLY': return 12;
-      default: return 12;
-    }
+    return PAY_FREQUENCY_MULTIPLIERS[employee.pay_frequency] || PAY_FREQUENCY_MULTIPLIERS.MONTHLY;
   };
 
-  // Generate a signature for the earning components to detect changes
-  const getComponentsSignature = (): string => {
-    return earningComponents
-      .map(comp => `${comp.id}-${comp.calculatedAmount || 0}-${comp.isPensionable}-${comp.isTaxable}`)
-      .sort()
-      .join('|');
-  };
-
-  // Check if current values differ from last calculated values
-  const shouldInvalidateCalculation = (): boolean => {
-    if (!hasCalculated) return false;
-    
-    const currentComponentsSignature = getComponentsSignature();
-    return (
-      lastCalculatedGrossSalary.current !== grossSalary ||
-      lastCalculatedComponents.current !== currentComponentsSignature
-    );
-  };
-
-  // Public method to check if calculation is outdated
-  const isCalculationOutdated = (): boolean => {
-    return shouldInvalidateCalculation();
-  };
-
-  // Tax Calculation Function (Annual basis)
-  const calculateTax = (taxableIncome: number): { tax: number; marginalRate: number } => {
-    let tax = 0;
-    let marginalRate = 0;
-
-    for (const bracket of TAX_BRACKETS) {
-      if (taxableIncome > bracket.min - 1) {
-        const taxableInBracket = Math.min(taxableIncome, bracket.max) - (bracket.min - 1);
-        tax += (taxableInBracket * bracket.rate) / 100;
-        marginalRate = bracket.rate;
-        
-        if (taxableIncome <= bracket.max) break;
-      }
-    }
-
-    return { tax, marginalRate };
-  };
-
-  // Enhanced Main Calculation Function (Following Finance Act 2023)
-  const calculateNetSalaryDetailed = (): NetSalaryCalculation => {
-    const monthlyGross = grossSalary;
-    const payFrequencyMultiplier = getPayFrequencyMultiplier();
-    
-    // Step 1: Annualize the gross salary
-    const annualGrossSalary = monthlyGross * payFrequencyMultiplier;
-    
-    // Calculate pensionable and taxable amounts from selected components
-    let monthlyPensionableAmount = 0;
-    let monthlyTaxableAmount = 0;
-    let hasPensionableComponents = false;
-    let hasTaxableComponents = false;
-
-    earningComponents.forEach(comp => {
-      if (comp.calculatedAmount && comp.calculatedAmount > 0) {
-        if (comp.isPensionable) {
-          monthlyPensionableAmount += comp.calculatedAmount;
-          hasPensionableComponents = true;
-        }
-        if (comp.isTaxable) {
-          monthlyTaxableAmount += comp.calculatedAmount;
-          hasTaxableComponents = true;
-        }
-      }
-    });
-
-    // Annualize component amounts
-    const annualPensionableAmount = monthlyPensionableAmount * payFrequencyMultiplier;
-    const annualTaxableAmount = monthlyTaxableAmount * payFrequencyMultiplier;
-
-    // For display purposes, maintain the 60/40 split
-    const basicSalary = monthlyGross * 0.6;
-    const allowances = monthlyGross * 0.4;
-
-    // Step 2: Calculate annual statutory deductions
-    let annualPensionContribution = 0;
-    let annualPensionEmployerContribution = 0;
-    let annualNhfDeduction = 0;
-    let annualNsitfDeduction = 0;
-
-    // Pension calculation (8% of pensionable components or gross if no components)
-    if (employee.is_pension_applicable) {
-      const pensionBase = hasPensionableComponents ? annualPensionableAmount : annualGrossSalary;
-      if (pensionBase > 0) {
-        annualPensionContribution = pensionBase * PENSION_RATE;
-        annualPensionEmployerContribution = pensionBase * PENSION_EMPLOYER_RATE;
-      }
-    }
-
-    // NHF calculation (2.5% of gross salary - Finance Act 2023)
-    if (employee.is_nhf_applicable) {
-      annualNhfDeduction = annualGrossSalary * NHF_RATE;
-    }
-
-    // NSITF calculation (1% of gross salary)
-    if (employee.is_nsitf_applicable) {
-      annualNsitfDeduction = annualGrossSalary * NSITF_RATE;
-    }
-
-    // Step 3: Calculate Adjusted Gross Income (Finance Act 2023 method)
-    const adjustedGrossIncome = annualGrossSalary - (annualPensionContribution + annualNhfDeduction);
-
-    // Step 4: Calculate Consolidated Relief Allowance
-    const consolidatedReliefAllowance = (0.20 * adjustedGrossIncome) + BASE_RELIEF_ALLOWANCE;
-
-    // Step 5: Calculate Annual Taxable Income
-    let annualTaxableIncomeForTax = 0;
-    if (hasTaxableComponents) {
-      // Use only taxable components for tax calculation
-      annualTaxableIncomeForTax = annualTaxableAmount - (annualPensionContribution + annualNhfDeduction + consolidatedReliefAllowance);
-    } else {
-      // Use gross salary if no specific taxable components
-      annualTaxableIncomeForTax = annualGrossSalary - (annualPensionContribution + annualNhfDeduction + consolidatedReliefAllowance);
-    }
-    
-    const finalTaxableIncome = Math.max(0, annualTaxableIncomeForTax);
-
-    // Step 6: Calculate Annual PAYE Tax
-    let annualPayeTax = 0;
-    let marginalTaxRate = 0;
-
-    if (employee.is_paye_applicable && finalTaxableIncome > 0) {
-      const taxCalculation = calculateTax(finalTaxableIncome);
-      annualPayeTax = taxCalculation.tax;
-      marginalTaxRate = taxCalculation.marginalRate;
-    }
-
-    // Step 7: Convert back to monthly amounts
-    const monthlyPensionContribution = annualPensionContribution / payFrequencyMultiplier;
-    const monthlyPensionEmployerContribution = annualPensionEmployerContribution / payFrequencyMultiplier;
-    const monthlyNhfDeduction = annualNhfDeduction / payFrequencyMultiplier;
-    const monthlyNsitfDeduction = annualNsitfDeduction / payFrequencyMultiplier;
-    const monthlyPayeTax = annualPayeTax / payFrequencyMultiplier;
-
-    // Step 8: Calculate final amounts
-    const totalMonthlyDeductions = monthlyPensionContribution + monthlyNhfDeduction + monthlyNsitfDeduction + monthlyPayeTax;
-    const netMonthlySalary = monthlyGross - totalMonthlyDeductions;
-    const effectiveTaxRate = monthlyGross > 0 ? (monthlyPayeTax / monthlyGross) * 100 : 0;
-
-    return {
-      // Monthly display amounts
-      grossSalary: monthlyGross,
-      basicSalary,
-      allowances,
-      totalIncome: monthlyGross,
-      pensionEmployeeContribution: monthlyPensionContribution,
-      pensionEmployerContribution: monthlyPensionEmployerContribution,
-      nhfDeduction: monthlyNhfDeduction,
-      nsitfDeduction: monthlyNsitfDeduction,
-      payeTax: monthlyPayeTax,
-      totalDeductions: totalMonthlyDeductions,
-      netSalary: netMonthlySalary,
-      
-      // Annual calculation basis
-      annualGrossSalary,
-      annualPensionableAmount,
-      annualTaxableAmount,
-      annualPensionContribution,
-      annualNhfDeduction,
-      annualNsitfDeduction,
-      
-      // Tax calculation details
-      adjustedGrossIncome,
-      consolidatedReliefAllowance,
-      taxableIncome: finalTaxableIncome,
-      annualPayeTax,
-      
-      effectiveTaxRate,
-      marginalTaxRate,
-      hasPensionableComponents,
-      hasTaxableComponents,
-      pensionableAmount: monthlyPensionableAmount,
-      taxableAmount: monthlyTaxableAmount
-    };
-  };
-
-  // Handle Calculation
+  // Handle calculation
   const handleCalculate = async (): Promise<void> => {
-    if (grossSalary <= 0) {
-      return;
-    }
-
-    setIsCalculating(true);
-    
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const result = calculateNetSalaryDetailed();
-      setCalculation(result);
-      setHasCalculated(true);
-      setShowDetails(showDetailedBreakdown);
-      
-      // Update tracking references
-      lastCalculatedGrossSalary.current = grossSalary;
-      lastCalculatedComponents.current = getComponentsSignature();
-      
-      // Notify parent component
-      onCalculationComplete?.(result);
-    } catch (error) {
-      console.error("Error calculating net salary:", error);
-    } finally {
-      setIsCalculating(false);
-    }
+    if (disabled || !canCalculate) return;
+    await calculate();
   };
 
-  // Check if calculation needs updating (for button text and styling)
-  const needsRecalculation = isCalculationOutdated();
-  const isOutdated = hasCalculated && needsRecalculation;
-
-  // Reset calculation when gross salary changes
-  // REMOVED: This was causing results to disappear when values changed
-  // Results now persist until user explicitly recalculates
-
+  // Early return for invalid input
   if (grossSalary <= 0) {
     return (
       <Card className={`border-gray-200 ${className}`}>
         <CardContent className="p-6 text-center text-gray-500">
           <Calculator className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>Enter a gross salary amount to calculate net salary</p>
+          {validationMessage && (
+            <p className="text-red-500 text-sm mt-2">{validationMessage}</p>
+          )}
         </CardContent>
       </Card>
     );
@@ -471,13 +161,26 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
               </div>
             </div>
 
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Calculation Error</h3>
+                    <div className="mt-2 text-sm text-red-700">{error}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Calculate Button */}
             <div className="text-center">
               <Button
                 onClick={handleCalculate}
-                disabled={isCalculating || grossSalary <= 0}
+                disabled={isCalculating || !canCalculate || disabled}
                 className={`${
-                  isOutdated 
+                  isCalculationOutdated 
                     ? 'bg-yellow-600 hover:bg-yellow-700' 
                     : hasCalculated 
                       ? 'bg-blue-600 hover:bg-blue-700' 
@@ -496,7 +199,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                 ) : (
                   <>
                     <Calculator className="w-5 h-5 mr-2" />
-                    {isOutdated 
+                    {isCalculationOutdated 
                       ? 'Update Calculation' 
                       : hasCalculated 
                         ? 'Recalculate Net Salary' 
@@ -508,7 +211,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
             </div>
 
             {/* Outdated Calculation Warning */}
-            {isOutdated && (
+            {isCalculationOutdated && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
                 <div className="flex">
                   <AlertCircle className="h-5 w-5 text-yellow-400" />
@@ -528,16 +231,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
               <div className="space-y-6 mt-6">
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className={`${isOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-blue-200 bg-blue-50'}`}>
+                  <Card className={`${isCalculationOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-blue-200 bg-blue-50'}`}>
                     <CardContent className="p-4 text-center">
-                      <div className={`text-2xl font-bold ${isOutdated ? 'text-yellow-900' : 'text-blue-900'}`}>
+                      <div className={`text-2xl font-bold ${isCalculationOutdated ? 'text-yellow-900' : 'text-blue-900'}`}>
                         {formatCurrency(calculation.grossSalary)}
                       </div>
-                      <div className={`text-sm ${isOutdated ? 'text-yellow-600' : 'text-blue-600'}`}>Monthly Gross</div>
-                      <div className={`text-xs mt-1 ${isOutdated ? 'text-yellow-500' : 'text-blue-500'}`}>
+                      <div className={`text-sm ${isCalculationOutdated ? 'text-yellow-600' : 'text-blue-600'}`}>Monthly Gross</div>
+                      <div className={`text-xs mt-1 ${isCalculationOutdated ? 'text-yellow-500' : 'text-blue-500'}`}>
                         Annual: {formatCurrency(calculation.annualGrossSalary)}
                       </div>
-                      {isOutdated && (
+                      {isCalculationOutdated && (
                         <div className="text-xs text-yellow-600 mt-1 font-medium">
                           ⚠ May be outdated
                         </div>
@@ -545,33 +248,33 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                     </CardContent>
                   </Card>
                   
-                  <Card className={`${isOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'}`}>
+                  <Card className={`${isCalculationOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'}`}>
                     <CardContent className="p-4 text-center">
-                      <div className={`text-2xl font-bold ${isOutdated ? 'text-yellow-900' : 'text-red-900'}`}>
+                      <div className={`text-2xl font-bold ${isCalculationOutdated ? 'text-yellow-900' : 'text-red-900'}`}>
                         {formatCurrency(calculation.totalDeductions)}
                       </div>
-                      <div className={`text-sm ${isOutdated ? 'text-yellow-600' : 'text-red-600'}`}>Monthly Deductions</div>
-                      <div className={`text-xs mt-1 ${isOutdated ? 'text-yellow-500' : 'text-red-500'}`}>
+                      <div className={`text-sm ${isCalculationOutdated ? 'text-yellow-600' : 'text-red-600'}`}>Monthly Deductions</div>
+                      <div className={`text-xs mt-1 ${isCalculationOutdated ? 'text-yellow-500' : 'text-red-500'}`}>
                         Annual: {formatCurrency(calculation.totalDeductions * getPayFrequencyMultiplier())}
                       </div>
-                      {isOutdated && (
+                      {isCalculationOutdated && (
                         <div className="text-xs text-yellow-600 mt-1 font-medium">
                           ⚠ May be outdated
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
                   
-                  <Card className={`${isOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}`}>
+                  <Card className={`${isCalculationOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}`}>
                     <CardContent className="p-4 text-center">
-                      <div className={`text-2xl font-bold ${isOutdated ? 'text-yellow-900' : 'text-green-900'}`}>
+                      <div className={`text-2xl font-bold ${isCalculationOutdated ? 'text-yellow-900' : 'text-green-900'}`}>
                         {formatCurrency(calculation.netSalary)}
                       </div>
-                      <div className={`text-sm ${isOutdated ? 'text-yellow-600' : 'text-green-600'}`}>Monthly Take-Home</div>
-                      <div className={`text-xs mt-1 ${isOutdated ? 'text-yellow-500' : 'text-green-500'}`}>
+                      <div className={`text-sm ${isCalculationOutdated ? 'text-yellow-600' : 'text-green-600'}`}>Monthly Take-Home</div>
+                      <div className={`text-xs mt-1 ${isCalculationOutdated ? 'text-yellow-500' : 'text-green-500'}`}>
                         Annual: {formatCurrency(calculation.netSalary * getPayFrequencyMultiplier())}
                       </div>
-                      {isOutdated && (
+                      {isCalculationOutdated && (
                         <div className="text-xs text-yellow-600 mt-1 font-medium">
                           ⚠ May be outdated
                         </div>
@@ -585,7 +288,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                   <div className="text-center">
                     <Button
                       variant="outline"
-                      onClick={() => setShowDetails(!showDetails)}
+                      onClick={toggleDetails}
                     >
                       {showDetails ? 'Hide Details' : 'Show Detailed Breakdown'}
                     </Button>
@@ -648,8 +351,8 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                       </CardContent>
                     </Card>
 
+                    {/* Monthly Breakdown */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Monthly Breakdown */}
                       <Card>
                         <CardHeader>
                           <CardTitle className="text-lg text-green-700">Monthly Breakdown</CardTitle>
@@ -709,7 +412,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                     </div>
 
                     {/* Tax Calculation Details */}
-                    {employee.is_paye_applicable && (
+                    {employee.is_paye_applicable && calculation.taxableIncome > 0 && (
                       <Card>
                         <CardHeader>
                           <CardTitle className="text-lg">Annual Tax Calculation Details</CardTitle>
@@ -859,156 +562,6 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
       </Card>
     </div>
   );
-};
-
-// Export the enhanced calculation function for external use
-export const calculateNetSalary = (employee: Employee, grossSalary: number, earningComponents: SalaryComponent[] = []): NetSalaryCalculation => {
-  const monthlyGross = grossSalary;
-  const payFrequencyMultiplier = employee.pay_frequency === 'WEEKLY' ? 52 : 
-                                employee.pay_frequency === 'BIWEEKLY' ? 26 : 12;
-  
-  // Step 1: Annualize the gross salary
-  const annualGrossSalary = monthlyGross * payFrequencyMultiplier;
-  
-  // Calculate pensionable and taxable amounts from selected components
-  let monthlyPensionableAmount = 0;
-  let monthlyTaxableAmount = 0;
-  let hasPensionableComponents = false;
-  let hasTaxableComponents = false;
-
-  earningComponents.forEach(comp => {
-    if (comp.calculatedAmount && comp.calculatedAmount > 0) {
-      if (comp.isPensionable) {
-        monthlyPensionableAmount += comp.calculatedAmount;
-        hasPensionableComponents = true;
-      }
-      if (comp.isTaxable) {
-        monthlyTaxableAmount += comp.calculatedAmount;
-        hasTaxableComponents = true;
-      }
-    }
-  });
-
-  // Annualize component amounts
-  const annualPensionableAmount = monthlyPensionableAmount * payFrequencyMultiplier;
-  const annualTaxableAmount = monthlyTaxableAmount * payFrequencyMultiplier;
-
-  // For display purposes, maintain the 60/40 split
-  const basicSalary = monthlyGross * 0.6;
-  const allowances = monthlyGross * 0.4;
-
-  // Step 2: Calculate annual statutory deductions
-  let annualPensionContribution = 0;
-  let annualPensionEmployerContribution = 0;
-  let annualNhfDeduction = 0;
-  let annualNsitfDeduction = 0;
-
-  // Pension calculation (8% of pensionable components or gross if no components)
-  if (employee.is_pension_applicable) {
-    const pensionBase = hasPensionableComponents ? annualPensionableAmount : annualGrossSalary;
-    if (pensionBase > 0) {
-      annualPensionContribution = pensionBase * PENSION_RATE;
-      annualPensionEmployerContribution = pensionBase * PENSION_EMPLOYER_RATE;
-    }
-  }
-
-  // NHF calculation (2.5% of gross salary - Finance Act 2023)
-  if (employee.is_nhf_applicable) {
-    annualNhfDeduction = annualGrossSalary * NHF_RATE;
-  }
-
-  // NSITF calculation (1% of gross salary)
-  if (employee.is_nsitf_applicable) {
-    annualNsitfDeduction = annualGrossSalary * NSITF_RATE;
-  }
-
-  // Step 3: Calculate Adjusted Gross Income (Finance Act 2023 method)
-  const adjustedGrossIncome = annualGrossSalary - (annualPensionContribution + annualNhfDeduction);
-
-  // Step 4: Calculate Consolidated Relief Allowance
-  const consolidatedReliefAllowance = (0.20 * adjustedGrossIncome) + BASE_RELIEF_ALLOWANCE;
-
-  // Step 5: Calculate Annual Taxable Income
-  let annualTaxableIncomeForTax = 0;
-  if (hasTaxableComponents) {
-    // Use only taxable components for tax calculation
-    annualTaxableIncomeForTax = annualTaxableAmount - (annualPensionContribution + annualNhfDeduction + consolidatedReliefAllowance);
-  } else {
-    // Use gross salary if no specific taxable components
-    annualTaxableIncomeForTax = annualGrossSalary - (annualPensionContribution + annualNhfDeduction + consolidatedReliefAllowance);
-  }
-  
-  const finalTaxableIncome = Math.max(0, annualTaxableIncomeForTax);
-
-  // Step 6: Calculate Annual PAYE Tax
-  let annualPayeTax = 0;
-  let marginalTaxRate = 0;
-
-  if (employee.is_paye_applicable && finalTaxableIncome > 0) {
-    let tax = 0;
-    let marginalRate = 0;
-
-    for (const bracket of TAX_BRACKETS) {
-      if (finalTaxableIncome > bracket.min - 1) {
-        const taxableInBracket = Math.min(finalTaxableIncome, bracket.max) - (bracket.min - 1);
-        tax += (taxableInBracket * bracket.rate) / 100;
-        marginalRate = bracket.rate;
-        
-        if (finalTaxableIncome <= bracket.max) break;
-      }
-    }
-
-    annualPayeTax = tax;
-    marginalTaxRate = marginalRate;
-  }
-
-  // Step 7: Convert back to monthly amounts
-  const monthlyPensionContribution = annualPensionContribution / payFrequencyMultiplier;
-  const monthlyPensionEmployerContribution = annualPensionEmployerContribution / payFrequencyMultiplier;
-  const monthlyNhfDeduction = annualNhfDeduction / payFrequencyMultiplier;
-  const monthlyNsitfDeduction = annualNsitfDeduction / payFrequencyMultiplier;
-  const monthlyPayeTax = annualPayeTax / payFrequencyMultiplier;
-
-  // Step 8: Calculate final amounts
-  const totalMonthlyDeductions = monthlyPensionContribution + monthlyNhfDeduction + monthlyNsitfDeduction + monthlyPayeTax;
-  const netMonthlySalary = monthlyGross - totalMonthlyDeductions;
-  const effectiveTaxRate = monthlyGross > 0 ? (monthlyPayeTax / monthlyGross) * 100 : 0;
-
-  return {
-    // Monthly display amounts
-    grossSalary: monthlyGross,
-    basicSalary,
-    allowances,
-    totalIncome: monthlyGross,
-    pensionEmployeeContribution: monthlyPensionContribution,
-    pensionEmployerContribution: monthlyPensionEmployerContribution,
-    nhfDeduction: monthlyNhfDeduction,
-    nsitfDeduction: monthlyNsitfDeduction,
-    payeTax: monthlyPayeTax,
-    totalDeductions: totalMonthlyDeductions,
-    netSalary: netMonthlySalary,
-    
-    // Annual calculation basis
-    annualGrossSalary,
-    annualPensionableAmount,
-    annualTaxableAmount,
-    annualPensionContribution,
-    annualNhfDeduction,
-    annualNsitfDeduction,
-    
-    // Tax calculation details
-    adjustedGrossIncome,
-    consolidatedReliefAllowance,
-    taxableIncome: finalTaxableIncome,
-    annualPayeTax,
-    
-    effectiveTaxRate,
-    marginalTaxRate,
-    hasPensionableComponents,
-    hasTaxableComponents,
-    pensionableAmount: monthlyPensionableAmount,
-    taxableAmount: monthlyTaxableAmount
-  };
 };
 
 export default SalaryCalculator;
