@@ -43,7 +43,7 @@ const SalaryStructure = () => {
 			try {
 				const baseURL = `${tenant}.exxforce.com`
 				const res = await fetch(
-					`http://${baseURL}/tenant/payroll-settings/salary-components`,
+					`https://${baseURL}/tenant/payroll-settings/salary-components`,
 					{
 						headers: {
 							Authorization: `Bearer ${localStorage.getItem('access_token')}`,

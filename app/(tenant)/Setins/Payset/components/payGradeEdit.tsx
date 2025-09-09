@@ -52,19 +52,19 @@ export default function EditPayGradePage({
 
 				const [salaryRes, deductionRes, payGradeRes] = await Promise.all([
 					axios.get(
-						`http://${tenant}.localhost:8000/tenant/payroll-settings/salary-components`,
+						`https://${tenant}.exxforce.com/tenant/payroll-settings/salary-components`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						}
 					),
 					axios.get(
-						`http://${tenant}.localhost:8000/tenant/payroll-settings/deduction-components`,
+						`https://${tenant}.exxforce.com/tenant/payroll-settings/deduction-components`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						}
 					),
 					axios.get(
-						`http://${tenant}.localhost:8000//tenant/payroll-settings/pay-grades/${name}/detail`,
+						`https://${tenant}.exxforce//tenant/payroll-settings/pay-grades/${name}/detail`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						}
@@ -154,7 +154,7 @@ export default function EditPayGradePage({
 		try {
 			const token = localStorage.getItem('access_token');
 			await axios.put(
-				`http://${tenant}.localhost:8000//tenant/payroll-settings/pay-grades/${payGradeName}/update`,
+				`http://${tenant}.exxforce.com/tenant/payroll-settings/pay-grades/${payGradeName}/update`,
 				{
 					name,
 					gross_salary: grossSalary,
