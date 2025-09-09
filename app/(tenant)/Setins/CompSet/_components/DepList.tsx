@@ -26,9 +26,9 @@ import {
 } from '@/components/ui/dialog';
 
 interface Department {
+	employee_count: number;
 	id: number;	
 	name: string;
-	totalEmployees: number;
 	}
 
 const DepList = () => {
@@ -42,7 +42,7 @@ const DepList = () => {
 		const baseUrl = `https://${tenant}.exxforce.com`;
 		const fetchDepartments = async () => {
 			try {
-				const res = await fetch(`${baseUrl}/tenant/employee/departments`, {
+				const res = await fetch(`${baseUrl}/tenant/employee/tenant-info`, {
 					headers: {
 						Authorization: `Bearer ${localStorage.getItem('access_token')}`,
 					},
@@ -51,7 +51,7 @@ const DepList = () => {
 				// if (res.ok) setDepartments(res.data)
 				if (!res.ok) throw new Error('Failed to fetch departments');
 				const data = await res.json();
-				setDepartments(data);
+				setDepartments(data.departments);
 				
 			} catch (error) {
 				console.error(error);
@@ -98,7 +98,7 @@ const DepList = () => {
 								<TableCell className='font-medium'>
 									{department.name}
 								</TableCell>
-								<TableCell>{department.totalEmployees}</TableCell>
+								<TableCell>{department.employee_count}</TableCell>
 								<TableCell>
 								</TableCell>
 							</TableRow>

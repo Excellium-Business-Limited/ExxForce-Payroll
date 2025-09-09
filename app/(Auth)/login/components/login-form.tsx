@@ -58,7 +58,7 @@ export function LoginForm({ className }: { className?: string }) {
 			setTimeout(() => {
 				const redirectPath = new URL(redirect).pathname;
 				console.log('Redirecting to:', redirectPath);
-				// router.push(redirectPath);
+				router.push(redirectPath);
 			}, 500);
 		} catch (err: any) {
 			console.error('Login failed:', err);

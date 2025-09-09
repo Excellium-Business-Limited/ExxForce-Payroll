@@ -123,7 +123,7 @@ export default function PieChrt({ className }: { className?: string }) {
 						},
 					}
 				);
-				console.log(response)
+				// console.log(response)
 				if (!response.ok) {
 					throw new Error('Failed to fetch payroll data');
 				}

@@ -17,12 +17,14 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import React from 'react';
+import { redirect } from 'next/navigation';
+import React, { useEffect } from 'react';
 import { string } from 'zod';
 
 const companyList = () => {
 	const [comp, setComp] = React.useState({
-		id: null, // Initialize id with a default value, e.g., null
+		tenant_name: null,
+		departments: [] // Initialize id with a default value, e.g., null
 	});
 	const companies = [
 		{ id: 1, compname: 'Excellcium Buisness', status: 'Active' },
@@ -31,6 +33,39 @@ const companyList = () => {
 		{ id: 4, compname: 'Excel Counts ', status: 'Inactive' },
 		{ id: 5, compname: 'Excellcium Constructions', status: 'Active' },
 	];
+	useEffect(()=>{
+		const tenant = localStorage.getItem('tenant');
+		if (!tenant) {
+			console.error('Tenant not found in localStorage');
+			return;
+		}
+		
+			const baseUrl = `https://${tenant}.exxforce.com`;
+			const fetchCompanies = async () => {
+			try{
+			const res = await fetch(`${baseUrl}/tenant/employee/tenant-info `, {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+				},
+			});
+				;
+				// if (res.ok) setDepartments(res.data)
+				if (!res.ok) throw new Error('Failed to fetch departments');
+				const data = await res.json();
+				data && console.log(data)
+				setComp(data);
+				}
+				catch (error:any){
+					if(error.status === 401){
+						//redirect to login
+						setTimeout(() => {
+							redirect('/login');
+						}, 2000);
+					}
+				}
+			}
+			fetchCompanies()
+	}, [])
 	return (
 		<Card className='mx-4'>
 			<div className='flex justify-between align-middle px-4 py-2'>
@@ -57,37 +92,27 @@ const companyList = () => {
 						<TableHead className='text-[#3D56A8] font-normal'>
 							Company Name
 						</TableHead>
-						<TableHead className='text-[#3D56A8] font-normal'>Status</TableHead>
+						<TableHead className='text-[#3D56A8] font-normal m-8'>
+							Status
+						</TableHead>
 						<TableHead className='text-[#3D56A8] font-normal'>View</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{companies.map((comp) => {
-						return (
-							<TableRow key={comp.id}>
-								<TableCell>{comp.compname}</TableCell>
-								<TableCell className=''>
-									<p
-										className={`rounded-4xl w-[87px] h-[24px] align-middle px-4 items-center ${
-											comp.status === 'Active'
-												? 'bg-[#B0E4DD] text-[#008774]'
-												: 'bg-[#F5C6C6] text-[#D80000]'
-										}`}>
-										{comp.status}
-									</p>
-								</TableCell>
-								<TableCell>
-									<Link href={`/main/Setins/CompSet/${comp.id}`}>
-										{' '}
-										<img
-											src='/iconamoon_eye-light.png'
-											alt=''
-										/>
-									</Link>
-								</TableCell>
-							</TableRow>
-						);
-					})}
+					<TableRow>
+						<TableCell className='font-medium'>{comp.tenant_name}</TableCell>
+						<TableCell>
+							<p className='rounded-xl m-1.5 w-[50px] h-fit align-middle p-0.5 bg-[#B0E4DD] text-[#008774]'>
+								Active
+							</p>
+						</TableCell>
+						<TableCell>
+							<img
+								src='/iconamoon_eye-light.png'
+								alt=''
+							/>
+						</TableCell>
+					</TableRow>
 				</TableBody>
 			</Table>
 		</Card>
