@@ -36,10 +36,13 @@ import {
 } from '@/components/ui/dialog';
 
 import { Card } from '@/components/ui/card';
+import Dialogs from '../../components/dialog';
+import Import from '../../components/Import';
 import { getTenant } from '@/lib/auth';
 import { set } from 'date-fns';
 import { redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LoanForm from '../loanForm';
 
 interface Loan {
 	monthly_deduction: ReactNode;
@@ -64,7 +67,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 	const [error, setError] = useState('');
 	useEffect(() => {
 		const tenant = getTenant();
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 		const fetchLoans = async () => {
 			try {
 				const token = localStorage.getItem('access_token');
@@ -99,13 +102,99 @@ const loanReq = ({ loans }: LoanReqProps) => {
 		fetchLoans();
 		console.log(loans);
 		console.log(loans[0]);
-		setisLoan(true);
+		if (loans.length > 0){
+			setisLoan(true);
+		}else{
+			setisLoan(false);
+		}
 		return () => clearTimeout(timeout);
 	}, []);
 
 	const goToDetail = (loanId: number) => {
 		router.push(`/Loan/${loanId}`);
 	};
+
+	if (isloan === false) {
+			return (
+				<div className='h-[680px] m-7 gap-4 '>
+					<div className='flex flex-row items-center justify-between w-full'>
+						<span>
+							<h1>Loan</h1>
+							<p className='text-xs'>Create and Manage Loans</p>
+						</span>
+						<span className='items-end self-end justify-between flex gap-4'>
+							<Sheet>
+								<SheetTrigger asChild>
+									<Button
+										variant={'outline'}
+										className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
+										Add Loan
+									</Button>
+								</SheetTrigger>
+								<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
+									<SheetTitle className='hidden'></SheetTitle>
+									<LoanForm />
+								</SheetContent>
+							</Sheet>
+							<Dialogs title={'Import'}>
+								<Import
+									title='Loans'
+									isOpen={false}
+									onClose={function (): void {
+										throw new Error('Function not implemented.');
+									}}
+									onSubmit={function (importData: any): Promise<void> {
+										throw new Error('Function not implemented.');
+									}}
+								/>
+							</Dialogs>
+						</span>
+					</div>
+					<div className='text-center max-w-2xl mx-auto mt-[120px]'>
+						<img
+							src='/empty.jpg'
+							alt='Team Illustration'
+							className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
+						/>
+						<h2 className='text-2xl md:text-3xl  mb-4'>No Loans Yet</h2>
+						<pre className='text-base text-muted-foreground mb-8'>
+							You haven’t added any employee loans.Manage staff
+							<br />
+							loans easily by adding new loan records or importing
+							<br />
+							from a file.
+						</pre>
+						<div className='flex flex-col sm:flex-row gap-4 justify-center'>
+							<Sheet>
+								<SheetTrigger asChild>
+									<Button
+										variant={'outline'}
+										className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
+										Add Loan
+									</Button>
+								</SheetTrigger>
+								<SheetContent className='min-w-[500px] p-4 '>
+									<SheetTitle className='hidden'></SheetTitle>
+									<LoanForm />
+								</SheetContent>
+							</Sheet>
+							<Dialogs title={'Import'}>
+								<Import
+									title='Loans'
+									isOpen={false}
+									onClose={function (): void {
+										throw new Error('Function not implemented.');
+									}}
+									onSubmit={function (importData: any): Promise<void> {
+										throw new Error('Function not implemented.');
+									}}
+								/>
+							</Dialogs>
+						</div>
+					</div>
+				</div>
+			);
+		}
 
 	return (
 		<div>

@@ -7,32 +7,32 @@ import DepList from './_components/DepList';
 
 const page = () => {
 	return (
-		<div className='h-[680px]'>
-			<div className='mx-4'>
+		<div className='min-h-screen bg-gray-50'>
+			<div className='mx-6 p-6'>
 				<h1>Company Settings</h1>
-				<h5 className='text-sm'>
+				<p className='text-gray-600'>
 					Manage your organization settings and preferences
-				</h5>
+				</p>
 			</div>
-			<div className=' bg-white rounded-lg h-[433px] m-5'>
+			<div className='bg-white rounded-lg shadow-sm'>
 				<Tabs
-					className='self-center'
+					className='w-full'
 					defaultValue='Company'>
-					<TabsList className='no-design'>
-						<div className='m-2'>
+					<TabsList className='w-full justify-start border-b bg-transparent h-auto p-0 rounded-none'>
+						<div className='flex gap-8 px-6 py-4'>
 							<TabsTrigger
 								value='Company'
-								className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'>
+								className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
 								Company
 							</TabsTrigger>
 							<TabsTrigger
 								value='Designation'
-								className='data-[state=active]:text-[#3D56A8] data-[state=active]:underline text-muted-foreground'>
+								className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
 								Designation
 							</TabsTrigger>
 							<TabsTrigger
 								value='Department'
-								className='data-[state=active]:text-[#3D56A8] data-[state=active]:underline text-muted-foreground'>
+								className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
 								Department
 							</TabsTrigger>
 						</div>
@@ -44,7 +44,9 @@ const page = () => {
 					<TabsContent value='Designation'>
 						<DesList />
 					</TabsContent>
-					<TabsContent value='Department'><DepList/></TabsContent>
+					<TabsContent value='Department'>
+						<DepList />
+					</TabsContent>
 				</Tabs>
 			</div>
 		</div>

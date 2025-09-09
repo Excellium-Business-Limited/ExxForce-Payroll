@@ -51,7 +51,7 @@ const loanType = () => {
 	const handleAdd = async () => {
 		const tenant = localStorage.getItem('tenant');
 		const accessToken = localStorage.getItem('access_token');
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 		try {
 			const response = await axios.post(
 				`${baseURL}/tenant/loans/loan-types/create`,

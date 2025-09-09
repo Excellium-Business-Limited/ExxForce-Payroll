@@ -55,6 +55,7 @@ const page = () => {
 					
 					setIsLoading(false);
 					console.log(res.data);
+					if (res.data.length <= 0) setIsPayrun(false);
 				} catch (err: any) {
 					console.error(err);
 					setError(err.response?.data?.detail || 'Failed to load pay runs');
@@ -133,7 +134,7 @@ const page = () => {
 							<h2 className='text-2xl md:text-3xl  mb-4'>
 								Start Your First Payroll{' '}
 							</h2>
-							<p className='text-base text-muted-foreground border-2 self mb-8 w-[460px]'>
+							<p className='text-base text-muted-foreground self mb-8 w-[460px]'>
 								Easily create and manage payruns for your employees. Select the
 								pay period, add employee data, and process salaries quickly.
 							</p>

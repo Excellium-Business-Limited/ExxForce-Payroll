@@ -72,7 +72,7 @@ export default function Home() {
 
 	useEffect(() => {
 		const tenant = getTenant();
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 		const fetchLoans = async () => {
 			try {
 				const token = localStorage.getItem('access_token');

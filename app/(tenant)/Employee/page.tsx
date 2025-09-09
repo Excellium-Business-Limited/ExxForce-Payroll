@@ -381,7 +381,7 @@ const EmployeePage: React.FC = () => {
     try {
       console.log(tenant)
       const response = await axios.get<Employee[]>(
-				`http://${tenant}.localhost:8000/tenant/employee/list`,
+				`https://${tenant}.exxforce.com/tenant/employee/list`,
 				{
 					headers: {
 						Authorization: `Bearer ${token}`,

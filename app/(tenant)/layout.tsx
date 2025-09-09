@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-			<TokenRefreshProvider apiBaseUrl={'http://localhost:8000'}>
+			<TokenRefreshProvider apiBaseUrl={'https://api.exxforce.com'}>
 				<div className=' w-full mb-3'>
 					<SidebarProvider>
 						<AppSidebar className='bg-black' />

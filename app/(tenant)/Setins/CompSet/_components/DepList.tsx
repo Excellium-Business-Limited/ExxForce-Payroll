@@ -39,7 +39,7 @@ const DepList = () => {
 			console.error('Tenant not found in localStorage');
 			return;
 		}
-		const baseUrl = `http://${tenant}.localhost:8000`;
+		const baseUrl = `https://${tenant}.exxforce.com`;
 		const fetchDepartments = async () => {
 			try {
 				const res = await fetch(`${baseUrl}/tenant/employee/departments`, {
