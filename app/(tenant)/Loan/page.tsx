@@ -277,23 +277,22 @@ export default function Home() {
 				</div>
 				<Card className='mt-12 ml-auto w-full h-[750px] p-3'>
 					<Tabs
-						className='self-center h-[1080px]'
+						className='w-full'
 						defaultValue='LRequest'>
-						<TabsList className='no-design'>
-							<div className='m-2'>
+						<TabsList className='w-full justify-start border-b bg-transparent h-auto p-0 rounded-none'>
+							<div className='flex gap-8 px-6 py-4'>
 								<TabsTrigger
-									className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'
 									value='LType'>
 									Loan Type
 								</TabsTrigger>
 								<TabsTrigger
-									className='data-[state=active]:text-[#3d56a8] data-[state=active]:underline text-muted-foreground'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'
 									value='LRequest'>
 									Loan Request
 								</TabsTrigger>
 							</div>
 						</TabsList>
-						<hr className=' h-[2px]' />
 						<TabsContent value='LType'>
 							<LoanType />
 						</TabsContent>

@@ -15,7 +15,13 @@ import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
 import React, { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { DialogClose } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import axios from 'axios';
@@ -42,7 +48,7 @@ export default function LoanForm({ className }: { className?: string }) {
 	const pathname = usePathname();
 	const router = useRouter();
 	const [tenant, setTenant] = useState<string | null>(null);
-	const baseURL = `http://${tenant}.localhost:8000`;
+	const baseURL = `https://${tenant}.exxforce.com`;
 	const [loanTypes, setLoanTypes] = useState<LoanType[]>([]);
 	const [employees, setEmployees] = useState<Employee[]>([]);
 	const [form, setForm] = useState({
@@ -56,11 +62,14 @@ export default function LoanForm({ className }: { className?: string }) {
 		status: '',
 		interest_rate: '',
 		interest_method: '',
-
 	});
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [startDate, setStartDate] = useState<Date | null>(null);
+	const [isInterest, setIsInterest] = React.useState(false);
+	const [interestMethod, setInterestMethod] = React.useState('');
+	const [rate, setRate] = React.useState('');
+	const [loanType, setLoanType] = React.useState('');
 
 	useEffect(() => {
 		const loadData = async () => {
@@ -135,12 +144,12 @@ export default function LoanForm({ className }: { className?: string }) {
 				`${baseURL}/tenant/loans/create`,
 				{
 					loan_type_id: parseInt(form.loan_type_id),
-					employee_id: (parseInt(String(form.employee_id))), // Adjusting for zero-based index
+					employee_id: parseInt(String(form.employee_id)), // Adjusting for zero-based index
 					amount: Number(form.amount),
 					repayment_months: parseInt(form.repayment_months),
 					start_date: form.start_date,
 					reason: form.reason || null,
-					status: 'approved'
+					status: 'approved',
 				},
 				{
 					headers: { Authorization: `Bearer ${token}` },
@@ -157,6 +166,93 @@ export default function LoanForm({ className }: { className?: string }) {
 				: details || 'Failed to create loan';
 			setError(message);
 		}
+	};
+
+	const loanTypeForm = () => {
+		const handleAdd = async () => {
+			const tenant = localStorage.getItem('tenant');
+			const accessToken = localStorage.getItem('access_token');
+			const baseURL = `https://${tenant}.exxforce.com`;
+			try {
+				const response = await axios.post(
+					`${baseURL}/tenant/loans/loan-types/create`,
+					{
+						name: loanType,
+						interest_rate: parseInt(rate),
+						is_interest_applied: isInterest,
+						interest_method: interestMethod,
+					},
+					{
+						headers: { Authorization: `Bearer ${accessToken}` },
+					}
+				);
+
+				alert('Loan Type created!');
+				// router.push(`/Loan`);
+				if (response.status === 200) {
+					return loanType;
+				}
+			} catch (err: any) {
+				console.error(err);
+				const details = err.response?.data?.detail;
+				alert(`Error: ${details}`);
+			}
+		};
+		return (
+			<div>
+				<form action=''>
+					<span className='mt-2 ml-2'>
+						<Label htmlFor='name'>Loan Type Name</Label>
+						<Input
+							type='text'
+							id='name'
+							onChange={(e) => setLoanType(e.target.value)}
+							required
+						/>
+					</span>
+					<span className='m-2'>
+						<Label htmlFor='interestRate'>Interest Rate</Label>
+						<Input
+							type='number'
+							id='interestRate'
+							onChange={(e) => setRate(e.target.value)}
+							required
+						/>
+					</span>
+					<span className='flex items-center gap-2 m-2'>
+						<Checkbox onClick={() => setIsInterest(!isInterest)} />
+						<Label htmlFor='interestRate'>Interest Applied</Label>
+					</span>
+					<span className='flex items-center m-2'>
+						<Label htmlFor='interestMethod'>Interest Type</Label>
+						<Select
+							value={interestMethod}
+							onValueChange={setInterestMethod}>
+							<SelectTrigger>
+								<SelectValue placeholder='Select Value' />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value='simple interest'>Simple Interest</SelectItem>
+								<SelectItem value='reducing'>Reducing Balance</SelectItem>
+							</SelectContent>
+						</Select>
+					</span>
+				</form>
+				<span className='self-end gap-4 flex justify-between'>
+					<Button
+						className='rounded-lg p-2 text-[#3D56A8] w-[80px] border h-[38px] bg-white'
+						asChild>
+						<DialogClose>Close</DialogClose>
+					</Button>
+					<Button
+						onClick={handleAdd}
+						type='submit'
+						className='bg-[#3D56A8] text-white'>
+						Submit
+					</Button>
+				</span>
+			</div>
+		);
 	};
 
 	return (
@@ -194,9 +290,120 @@ export default function LoanForm({ className }: { className?: string }) {
 											{type.name}
 										</SelectItem>
 									))}
-									<SelectItem value='new-loan'>
-										<Button type='button'>+ Add New Loan</Button>
-									</SelectItem>
+									<Dialog>
+										<DialogTrigger asChild className='mt-2'>
+											<Button
+												type='button'
+												variant='outline'>
+												+ Add New Loan Type
+											</Button>
+										</DialogTrigger>
+										<DialogContent className='w-[400px] bg-white'>
+											<DialogTitle hidden></DialogTitle>
+											{(() => {
+												const [localLoanType, setLocalLoanType] = useState('');
+												const [localRate, setLocalRate] = useState('');
+												const [localIsInterest, setLocalIsInterest] = useState(false);
+												const [localInterestMethod, setLocalInterestMethod] = useState('');
+												const handleAdd = async () => {
+													const tenant = localStorage.getItem('tenant');
+													const accessToken = localStorage.getItem('access_token');
+													const baseURL = `https://${tenant}.exxforce.com`;
+													try {
+														const response = await axios.post(
+															`${baseURL}/tenant/loans/loan-types/create`,
+															{
+																name: localLoanType,
+																interest_rate: parseInt(localRate),
+																is_interest_applied: localIsInterest,
+																interest_method: localInterestMethod,
+															},
+															{
+																headers: { Authorization: `Bearer ${accessToken}` },
+															}
+														);
+
+														alert('Loan Type created!');
+														setLoanTypes((prev) => [
+															...prev,
+															{
+																id: response.data.id,
+																name: localLoanType,
+																is_interest_applied: localIsInterest,
+																interest_rate: localRate,
+																interest_method: localInterestMethod,
+															},
+														]);
+														setForm((prev) => ({
+															...prev,
+															loan_type_id: response.data.id.toString(),
+														}));
+														// Close dialog
+														(document.activeElement as HTMLElement | null)?.blur()
+													} catch (err: any) {
+														console.error(err);
+														const details = err.response?.data?.detail;
+														alert(`Error: ${details}`);
+													}
+												};
+												return (
+													<div>
+														<form action=''>
+															<span className='mt-2 ml-2'>
+																<Label htmlFor='name'>Loan Type Name</Label>
+																<Input
+																	type='text'
+																	id='name'
+																	onChange={(e) => setLocalLoanType(e.target.value)}
+																	required
+																/>
+															</span>
+															<span className='m-2'>
+																<Label htmlFor='interestRate'>Interest Rate</Label>
+																<Input
+																	type='number'
+																	id='interestRate'
+																	onChange={(e) => setLocalRate(e.target.value)}
+																	required
+																/>
+															</span>
+															<span className='flex items-center gap-2 m-2'>
+																<Checkbox onClick={() => setLocalIsInterest(!localIsInterest)} />
+																<Label htmlFor='interestRate'>Interest Applied</Label>
+															</span>
+															<span className='flex items-center m-2'>
+																<Label htmlFor='interestMethod'>Interest Type</Label>
+																<Select
+																	value={localInterestMethod}
+																	onValueChange={setLocalInterestMethod}>
+																	<SelectTrigger>
+																		<SelectValue placeholder='Select Value' />
+																	</SelectTrigger>
+																	<SelectContent>
+																		<SelectItem value='simple interest'>Simple Interest</SelectItem>
+																		<SelectItem value='reducing'>Reducing Balance</SelectItem>
+																	</SelectContent>
+																</Select>
+															</span>
+														</form>
+														<span className='self-end gap-4 flex justify-between'>
+															<Button
+																className='rounded-lg p-2 text-[#3D56A8] w-[80px] border h-[38px] bg-white'
+																asChild>
+																<DialogClose>Close</DialogClose>
+															</Button>
+															<Button
+																onClick={handleAdd}
+																type='button'
+																className='bg-[#3D56A8] text-white'>
+																Submit
+															</Button>
+														</span>
+													</div>
+												);
+											})()}
+										</DialogContent>
+									</Dialog>
 								</SelectContent>
 							</Select>
 						</span>
@@ -285,7 +492,11 @@ export default function LoanForm({ className }: { className?: string }) {
 					</div>
 					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='Start' className='mb-2 font-light'>Start Date of Repayment</Label>
+							<Label
+								htmlFor='Start'
+								className='mb-2 font-light'>
+								Start Date of Repayment
+							</Label>
 							<DatePicker
 								id='Start'
 								required
@@ -299,7 +510,11 @@ export default function LoanForm({ className }: { className?: string }) {
 					</div>
 					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='intrestRate' className='mb-2 font-light'>Interest Rate</Label>
+							<Label
+								htmlFor='intrestRate'
+								className='mb-2 font-light'>
+								Interest Rate
+							</Label>
 							<Input
 								className='h-8 mb-4 w-[200px] pl-3 pr-8 border rounded'
 								type='number'
@@ -313,7 +528,11 @@ export default function LoanForm({ className }: { className?: string }) {
 					</div>
 					<div className='grid grid-cols-2 gap-6 m-4'>
 						<span>
-							<Label htmlFor='Method' className='mb-2 font-light'>Interest Method</Label>
+							<Label
+								htmlFor='Method'
+								className='mb-2 font-light'>
+								Interest Method
+							</Label>
 							<div className='flex flex-col gap-4 mt-2'>
 								<label className='flex items-center gap-2 cursor-pointer'>
 									<Checkbox

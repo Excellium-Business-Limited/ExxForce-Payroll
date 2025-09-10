@@ -116,50 +116,8 @@ const loanReq = ({ loans }: LoanReqProps) => {
 
 	if (isloan === false) {
 			return (
-				<div className='h-[680px] m-7 gap-4 '>
-					<div className='flex flex-row items-center justify-between w-full'>
-						<span>
-							<h1>Loan</h1>
-							<p className='text-xs'>Create and Manage Loans</p>
-						</span>
-						<span className='items-end self-end justify-between flex gap-4'>
-							<Sheet>
-								<SheetTrigger asChild>
-									<Button
-										variant={'outline'}
-										className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-										Add Loan
-									</Button>
-								</SheetTrigger>
-								<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
-									<SheetTitle className='hidden'></SheetTitle>
-									<LoanForm />
-								</SheetContent>
-							</Sheet>
-							<Dialogs title={'Import'}>
-								<Import
-									title='Loans'
-									isOpen={false}
-									onClose={function (): void {
-										throw new Error('Function not implemented.');
-									}}
-									onSubmit={function (importData: any): Promise<void> {
-										throw new Error('Function not implemented.');
-									}}
-									children={
-										<div>
-											<li>• Loan Type (required)</li>
-											<li>• Employee Name (required)</li>
-											<li>• Amount (required)</li>
-											<li>• Start Date (required)</li>
-											<li>• Interest Rate (optional)</li>
-											<li>• Repayment Terms (optional)</li>
-										</div>
-									}
-								/>
-							</Dialogs>
-						</span>
-					</div>
+				<div className='h-[680px] w-full m-7 gap-4 '>
+					
 					<div className='text-center max-w-2xl mx-auto mt-[120px]'>
 						<img
 							src='/empty.jpg'

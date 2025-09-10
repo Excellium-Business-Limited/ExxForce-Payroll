@@ -115,7 +115,7 @@ export default function ReportPage({
 			return;
 		}
 
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 		setLoading(true);
 		setError(null);
 
