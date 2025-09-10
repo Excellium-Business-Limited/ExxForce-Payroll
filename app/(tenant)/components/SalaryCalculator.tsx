@@ -1,11 +1,125 @@
 // components/SalaryCalculator.tsx
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, Info, AlertCircle } from "lucide-react";
-import { SalaryCalculatorProps } from '../types/employee';
-import { useSalaryCalculator } from '../hooks/useSalaryCalculator';
-import { TAX_BRACKETS, PAY_FREQUENCY_MULTIPLIERS } from '../constants/salary';
+
+// Types
+interface Employee {
+  id?: number;
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  gender: 'MALE' | 'FEMALE';
+  date_of_birth: string;
+  address: string;
+  employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
+  start_date: string;
+  tax_start_date: string;
+  job_title: string;
+  department_name: string;
+  pay_grade_name: string;
+  custom_salary: number;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  pay_frequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
+  is_paye_applicable: boolean;
+  is_pension_applicable: boolean;
+  is_nhf_applicable: boolean;
+  is_nsitf_applicable: boolean;
+}
+
+interface SalaryComponent {
+  id: string;
+  name: string;
+  componentId?: number | string;
+  calculationType?: 'fixed' | 'percentage';
+  defaultValue?: number;
+  fixedValue?: number;
+  percentageValue?: number;
+  calculatedAmount?: number;
+  isBasic?: boolean;
+  isEditable?: boolean;
+  isPensionable?: boolean;
+  isTaxable?: boolean;
+}
+
+interface NetSalaryCalculation {
+  grossSalary: number;
+  basicSalary: number;
+  allowances: number;
+  totalIncome: number;
+  pensionEmployeeContribution: number;
+  pensionEmployerContribution: number;
+  nhfDeduction: number;
+  nsitfDeduction: number;
+  consolidatedReliefAllowance: number;
+  taxableIncome: number;
+  payeTax: number;
+  totalDeductions: number;
+  netSalary: number;
+  effectiveTaxRate: number;
+  marginalTaxRate: number;
+  annualGrossSalary: number;
+  annualPensionableAmount: number;
+  annualTaxableAmount: number;
+  annualPensionContribution: number;
+  annualNhfDeduction: number;
+  annualNsitfDeduction: number;
+  adjustedGrossIncome: number;
+  annualPayeTax: number;
+  hasPensionableComponents: boolean;
+  hasTaxableComponents: boolean;
+  pensionableAmount: number;
+  taxableAmount: number;
+}
+
+interface TaxBracket {
+  min: number;
+  max: number;
+  rate: number;
+}
+
+interface SalaryCalculatorProps {
+  employee: Employee;
+  grossSalary: number;
+  earningComponents?: SalaryComponent[];
+  onCalculationComplete?: (calculation: NetSalaryCalculation) => void;
+  onCalculationError?: (error: string) => void;
+  showDetailedBreakdown?: boolean;
+  className?: string;
+  disabled?: boolean;
+}
+
+// Constants
+const SALARY_CONSTANTS = {
+  BASIC_SALARY_RATIO: 0.6,
+  ALLOWANCE_RATIO: 0.4,
+  BASE_RELIEF_ALLOWANCE: 200000,
+  PENSION_RATE: 0.08,
+  PENSION_EMPLOYER_RATE: 0.10,
+  NHF_RATE: 0.025,
+  NSITF_RATE: 0.01,
+  CONSOLIDATION_RELIEF_RATE: 0.20
+} as const;
+
+const TAX_BRACKETS: TaxBracket[] = [
+  { min: 0, max: 300000, rate: 7 },
+  { min: 300001, max: 600000, rate: 11 },
+  { min: 600001, max: 1100000, rate: 15 },
+  { min: 1100001, max: 1600000, rate: 19 },
+  { min: 1600001, max: 3200000, rate: 21 },
+  { min: 3200001, max: Infinity, rate: 24 }
+];
+
+const PAY_FREQUENCY_MULTIPLIERS = {
+  WEEKLY: 52,
+  BIWEEKLY: 26,
+  MONTHLY: 12
+} as const;
 
 const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
   employee,
@@ -17,26 +131,234 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
   className = "",
   disabled = false
 }) => {
-  const {
-    calculation,
-    isCalculating,
-    hasCalculated,
-    showDetails,
-    error,
-    isCalculationOutdated,
-    canCalculate,
-    validationMessage,
-    calculate,
-    toggleDetails,
-    resetCalculation
-  } = useSalaryCalculator({
-    employee,
-    grossSalary,
-    earningComponents,
-    showDetailedBreakdown,
-    onCalculationComplete,
-    onCalculationError
-  });
+  const [calculation, setCalculation] = useState<NetSalaryCalculation | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [isCalculationOutdated, setIsCalculationOutdated] = useState(false);
+
+  // Validation
+  const validation = useMemo(() => {
+    const errors: string[] = [];
+    
+    // Basic validation
+    if (!employee) {
+      errors.push('Employee information is required');
+    } else {
+      if (!employee.employee_id?.trim()) {
+        errors.push('Employee ID is required');
+      }
+      if (!employee.first_name?.trim() || !employee.last_name?.trim()) {
+        errors.push('Employee name is required');
+      }
+      if (!['MONTHLY', 'WEEKLY', 'BIWEEKLY'].includes(employee.pay_frequency)) {
+        errors.push('Valid pay frequency is required');
+      }
+    }
+    
+    // Salary validation
+    if (grossSalary <= 0) {
+      errors.push('Gross salary must be greater than 0');
+    } else if (grossSalary > 100000000) {
+      errors.push('Gross salary seems unreasonably high');
+    } else if (!Number.isFinite(grossSalary) || isNaN(grossSalary)) {
+      errors.push('Gross salary must be a valid number');
+    }
+
+    // Component validation
+    earningComponents.forEach((component, index) => {
+      if (component.name && component.calculatedAmount !== undefined && component.calculatedAmount < 0) {
+        errors.push(`Component ${index + 1} (${component.name}): Amount cannot be negative`);
+      }
+      if (component.percentageValue !== undefined && 
+          (component.percentageValue < 0 || component.percentageValue > 100)) {
+        errors.push(`Component ${index + 1} (${component.name}): Percentage must be between 0 and 100`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      canCalculate: errors.length === 0 && grossSalary > 0 && employee
+    };
+  }, [employee, grossSalary, earningComponents]);
+
+  // Calculate tax
+  const calculateTax = (taxableIncome: number): { tax: number; marginalRate: number } => {
+    let tax = 0;
+    let marginalRate = 0;
+
+    for (const bracket of TAX_BRACKETS) {
+      if (taxableIncome > bracket.min - 1) {
+        const taxableInBracket = Math.min(taxableIncome, bracket.max) - (bracket.min - 1);
+        tax += (taxableInBracket * bracket.rate) / 100;
+        marginalRate = bracket.rate;
+        
+        if (taxableIncome <= bracket.max) break;
+      }
+    }
+
+    return { tax, marginalRate };
+  };
+
+  // Get pay frequency multiplier
+  const getPayFrequencyMultiplier = (): number => {
+    return PAY_FREQUENCY_MULTIPLIERS[employee.pay_frequency] || PAY_FREQUENCY_MULTIPLIERS.MONTHLY;
+  };
+
+  // Main calculation function
+  const performCalculation = (): NetSalaryCalculation => {
+    const monthlyGross = grossSalary;
+    const payFrequencyMultiplier = getPayFrequencyMultiplier();
+    const annualGrossSalary = monthlyGross * payFrequencyMultiplier;
+
+    // Analyze earning components
+    let monthlyPensionableAmount = 0;
+    let monthlyTaxableAmount = 0;
+    let hasPensionableComponents = false;
+    let hasTaxableComponents = false;
+
+    earningComponents.forEach(comp => {
+      if (comp.calculatedAmount && comp.calculatedAmount > 0) {
+        if (comp.isPensionable) {
+          monthlyPensionableAmount += comp.calculatedAmount;
+          hasPensionableComponents = true;
+        }
+        if (comp.isTaxable) {
+          monthlyTaxableAmount += comp.calculatedAmount;
+          hasTaxableComponents = true;
+        }
+      }
+    });
+
+    const annualPensionableAmount = monthlyPensionableAmount * payFrequencyMultiplier;
+    const annualTaxableAmount = monthlyTaxableAmount * payFrequencyMultiplier;
+
+    // Calculate statutory deductions
+    let annualPensionContribution = 0;
+    let annualPensionEmployerContribution = 0;
+    let annualNhfDeduction = 0;
+    let annualNsitfDeduction = 0;
+
+    if (employee.is_pension_applicable) {
+      const pensionBase = hasPensionableComponents ? annualPensionableAmount : annualGrossSalary;
+      if (pensionBase > 0) {
+        annualPensionContribution = pensionBase * SALARY_CONSTANTS.PENSION_RATE;
+        annualPensionEmployerContribution = pensionBase * SALARY_CONSTANTS.PENSION_EMPLOYER_RATE;
+      }
+    }
+
+    if (employee.is_nhf_applicable) {
+      annualNhfDeduction = annualGrossSalary * SALARY_CONSTANTS.NHF_RATE;
+    }
+
+    if (employee.is_nsitf_applicable) {
+      annualNsitfDeduction = annualGrossSalary * SALARY_CONSTANTS.NSITF_RATE;
+    }
+
+    // Calculate tax
+    const adjustedGrossIncome = annualGrossSalary - (annualPensionContribution + annualNhfDeduction);
+    const consolidatedReliefAllowance = (SALARY_CONSTANTS.CONSOLIDATION_RELIEF_RATE * adjustedGrossIncome) + SALARY_CONSTANTS.BASE_RELIEF_ALLOWANCE;
+
+    let annualTaxableIncomeForTax = 0;
+    if (hasTaxableComponents) {
+      annualTaxableIncomeForTax = annualTaxableAmount - (annualPensionContribution + annualNhfDeduction + consolidatedReliefAllowance);
+    } else {
+      annualTaxableIncomeForTax = annualGrossSalary - (annualPensionContribution + annualNhfDeduction + consolidatedReliefAllowance);
+    }
+
+    const finalTaxableIncome = Math.max(0, annualTaxableIncomeForTax);
+
+    let annualPayeTax = 0;
+    let marginalTaxRate = 0;
+
+    if (employee.is_paye_applicable && finalTaxableIncome > 0) {
+      const taxCalculation = calculateTax(finalTaxableIncome);
+      annualPayeTax = taxCalculation.tax;
+      marginalTaxRate = taxCalculation.marginalRate;
+    }
+
+    // Convert to monthly
+    const basicSalary = monthlyGross * SALARY_CONSTANTS.BASIC_SALARY_RATIO;
+    const allowances = monthlyGross * SALARY_CONSTANTS.ALLOWANCE_RATIO;
+    const monthlyPensionContribution = annualPensionContribution / payFrequencyMultiplier;
+    const monthlyPensionEmployerContribution = annualPensionEmployerContribution / payFrequencyMultiplier;
+    const monthlyNhfDeduction = annualNhfDeduction / payFrequencyMultiplier;
+    const monthlyNsitfDeduction = annualNsitfDeduction / payFrequencyMultiplier;
+    const monthlyPayeTax = annualPayeTax / payFrequencyMultiplier;
+
+    const totalMonthlyDeductions = monthlyPensionContribution + monthlyNhfDeduction + monthlyNsitfDeduction + monthlyPayeTax;
+    const netMonthlySalary = monthlyGross - totalMonthlyDeductions;
+    const effectiveTaxRate = monthlyGross > 0 ? (monthlyPayeTax / monthlyGross) * 100 : 0;
+
+    return {
+      grossSalary: monthlyGross,
+      basicSalary,
+      allowances,
+      totalIncome: monthlyGross,
+      pensionEmployeeContribution: monthlyPensionContribution,
+      pensionEmployerContribution: monthlyPensionEmployerContribution,
+      nhfDeduction: monthlyNhfDeduction,
+      nsitfDeduction: monthlyNsitfDeduction,
+      payeTax: monthlyPayeTax,
+      totalDeductions: totalMonthlyDeductions,
+      netSalary: netMonthlySalary,
+      annualGrossSalary,
+      annualPensionableAmount,
+      annualTaxableAmount,
+      annualPensionContribution,
+      annualNhfDeduction,
+      annualNsitfDeduction,
+      adjustedGrossIncome,
+      consolidatedReliefAllowance,
+      taxableIncome: finalTaxableIncome,
+      annualPayeTax,
+      effectiveTaxRate,
+      marginalTaxRate,
+      hasPensionableComponents,
+      hasTaxableComponents,
+      pensionableAmount: monthlyPensionableAmount,
+      taxableAmount: monthlyTaxableAmount
+    };
+  };
+
+  // Handle calculation
+  const calculate = async (): Promise<void> => {
+    if (disabled || !validation.canCalculate) return;
+
+    setIsCalculating(true);
+    setError('');
+
+    try {
+      // Add small delay to show loading state
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const result = performCalculation();
+      setCalculation(result);
+      setHasCalculated(true);
+      setIsCalculationOutdated(false);
+      onCalculationComplete?.(result);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Calculation failed';
+      setError(errorMessage);
+      onCalculationError?.(errorMessage);
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  // Toggle details
+  const toggleDetails = () => {
+    setShowDetails(!showDetails);
+  };
+
+  // Reset calculation when inputs change
+  useEffect(() => {
+    if (hasCalculated) {
+      setIsCalculationOutdated(true);
+    }
+  }, [grossSalary, earningComponents, employee]);
 
   // Utility Functions
   const formatCurrency = (amount: number): string => {
@@ -51,25 +373,19 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
     return `${rate.toFixed(2)}%`;
   };
 
-  const getPayFrequencyMultiplier = (): number => {
-    return PAY_FREQUENCY_MULTIPLIERS[employee.pay_frequency] || PAY_FREQUENCY_MULTIPLIERS.MONTHLY;
-  };
-
-  // Handle calculation
-  const handleCalculate = async (): Promise<void> => {
-    if (disabled || !canCalculate) return;
-    await calculate();
-  };
-
   // Early return for invalid input
-  if (grossSalary <= 0) {
+  if (!validation.canCalculate && grossSalary <= 0) {
     return (
       <Card className={`border-gray-200 ${className}`}>
         <CardContent className="p-6 text-center text-gray-500">
           <Calculator className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>Enter a gross salary amount to calculate net salary</p>
-          {validationMessage && (
-            <p className="text-red-500 text-sm mt-2">{validationMessage}</p>
+          {validation.errors.length > 0 && (
+            <div className="mt-4 text-left">
+              {validation.errors.map((error, index) => (
+                <p key={index} className="text-red-500 text-sm">{error}</p>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -161,6 +477,25 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
               </div>
             </div>
 
+            {/* Validation Errors */}
+            {!validation.isValid && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Validation Errors</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <ul className="list-disc list-inside space-y-1">
+                        {validation.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Error Display */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -177,8 +512,8 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
             {/* Calculate Button */}
             <div className="text-center">
               <Button
-                onClick={handleCalculate}
-                disabled={isCalculating || !canCalculate || disabled}
+                onClick={calculate}
+                disabled={isCalculating || !validation.canCalculate || disabled}
                 className={`${
                   isCalculationOutdated 
                     ? 'bg-yellow-600 hover:bg-yellow-700' 
@@ -262,8 +597,8 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({
                           ⚠ May be outdated
                         </div>
                       )}
-                      </CardContent>
-                    </Card>
+                    </CardContent>
+                  </Card>
                   
                   <Card className={`${isCalculationOutdated ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}`}>
                     <CardContent className="p-4 text-center">

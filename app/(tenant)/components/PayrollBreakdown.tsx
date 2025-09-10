@@ -148,6 +148,17 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
     }
   }, [hasPayrollData, effectiveGross]);
 
+  // Create a properly typed employee object for SalaryCalculator
+  const salaryCalculatorEmployee = {
+    ...employee,
+    // Handle all optional properties that SalaryCalculator expects as required
+    id: employee.id || 0,
+    job_title: employee.job_title || 'Not Specified',
+    custom_salary: employee.custom_salary || 0,
+    department: employee.department || 'Not Specified',
+    pay_frequency: (employee.pay_frequency as 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY') || 'MONTHLY'
+  };
+
   // If no payroll data, show empty state
   if (!hasPayrollData) {
     return (
@@ -454,19 +465,16 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                   </button>
                 </div>
 
-                {/* {showCalculator && (
+                {showCalculator && (
                   <SalaryCalculator
-                    employee={{
-                      ...employee,
-                      employment_type: employee.employment_type || 'FULL_TIME' // Provide default if undefined
-                    }}
+                    employee={salaryCalculatorEmployee}
                     grossSalary={effectiveGross}
                     earningComponents={[]}
                     onCalculationComplete={handleCalculationComplete}
                     showDetailedBreakdown={false}
                     className=""
                   />
-                )} */}
+                )}
 
                 {/* Quick Net Salary Display */}
                 {netCalculation && (
