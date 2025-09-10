@@ -73,18 +73,19 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 		setIsUploading(true);
 
 		try {
-			// Create FormData
+			// Create FormData - backend expects the file path
 			const formData = new FormData();
 			formData.append('file', selectedFile);
-			formData.append('document_type', documentType);
+			formData.append('document_type', documentType.toUpperCase()); // Backend might expect uppercase
 			// Map the description to title for the backend
 			formData.append('title', description || selectedFile.name);
 			// Use description as notes as well, or leave empty
-			formData.append('notes', description || '');
+			formData.append('notes', description || 'Uploaded via Postman');
 			
 			// Use the same pattern as SalaryComponentSetup for API endpoint
+			const baseURL = `${tenant}.exxforce.com`;
 			const response = await axios.post(
-				`http://${tenant}.localhost:8000/tenant/employee/${employee.employee_id}/documents`,
+				`https://${baseURL}/tenant/employee/${employee.employee_id}/documents`,
 				formData,
 				{
 					headers: {
@@ -155,8 +156,11 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 		}
 	};
 
+	// Don't render anything if modal is not open
+	if (!isOpen) return null;
+
 	return (
-		<div className="p-6">
+		<div className="p-6 bg-white min-h-full">
 			<div className="mb-6">
 				<div className="flex items-center space-x-3 mb-2">
 					<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">

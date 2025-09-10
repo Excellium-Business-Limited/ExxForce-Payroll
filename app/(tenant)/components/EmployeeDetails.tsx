@@ -20,6 +20,7 @@ import LeaveListDisplay from '../components/LeaveListDisplay';
 import LeaveRequestForm from '../components/LeaveRequestForm';
 import PayrollBreakdown from '../components/PayrollBreakdown';
 import DocumentUploadModal from '../components/DocumentUploadModal';
+import DocumentsList from '../components/DocumentsList';
 import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
@@ -83,7 +84,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 			style: 'currency',
 			currency: 'NGN',
 			minimumFractionDigits: 2,
-		}).format(amount);
+		}).format(amount).replace('NGN', '₦');
 	};
 
 	const formatDate = (dateString: string | undefined) => {
@@ -486,7 +487,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 					<div className='bg-white rounded-lg shadow-lg p-6 w-56 h-36 border'>
 						<div className='flex items-center justify-between mb-4'>
 							<div className='w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center'>
-								<DollarSign className='w-4 h-4 text-blue-600' />
+								<span className='text-blue-600 text-sm font-bold'>₦</span>
 							</div>
 							<div className='text-xs text-gray-400'>Payroll</div>
 						</div>
@@ -526,7 +527,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 			<button
 				onClick={handleProcessPayroll}
 				className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-				<DollarSign className='w-4 h-4' />
+				<span className='w-4 h-4 text-sm font-bold'>₦</span>
 				Process Payroll
 			</button>
 		</div>
@@ -942,7 +943,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 			<div className='flex gap-3'>
 				<button className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-					<DollarSign className='w-4 h-4' />
+					<span className='w-4 h-4 text-sm font-bold'>₦</span>
 					Process Payment
 				</button>
 				<button className='bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors'>
@@ -1250,7 +1251,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 							</div>
 						)}
 
-						{activeTab === 'document' && <DocumentEmptyState />}
+						{activeTab === 'document' && (
+							<DocumentsList
+								employee={employee}
+								onUploadDocument={handleUploadDocument}
+							/>
+						)}
 
 						{activeTab === 'loan' && (
 							<div>
@@ -1525,14 +1531,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 						{/* Form Content */}
 						<div className='flex-1 overflow-auto'>
-							{/* Uncomment when DocumentUploadModal is available */}
-							{/* <DocumentUploadModal
+							<DocumentUploadModal
 								isOpen={showDocumentUpload}
 								onClose={handleCloseDocumentUpload}
 								onSubmit={handleDocumentUploadSubmit}
-								employee={employee.id?.toString()}
-								employeeName={`${employee.first_name} ${employee.last_name}`}
-							/> */}
+								employee={employee}
+							/>
 						</div>
 					</div>
 				)}
