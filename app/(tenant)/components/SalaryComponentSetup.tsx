@@ -36,6 +36,9 @@ interface SalaryComponent {
   isEditable?: boolean;
   isPensionable?: boolean;
   isTaxable?: boolean;
+  // For tracking existing components that need editing
+  isExisting?: boolean;
+  existingComponentId?: number;
 }
 
 interface BackendComponent {
@@ -282,11 +285,63 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }
   };
 
+  // Function to fetch existing employee salary components
+  const fetchExistingEmployeeComponents = async (): Promise<void> => {
+    if (!employee?.employee_id) return;
+
+    const baseURL = `${tenant}.exxforce.com`;
+    
+    try {
+      // Fetch existing salary components for this employee
+      const response = await axios.get(
+        `https://${baseURL}/tenant/employee/${employee.employee_id}/salary-components`,
+        {
+          headers: {
+            Authorization: `Bearer ${globalState.accessToken}`,
+          },
+        }
+      );
+
+      console.log('Existing employee components fetched:', response.data);
+
+      // Process the response and populate existing components
+      if (response.data && Array.isArray(response.data)) {
+        const existingComponents: SalaryComponent[] = response.data.map((comp: any) => ({
+          id: `existing-${comp.id}`,
+          name: comp.name,
+          componentId: comp.component_id,
+          existingComponentId: comp.id,
+          calculationType: comp.calculation_type,
+          fixedValue: comp.calculation_type === 'fixed' ? comp.value : undefined,
+          percentageValue: comp.calculation_type === 'percentage' ? comp.value : undefined,
+          calculatedAmount: comp.calculated_amount || 0,
+          isBasic: comp.is_basic || false,
+          isEditable: !comp.is_basic,
+          isPensionable: comp.is_pensionable || false,
+          isTaxable: comp.is_taxable || false,
+          isExisting: true
+        }));
+
+        setEarningComponents(prevComponents => [
+          ...prevComponents.filter(comp => !comp.isExisting), // Remove any existing components
+          ...existingComponents
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching existing employee components:', error);
+      // Don't show error to user as this is optional functionality
+    }
+  };
+
   // Fetch components on component mount
   useEffect(() => {
     fetchEarningComponents();
     fetchDeductionComponents();
-  }, []);
+    // Also fetch existing employee components if we have an employee
+    if (employee?.employee_id) {
+      fetchExistingEmployeeComponents();
+    }
+  }, [employee?.employee_id]);
 
   // Calculate component amounts and update basic component
   const calculateComponentAmounts = (): void => {
@@ -574,6 +629,26 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }).format(amount);
   };
 
+  // Update employee gross salary first
+  const updateEmployeeGrossSalary = async (): Promise<void> => {
+    const baseURL = `${tenant}.exxforce.com`;
+    
+    const payload = {
+      salary: grossSalary // Backend expects 'salary' not 'gross_salary'
+    };
+
+    await axios.put(
+      `https://${baseURL}/tenant/employee/update/${employee?.employee_id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${globalState.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+      }
+    );
+  };
+
   // API submission functions
   const submitSalaryComponents = async (): Promise<void> => {
     const promises = earningComponents
@@ -588,18 +663,35 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
           payload.percentage_override = comp.percentageValue;
         }
-        const baseURL = `${tenant}.exxforce.com`
 
-        return axios.post(
-          `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${globalState.accessToken}`,
-              'Content-Type': 'application/json'
-            },
-          }
-        );
+        const baseURL = `${tenant}.exxforce.com`;
+
+        // Check if this is an existing component that needs editing
+        if (comp.isExisting && comp.existingComponentId) {
+          // Use PUT endpoint for editing existing components
+          return axios.put(
+            `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/${comp.existingComponentId}/edit`,
+            payload,
+            {
+              headers: {
+                Authorization: `Bearer ${globalState.accessToken}`,
+                'Content-Type': 'application/json'
+              },
+            }
+          );
+        } else {
+          // Use POST endpoint for creating new components
+          return axios.post(
+            `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
+            payload,
+            {
+              headers: {
+                Authorization: `Bearer ${globalState.accessToken}`,
+                'Content-Type': 'application/json'
+              },
+            }
+          );
+        }
       });
 
     await Promise.all(promises);
@@ -621,7 +713,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
         const baseURL = `${tenant}.exxforce.com`
         return axios.post(
-          `http://${baseURL}/tenant/employee/${employee?.employee_id}/deduction-components/create`,
+          `https://${baseURL}/tenant/employee/${employee?.employee_id}/deduction-components/create`,
           payload,
           {
             headers: {
@@ -649,10 +741,16 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     setIsSubmitting(true);
 
     try {
-      // Submit salary components
+      // Step 1: Update employee gross salary first
+      console.log('Updating employee gross salary...');
+      await updateEmployeeGrossSalary();
+      
+      // Step 2: Submit salary components
+      console.log('Submitting salary components...');
       await submitSalaryComponents();
       
-      // Submit deduction components
+      // Step 3: Submit deduction components
+      console.log('Submitting deduction components...');
       await submitDeductionComponents();
 
       const payload = {
@@ -676,7 +774,14 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       
     } catch (error) {
       console.error('Error submitting salary components:', error);
-      alert('Failed to submit salary components. Please try again.');
+      
+      // More specific error handling
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.response?.data?.detail || error.message;
+        alert(`Failed to submit: ${errorMessage}`);
+      } else {
+        alert('Failed to submit salary components. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -759,6 +864,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
               {comp.isBasic && (
                 <p className="text-xs text-blue-600 mt-1">
                   Auto-calculated as remainder
+                </p>
+              )}
+              {comp.isExisting && !comp.isBasic && (
+                <p className="text-xs text-green-600 mt-1">
+                  Existing component (editing)
                 </p>
               )}
               {type === 'earning' && comp.name && (
