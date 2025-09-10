@@ -3,63 +3,39 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, FileText, DollarSign } from 'lucide-react';
 import SalaryCalculator from './SalaryCalculator';
-// import SalaryCalculator, { calculateNetSalary } from './SalaryCalculator';
+import type { Employee, PayrollComponent } from '../types/employee';
 
-
-interface SalaryComponent {
+// Internal interfaces for API response structure
+interface APIPayrollComponent {
   id: number;
   name: string;
   amount: string; // API returns as string
+  type?: 'EARNING' | 'DEDUCTION' | 'BENEFIT';
+  is_taxable?: boolean;
+  is_percentage?: boolean;
+  percentage_value?: number;
+  description?: string;
 }
 
-interface DeductionComponent {
-  id: number;
-  name: string;
-  amount: string; // API returns as string
-}
-
-interface BenefitComponent {
-  id: number;
-  name: string;
-  amount: string; // API returns as string
-}
-
-interface Employee {
-  id?: number;
-  employee_id: string;
-  first_name: string;
-  last_name: string;
-  custom_salary?: number;
-  effective_gross: string; // API returns as string
-  salary_components: SalaryComponent[];
-  deduction_components: DeductionComponent[];
-  benefits: BenefitComponent[];
-  // Additional fields from the actual API response
-  department?: string;
-  job_title?: string;
-  employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN'; // Fixed: Make required to match SalaryCalculator
-  pay_frequency?: string;
-  // Required fields for SalaryCalculator
-  email: string;
-  phone_number: string;
-  gender: 'MALE' | 'FEMALE';
-  date_of_birth: string;
-  address: string;
-  start_date: string;
-  tax_start_date: string;
-  department_name: string;
-  pay_grade_name: string;
-  bank_name: string;
-  account_number: string;
-  account_name: string;
-  is_paye_applicable: boolean;
-  is_pension_applicable: boolean;
-  is_nhf_applicable: boolean;
-  is_nsitf_applicable: boolean;
+// Extended Employee interface for PayrollBreakdown specific data
+interface PayrollEmployee extends Employee {
+  effective_gross?: string; // API returns as string
+  salary_components?: APIPayrollComponent[];
+  deduction_components?: APIPayrollComponent[];
+  benefits?: APIPayrollComponent[];
+  payroll_data?: {
+    earnings?: PayrollComponent[];
+    deductions?: PayrollComponent[];
+    benefits?: PayrollComponent[];
+    gross_salary?: number;
+    net_salary?: number;
+    total_deductions?: number;
+    total_benefits?: number;
+  };
 }
 
 interface PayrollBreakdownProps {
-  employee: Employee;
+  employee: PayrollEmployee;
   onProcessPayroll?: (employee: Employee) => void;
   onGeneratePayslip?: () => void;
 }
@@ -118,9 +94,9 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
   const effectiveGross = parseFloat(employee.effective_gross || '0');
   
   // Calculate totals
-  const totalSalaryComponents = salaryComponents.reduce((sum, comp) => sum + parseFloat(comp.amount || '0'), 0);
-  const totalDeductions = deductionComponents.reduce((sum, comp) => sum + parseFloat(comp.amount || '0'), 0);
-  const totalBenefits = benefits.reduce((sum, comp) => sum + parseFloat(comp.amount || '0'), 0);
+  const totalSalaryComponents = salaryComponents.reduce((sum: number, comp: APIPayrollComponent) => sum + parseFloat(comp.amount || '0'), 0);
+  const totalDeductions = deductionComponents.reduce((sum: number, comp: APIPayrollComponent) => sum + parseFloat(comp.amount || '0'), 0);
+  const totalBenefits = benefits.reduce((sum: number, comp: APIPayrollComponent) => sum + parseFloat(comp.amount || '0'), 0);
   const netSalary = netCalculation?.netSalary || (effectiveGross - totalDeductions);
 
   // Check if employee has any payroll components
@@ -155,7 +131,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
     id: employee.id || 0,
     job_title: employee.job_title || 'Not Specified',
     custom_salary: employee.custom_salary || 0,
-    department: employee.department || 'Not Specified',
+    department_name: employee.department_name || 'Not Specified',
     pay_frequency: (employee.pay_frequency as 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY') || 'MONTHLY'
   };
 
@@ -297,7 +273,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
 
                   {/* Salary Components */}
                   {salaryComponents.length > 0 ? (
-                    salaryComponents.map((component) => (
+                    salaryComponents.map((component: APIPayrollComponent) => (
                       <div key={component.id} className="flex justify-between items-center py-2">
                         <div>
                           <span className="text-sm text-black">{component.name}</span>
@@ -361,7 +337,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
 
                   {/* Deduction Components */}
                   {deductionComponents.length > 0 ? (
-                    deductionComponents.map((component) => (
+                    deductionComponents.map((component: APIPayrollComponent) => (
                       <div key={component.id} className="flex justify-between items-center py-2">
                         <div>
                           <span className="text-sm text-black">{component.name}</span>
@@ -418,7 +394,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
                   </div>
 
                   {/* Benefit Components */}
-                  {benefits.map((benefit) => (
+                  {benefits.map((benefit: APIPayrollComponent) => (
                     <div key={benefit.id} className="flex justify-between items-center py-2">
                       <div>
                         <span className="text-sm text-black">{benefit.name}</span>
@@ -467,7 +443,7 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
 
                 {showCalculator && (
                   <SalaryCalculator
-                    employee={salaryCalculatorEmployee}
+                    employee={salaryCalculatorEmployee as Employee}
                     grossSalary={effectiveGross}
                     earningComponents={[]}
                     onCalculationComplete={handleCalculationComplete}
