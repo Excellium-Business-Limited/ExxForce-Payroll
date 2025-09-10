@@ -215,7 +215,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		try {
 			setIsLoadingLeaveRequests(true);
 			const response = await axios.get(
-				`http://${tenant}.localhost:8000/tenant/leave/employee/${initialEmployee.employee_id}/leaves`,
+				`https://${tenant}.exxforce.com/tenant/leave/employee/${initialEmployee.employee_id}/leaves`,
 				{
 					headers: {
 						'Content-Type': 'application/json',
@@ -254,7 +254,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		try {
 			setIsLoadingLoans(true);
 			const response = await axios.get(
-				`http://${tenant}.localhost:8000/tenant/loans/${initialEmployee.employee_id}/loans`,
+				`https://${tenant}.exxforce.com/tenant/loans/${initialEmployee.employee_id}/loans`,
 				{
 					headers: {
 						'Content-Type': 'application/json',
@@ -643,6 +643,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		if (!hasAnyComponents) {
 			return <PayrollEmptyState />;
 		}
+		
 
 		return (
 			<div className='space-y-6'>
@@ -1583,7 +1584,9 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 										</div>
 									</div>
 								) : (
+									<div>
 									<PayrollDisplay />
+									</div>
 								)}
 							</div>
 						)}

@@ -381,7 +381,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				console.log('Updating employee with employee_id:', employeeData.employee_id);
 				// Use employee_id in the URL (not the numeric id field)
 				response = await axios.put(
-					`http://${tenant}.localhost:8000/tenant/employee/update/${employeeData.employee_id}`,
+					`https://${tenant}.exxforce.com/tenant/employee/update/${employeeData.employee_id}`,
 					apiData,
 					{ 
 						headers: { 
@@ -394,7 +394,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			} else {
 				console.log('Creating new employee...');
 				response = await axios.post(
-					`http://${tenant}.localhost:8000/tenant/employee/create`,
+					`https://${tenant}.exxforce.com/tenant/employee/create`,
 					apiData,
 					{ 
 						headers: { 
@@ -455,7 +455,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 			// Create the employee first
 			const response = await axios.post(
-				`http://${tenant}.localhost:8000/tenant/employee/create`,
+				`https://${tenant}.exxforce.com/tenant/employee/create`,
 				apiData,
 				{ 
 					headers: { 

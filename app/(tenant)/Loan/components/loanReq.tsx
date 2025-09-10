@@ -146,6 +146,16 @@ const loanReq = ({ loans }: LoanReqProps) => {
 									onSubmit={function (importData: any): Promise<void> {
 										throw new Error('Function not implemented.');
 									}}
+									children={
+										<div>
+											<li>• Loan Type (required)</li>
+											<li>• Employee Name (required)</li>
+											<li>• Amount (required)</li>
+											<li>• Start Date (required)</li>
+											<li>• Interest Rate (optional)</li>
+											<li>• Repayment Terms (optional)</li>
+										</div>
+									}
 								/>
 							</Dialogs>
 						</span>
@@ -188,6 +198,16 @@ const loanReq = ({ loans }: LoanReqProps) => {
 									onSubmit={function (importData: any): Promise<void> {
 										throw new Error('Function not implemented.');
 									}}
+									children={
+										<div>
+											<li>• Loan Type (required)</li>
+											<li>• Employee Name (required)</li>
+											<li>• Amount (required)</li>
+											<li>• Start Date (required)</li>
+											<li>• Interest Rate (optional)</li>
+											<li>• Repayment Terms (optional)</li>
+										</div>
+									}
 								/>
 							</Dialogs>
 						</div>

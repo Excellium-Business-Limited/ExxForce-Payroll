@@ -159,6 +159,16 @@ export default function Home() {
 								onSubmit={function (importData: any): Promise<void> {
 									throw new Error('Function not implemented.');
 								}}
+								children={
+									<div>
+										<li>• Loan Type (required)</li>
+										<li>• Employee Name (required)</li>
+										<li>• Amount (required)</li>
+										<li>• Start Date (required)</li>
+										<li>• Interest Rate (optional)</li>
+										<li>• Repayment Terms (optional)</li>
+									</div>
+								}
 							/>
 						</Dialogs>
 					</span>
@@ -201,6 +211,16 @@ export default function Home() {
 								onSubmit={function (importData: any): Promise<void> {
 									throw new Error('Function not implemented.');
 								}}
+								children={
+									<div>
+										<li>• Loan Type (required)</li>
+										<li>• Employee Name (required)</li>
+										<li>• Amount (required)</li>
+										<li>• Start Date (required)</li>
+										<li>• Interest Rate (optional)</li>
+										<li>• Repayment Terms (optional)</li>
+									</div>
+								}
 							/>
 						</Dialogs>
 					</div>
@@ -241,6 +261,16 @@ export default function Home() {
 								onSubmit={function (importData: any): Promise<void> {
 									throw new Error('Function not implemented.');
 								}}
+								children={
+									<div>
+										<li>• Loan Type (required)</li>
+										<li>• Employee Name (required)</li>
+										<li>• Amount (required)</li>
+										<li>• Start Date (required)</li>
+										<li>• Interest Rate (optional)</li>
+										<li>• Repayment Terms (optional)</li>
+									</div>
+								}
 							/>
 						</Dialogs>
 					</span>
@@ -268,10 +298,9 @@ export default function Home() {
 							<LoanType />
 						</TabsContent>
 						<TabsContent value='LRequest'>
-								<LoanReq loans={loans} />
+							<LoanReq loans={loans} />
 						</TabsContent>
 					</Tabs>
-					
 				</Card>
 			</div>
 		</div>

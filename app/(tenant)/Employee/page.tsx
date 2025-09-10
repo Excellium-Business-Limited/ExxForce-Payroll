@@ -6,7 +6,7 @@ import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
 import EmployeeDetails from '../components/EmployeeDetails';
 import SalarySetupForm from '../components/SalarySetupForm';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/context';
 import { getAccessToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -971,10 +971,20 @@ const EmployeePage: React.FC = () => {
 				open={showImportModal}
 				onOpenChange={handleCloseImportModal}>
 				<DialogContent className='sm:max-w-[500px]'>
+          <DialogTitle hidden></DialogTitle>
 					<ImportModal
+          title='Employees'
 						isOpen={showImportModal}
 						onClose={handleCloseImportModal}
 						onSubmit={handleImportSubmit}
+						children={
+							<div>
+								<li>• Employee ID, First Name, Last Name (required)</li>
+								<li>• Email, Phone Number, Job Title (required)</li>
+								<li>• Department, Employment Type, Start Date (required)</li>
+								<li>• Date of Birth, Gender, Address (optional)</li>
+							</div>
+						}
 					/>
 				</DialogContent>
 			</Dialog>
