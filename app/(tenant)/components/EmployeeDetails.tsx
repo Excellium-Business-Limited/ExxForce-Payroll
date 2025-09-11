@@ -357,7 +357,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 	// Handler for Add Loan button
 	const handleAddLoan = () => {
-		router.push('/loans');
+		router.push('/Loan');
 	};
 
 	// Handler for closing the inline forms
