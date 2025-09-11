@@ -109,13 +109,64 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
         }
       );
 
-      // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Get the content type from the response headers
+      let contentType = response.headers['content-type'] || 'application/octet-stream';
+      
+      // Try to get filename from Content-Disposition header first
+      let downloadFileName = fileName;
+      const contentDisposition = response.headers['content-disposition'];
+      
+      console.log('Raw response headers:', response.headers);
+      console.log('Content-Disposition:', contentDisposition);
+      console.log('Original content-type:', contentType);
+      
+      if (contentDisposition) {
+        // Enhanced regex to handle quoted and unquoted filenames
+        const quotedMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
+        const unquotedMatch = contentDisposition.match(/filename\s*=\s*([^;,\s]+)/i);
+        
+        if (quotedMatch && quotedMatch[1]) {
+          downloadFileName = quotedMatch[1];
+          console.log('Extracted filename (quoted):', downloadFileName);
+        } else if (unquotedMatch && unquotedMatch[1]) {
+          downloadFileName = unquotedMatch[1];
+          console.log('Extracted filename (unquoted):', downloadFileName);
+        }
+      }
+      
+      // If we have a filename, determine the correct content type from the extension
+      if (downloadFileName) {
+        const expectedMimeType = getMimeTypeFromExtension(downloadFileName);
+        console.log('Expected MIME type from extension:', expectedMimeType);
+        
+        // Always use the MIME type based on file extension for better accuracy
+        if (expectedMimeType !== 'application/octet-stream') {
+          contentType = expectedMimeType;
+          console.log('Updated content type to:', contentType);
+        }
+        
+        // Ensure filename has correct extension if missing
+        const currentExtension = getFileExtension(downloadFileName);
+        if (!currentExtension && contentType !== 'application/octet-stream') {
+          const extensionFromMime = getFileExtensionFromContentType(contentType);
+          if (extensionFromMime) {
+            downloadFileName = `${downloadFileName}${extensionFromMime}`;
+          }
+        }
+      } else {
+        // If no filename, create one with proper extension
+        const extension = getFileExtensionFromContentType(contentType);
+        downloadFileName = `document_${documentId}${extension}`;
+      }
+      
+      // Create blob with the correct content type
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Use the original filename or fallback to a generated name
-      link.setAttribute('download', fileName || `document_${documentId}`);
+      // Use the determined filename
+      link.setAttribute('download', downloadFileName);
       
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -125,7 +176,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
       // Clean up the URL
       window.URL.revokeObjectURL(url);
 
-      console.log('Document downloaded successfully');
+      console.log('Document downloaded successfully:', downloadFileName, 'Content-Type:', contentType);
     } catch (error) {
       console.error('Error downloading document:', error);
       if (axios.isAxiosError(error)) {
@@ -138,17 +189,191 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
     }
   };
 
-  // Preview document (opens in new tab)
-  const handlePreview = async (documentId: number) => {
+  // Preview document (opens in new tab for viewing, not downloading)
+  const handlePreview = async (documentId: number, fileName?: string) => {
     try {
       const baseURL = `${tenant}.exxforce.com`;
-      const url = `https://${baseURL}/tenant/employee/documents/${documentId}/download`;
+      const response = await axios.get(
+        `https://${baseURL}/tenant/employee/documents/${documentId}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${globalState.accessToken}`,
+          },
+          responseType: 'blob',
+        }
+      );
+
+      // Determine the correct content type
+      let contentType = response.headers['content-type'] || 'application/octet-stream';
       
-      // Open in new tab with authorization header (if browser supports it)
-      window.open(url, '_blank');
+      // Try to get filename from Content-Disposition header
+      let previewFileName = fileName;
+      const contentDisposition = response.headers['content-disposition'];
+      
+      console.log('Preview - Content-Disposition:', contentDisposition);
+      console.log('Preview - Original content-type:', contentType);
+      
+      if (contentDisposition) {
+        // Enhanced regex to handle quoted and unquoted filenames
+        const quotedMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
+        const unquotedMatch = contentDisposition.match(/filename\s*=\s*([^;,\s]+)/i);
+        
+        if (quotedMatch && quotedMatch[1]) {
+          previewFileName = quotedMatch[1];
+          console.log('Preview - Extracted filename (quoted):', previewFileName);
+        } else if (unquotedMatch && unquotedMatch[1]) {
+          previewFileName = unquotedMatch[1];
+          console.log('Preview - Extracted filename (unquoted):', previewFileName);
+        }
+      }
+      
+      // If we have a filename, ensure content type matches the file extension
+      if (previewFileName) {
+        const expectedMimeType = getMimeTypeFromExtension(previewFileName);
+        console.log('Preview - Expected MIME type from extension:', expectedMimeType);
+        
+        if (expectedMimeType !== 'application/octet-stream') {
+          contentType = expectedMimeType;
+          console.log('Preview - Updated content type to:', contentType);
+        }
+      }
+      
+      // Create blob with correct content type for viewing (not downloading)
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a new window/tab for preview
+      const previewWindow = window.open('', '_blank');
+      
+      if (previewWindow) {
+        // Check if it's a viewable content type
+        if (contentType.includes('pdf') || contentType === 'application/pdf') {
+          // For PDFs - embed directly
+          previewWindow.document.write(`
+            <html>
+              <head>
+                <title>Document Preview - ${previewFileName || 'Document'}</title>
+                <style>
+                  body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+                  .header { background: #f8f9fa; padding: 10px 20px; border-bottom: 1px solid #e9ecef; }
+                  .header h3 { margin: 0; color: #495057; }
+                  embed { display: block; }
+                </style>
+              </head>
+              <body>
+                <div class="header">
+                  <h3>📄 ${previewFileName || 'Document Preview'}</h3>
+                </div>
+                <embed src="${url}" type="application/pdf" width="100%" height="calc(100vh - 60px)" />
+              </body>
+            </html>
+          `);
+        } else if (contentType.includes('image/')) {
+          // For images
+          previewWindow.document.write(`
+            <html>
+              <head>
+                <title>Image Preview - ${previewFileName || 'Image'}</title>
+                <style>
+                  body { margin: 0; padding: 0; display: flex; flex-direction: column; background: #f0f0f0; font-family: Arial, sans-serif; }
+                  .header { background: white; padding: 15px 20px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                  .header h3 { margin: 0; color: #333; }
+                  .image-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+                  img { max-width: 100%; max-height: calc(100vh - 120px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 4px; }
+                </style>
+              </head>
+              <body>
+                <div class="header">
+                  <h3>🖼️ ${previewFileName || 'Image Preview'}</h3>
+                </div>
+                <div class="image-container">
+                  <img src="${url}" alt="Document Preview" />
+                </div>
+              </body>
+            </html>
+          `);
+        } else if (contentType.includes('text/') || contentType.includes('wordprocessingml') || contentType.includes('msword')) {
+          // For text files and Word docs that can't be previewed
+          previewWindow.document.write(`
+            <html>
+              <head>
+                <title>Preview - ${previewFileName || 'Document'}</title>
+                <style>
+                  body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f8f9fa; }
+                  .container { background: white; border-radius: 8px; padding: 40px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .icon { font-size: 48px; margin-bottom: 20px; }
+                  h2 { color: #495057; margin-bottom: 16px; }
+                  p { color: #6c757d; line-height: 1.5; margin-bottom: 20px; }
+                  button { padding: 12px 24px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+                  button:hover { background: #0056b3; }
+                  .file-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="icon">📝</div>
+                  <h2>Document Preview</h2>
+                  <div class="file-info">
+                    <strong>File:</strong> ${previewFileName || 'Unknown'}<br>
+                    <strong>Type:</strong> ${contentType}<br>
+                    <strong>Format:</strong> ${getFileExtension(previewFileName || '').toUpperCase()} Document
+                  </div>
+                  <p>This document type requires downloading to view the full content. Word documents, Excel sheets, and other office files cannot be previewed directly in the browser.</p>
+                  <button onclick="window.close()">Close Preview</button>
+                </div>
+              </body>
+            </html>
+          `);
+        } else {
+          // For non-viewable files, show a message
+          previewWindow.document.write(`
+            <html>
+              <head>
+                <title>Preview Not Available</title>
+                <style>
+                  body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f8f9fa; }
+                  .container { background: white; border-radius: 8px; padding: 40px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .icon { font-size: 48px; margin-bottom: 20px; }
+                  h2 { color: #495057; margin-bottom: 16px; }
+                  p { color: #6c757d; line-height: 1.5; margin-bottom: 20px; }
+                  button { padding: 12px 24px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+                  button:hover { background: #0056b3; }
+                  .file-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="icon">📎</div>
+                  <h2>Preview Not Available</h2>
+                  <div class="file-info">
+                    <strong>File:</strong> ${previewFileName || 'Unknown'}<br>
+                    <strong>Type:</strong> ${contentType}
+                  </div>
+                  <p>This file type cannot be previewed in the browser. Please download the file to view its contents.</p>
+                  <button onclick="window.close()">Close Preview</button>
+                </div>
+              </body>
+            </html>
+          `);
+        }
+      } else {
+        // Fallback if popup is blocked
+        window.location.href = url;
+      }
+      
+      // Clean up the URL after a longer delay to ensure it loads
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 10000);
+
+      console.log('Document preview opened successfully', 'Content-Type:', contentType);
     } catch (error) {
       console.error('Error previewing document:', error);
-      alert('Failed to preview document');
+      if (axios.isAxiosError(error)) {
+        alert(`Preview failed: ${error.response?.data?.message || 'Unknown error'}`);
+      } else {
+        alert('Failed to preview document');
+      }
     }
   };
 
@@ -181,6 +406,60 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
     } catch (error) {
       return 'Invalid date';
     }
+  };
+
+  // Get file extension from filename
+  const getFileExtension = (fileName: string): string => {
+    if (!fileName) return '';
+    const lastDot = fileName.lastIndexOf('.');
+    return lastDot !== -1 ? fileName.substring(lastDot) : '';
+  };
+
+  // Get MIME type from file extension
+  const getMimeTypeFromExtension = (fileName: string): string => {
+    const extension = getFileExtension(fileName).toLowerCase();
+    const extensionToMime: Record<string, string> = {
+      '.pdf': 'application/pdf',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xls': 'application/vnd.ms-excel',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.ppt': 'application/vnd.ms-powerpoint',
+      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.bmp': 'image/bmp',
+      '.svg': 'image/svg+xml',
+      '.txt': 'text/plain',
+      '.csv': 'text/csv',
+      '.zip': 'application/zip',
+      '.rar': 'application/x-rar-compressed',
+      '.7z': 'application/x-7z-compressed',
+    };
+    
+    return extensionToMime[extension] || 'application/octet-stream';
+  };
+
+  // Get file extension from content type (fallback)
+  const getFileExtensionFromContentType = (contentType: string): string => {
+    const mimeToExtension: Record<string, string> = {
+      'application/pdf': '.pdf',
+      'application/msword': '.doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+      'application/vnd.ms-excel': '.xls',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+      'image/jpeg': '.jpg',
+      'image/jpg': '.jpg',
+      'image/png': '.png',
+      'image/gif': '.gif',
+      'text/plain': '.txt',
+      'application/zip': '.zip',
+      'application/x-zip-compressed': '.zip',
+    };
+    
+    return mimeToExtension[contentType.toLowerCase()] || '';
   };
 
   // Get file icon based on file extension
@@ -425,7 +704,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
               <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                   <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Document Information
                 </h5>
@@ -481,7 +760,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
                 </div>
                 <div className="flex items-center space-x-3">
                   <button
-                    onClick={() => handlePreview(document.id)}
+                    onClick={() => handlePreview(document.id, document.file_name)}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <Eye className="w-4 h-4 mr-2" />

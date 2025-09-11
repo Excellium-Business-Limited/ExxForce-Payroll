@@ -445,6 +445,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 			// You might want to call an API to save the document
 			// Close the form after successful submission
 			setShowDocumentUpload(false);
+			// Force refresh of documents to show the newly uploaded document
+			// This will be handled by the DocumentsList component's own refresh mechanism
 		} catch (error) {
 			console.error('Error uploading document:', error);
 		}

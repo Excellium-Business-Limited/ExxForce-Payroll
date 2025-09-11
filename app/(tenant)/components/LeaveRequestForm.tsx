@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import axios from "axios";
+import { useGlobal } from '@/app/Context/context';
 
 interface LeaveType {
   id: number;
@@ -33,6 +34,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { tenant, globalState } = useGlobal();
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [formData, setFormData] = useState({
     leave_type_id: 0, // Changed from empty string to 0
@@ -56,11 +58,11 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     setLeaveTypeError("");
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://excellium.localhost:8000";
-      const response = await axios.get(`${baseUrl}/tenant/leave/leave-types`, {
+      const baseURL = `${tenant}.exxforce.com`;
+      const response = await axios.get(`https://${baseURL}/tenant/leave/leave-types`, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization : `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${globalState.accessToken}`,
         },
       });
 
@@ -165,15 +167,14 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       };
       console.log('Complete API payload:', JSON.stringify(submitData, null, 2));
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://excellium.localhost:8000';
+      const baseURL = `${tenant}.exxforce.com`;
       const response = await axios.post(
-        
-        `${baseUrl}/tenant/leave/leave-request`,
+        `https://${baseURL}/tenant/leave/leave-request`,
         submitData,
         {
           headers: {
             'Content-Type': 'application/json',
-             Authorization : `Bearer ${localStorage.getItem('access_token')}`,
+            Authorization: `Bearer ${globalState.accessToken}`,
           },
         }
       );
