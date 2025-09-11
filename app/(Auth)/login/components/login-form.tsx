@@ -27,10 +27,12 @@ export function LoginForm({ className }: { className?: string }) {
 		setEmail(e.target.value);
 		console.log('Email changed:', e.target.value);
 	};
+
 	const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setPassword(e.target.value);
 		console.log('Password changed:', e.target.value);
 	};
+
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError('');
@@ -47,19 +49,29 @@ export function LoginForm({ className }: { className?: string }) {
 			setIsSuccess(true);
 			setError('');
 
+			// Save tokens and tenant first
 			saveTokens(access, refresh);
 			setTenant(tenant);
+
+			// Update global state with all necessary data
 			updateGlobalState({
 				tenant: tenant,
-				access: access,
-				refresh: refresh,
+				accessToken: access, // Make sure this matches your global state property name
+				refreshToken: refresh,
+				isAuthenticated: true,
 			});
 
+			// Wait a bit longer to ensure everything is properly saved
 			setTimeout(() => {
 				const redirectPath = new URL(redirect).pathname;
 				console.log('Redirecting to:', redirectPath);
-				router.push(redirectPath);
-			}, 500);
+
+				// Force a page reload after redirect to ensure fresh state
+				window.location.href = redirectPath;
+
+				// Alternative: use router.push if you don't want full reload
+				// router.push(redirectPath);
+			}, 1000); // Increased delay
 		} catch (err: any) {
 			console.error('Login failed:', err);
 			setError(err.message || 'Invalid credentials. Please try again.');
@@ -68,6 +80,7 @@ export function LoginForm({ className }: { className?: string }) {
 			setIsLoading(false);
 		}
 	};
+
 	return (
 		<div className={cn('flex flex-col gap-4', className)}>
 			<div className='h-auto p-0 overflow-hidden mt-0 self-center sm:w-[50%] w-full md:w-[80%] lg:w-[90%] xl:w-[90%] 2xl:w-[90%]'>

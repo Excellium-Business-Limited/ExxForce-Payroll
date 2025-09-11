@@ -10,7 +10,7 @@ import {
 import { DTable } from './_components/Table';
 import data1 from './_components/data1.json';
 import { Payrun, columns } from './_components/TableSchema';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import BarChart from './_components/Barchart';
 import { Bar } from 'recharts';
 import Piechrt from './_components/Piechart';
@@ -18,20 +18,41 @@ import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import { fetchEmployees } from '@/lib/api';
-import  { useGlobal } from '@/app/Context/context';
+import { useGlobal } from '@/app/Context/context';
 import { set } from 'date-fns';
 import Loading from '@/components/ui/Loading';
-
 
 const Dashboard = () => {
 	const { globalState, updateGlobalState, tenant } = useGlobal();
 	const [isLoading, setIsLoading] = useState(true);
 	const [employees, setEmployees] = React.useState<any>([]);
-	const [paid, setPaid] = React.useState<any>()
-	const [net, setNet] = React.useState<any>()
-	const [tnt, setTnt] = React.useState<string | null >('')
-	const [deduction, setDeduction] = React.useState<any>()
+	const [paid, setPaid] = React.useState<any>();
+	const [net, setNet] = React.useState<any>();
+	const [tnt, setTnt] = React.useState<string | null>('');
+	const [deduction, setDeduction] = React.useState<any>();
+	const [authReady, setAuthReady] = useState(false);
+
+	// Wait for authentication to be ready
+	useEffect(() => {
+		const checkAuth = () => {
+			const token = getAccessToken();
+			const tenantValue = getTenant();
+			
+			if (token && tenantValue) {
+				setAuthReady(true);
+				setTnt(tenantValue);
+			} else {
+				// Keep checking until auth is ready
+				setTimeout(checkAuth, 100);
+			}
+		};
+		
+		checkAuth();
+	}, []);
+
 	const getSalaries = () => {
+		if (!employees.length) return '₦0';
+		
 		const Salaries = employees.map((employee: any) => employee.custom_salary);
 		const totalSalary = Salaries.reduce(
 			(acc: number, curr: number) => Number(acc) + Number(curr),
@@ -39,63 +60,96 @@ const Dashboard = () => {
 		);
 		const formattedSalary = totalSalary.toLocaleString('en-NG', {
 			style: 'currency',
-		currency: 'NGN',})	
+			currency: 'NGN',
+		});
 		return formattedSalary;
-	}
+	};
 
-	useEffect(() => {
-		const fetchPayrollData = async () => {
-			const tenant = getTenant()
-			setTnt(tenant)
-			const baseURL = `https://${tenant}.exxforce.com`;
-			const token = getAccessToken()
-			try {
-				setIsLoading(true);
-				const response = await fetch(
-					`${baseURL}/tenant/reports/payroll-summary/all?from_date=2025-01-01&to_date=2026-03-31`,
-					{
-						method: 'GET',
-						headers: {
-							'Content-Type': 'application/json',
-							'Authorization': `Bearer ${token}`,
-						},
-					}
-					
-				);
-				
-				const data = await response.json()
-				setPaid(data.employees_paid)
-				setDeduction(data.totals.deductions)
-				setNet(data.totals.net)
-				setIsLoading(false)
-				console.log(data)
-			 }catch (err){
-					console.error('Error fetching payroll data:', err);
-				}
+	const fetchPayrollData = useCallback(async () => {
+		if (!authReady || !tnt) return;
+
+		const baseURL = `https://${tnt}.exxforce.com`;
+		const token = getAccessToken();
+
+		if (!token) {
+			console.error('No access token available');
+			setIsLoading(false);
+			return;
 		}
-		fetchPayrollData();
-	}, [])
-	
-	
-	useEffect(() => {
+
+		try {
+			setIsLoading(true);
+			console.log('Fetching payroll data with token:', token.substring(0, 10) + '...');
+			
+			const response = await fetch(
+				`${baseURL}/tenant/reports/payroll-summary/all?from_date=2025-01-01&to_date=2026-03-31`,
+				{
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`,
+					},
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
+
+			const data = await response.json();
+			setPaid(data.employees_paid);
+			setDeduction(data.totals.deductions);
+			setNet(data.totals.net);
+			console.log('Payroll data fetched successfully:', data);
+		} catch (err) {
+			console.error('Error fetching payroll data:', err);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [authReady, tnt]);
+
+	const fetchEmployeesData = useCallback(async () => {
+		if (!authReady || !tnt) return;
+
 		const accessToken = globalState.accessToken || getAccessToken();
-		if (tenant) {
-			updateGlobalState({ tenant : tenant, accessToken: accessToken });
-			fetchEmployees(tenant).then((data) => {
-				setEmployees(data);
-				// updateGlobalState({ employees: data });
-				console.log(employees, data);
-			}).catch((error) => {
-				console.error("Error fetching employees:", error);
+		
+		if (!accessToken) {
+			console.error('No access token available for employees');
+			return;
+		}
+
+		try {
+			console.log('Fetching employees data...');
+			const data = await fetchEmployees(tnt);
+			setEmployees(data);
+			console.log('Employees fetched successfully:', data);
+		} catch (error) {
+			console.error("Error fetching employees:", error);
+		}
+	}, [authReady, tnt, globalState.accessToken]);
+
+	// Fetch data when auth is ready
+	useEffect(() => {
+		if (authReady && tnt) {
+			fetchPayrollData();
+			fetchEmployeesData();
+		}
+	}, [authReady, tnt, fetchPayrollData, fetchEmployeesData]);
+
+	// Update global state when tenant is available
+	useEffect(() => {
+		if (authReady && tnt) {
+			const accessToken = getAccessToken();
+			updateGlobalState({ 
+				tenant: tnt, 
+				accessToken: accessToken,
+				isAuthenticated: true 
 			});
 		}
-		timeout;
-		setIsLoading(false)
-	}, []);
-	const timeout = setTimeout(() => {
-		console.log(globalState);
-	}, 2000);
+	}, [authReady, tnt, updateGlobalState]);
+
 	const formatCurrency = (amount: number) => {
+		if (!amount) return '₦0';
 		return new Intl.NumberFormat('en-NG', {
 			style: 'currency',
 			currency: 'NGN',
@@ -103,7 +157,8 @@ const Dashboard = () => {
 			maximumFractionDigits: 0,
 		}).format(amount);
 	};
-	if (isLoading) {
+
+	if (isLoading || !authReady) {
 		return (
 			<div className='p-6'>
 				<Loading
@@ -116,13 +171,12 @@ const Dashboard = () => {
 		);
 	}
 
-	console.log(employees)
 	return (
 		<div>
 			<div>
 				<div className='flex gap-1.5 items-center mx-4 mt-4'>
 					<section>
-						<h3 className='font-semibold text-md'>Hi, Welcome Back {globalState.tenant}</h3>
+						<h3 className='font-semibold text-md'>Hi, Welcome Back {tnt}</h3>
 						<p className='text-muted-foreground text-md'>Here's what is happening with your payroll today</p>
 					</section>
 					<div className='flex gap-4 ml-auto'>
