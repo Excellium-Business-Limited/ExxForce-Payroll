@@ -106,7 +106,7 @@ const Dashboard = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [authReady, tnt]);
+	}, [authReady]);
 
 	const fetchEmployeesData = useCallback(async () => {
 		if (!authReady || !tnt) return;
@@ -126,7 +126,7 @@ const Dashboard = () => {
 		} catch (error) {
 			console.error("Error fetching employees:", error);
 		}
-	}, [authReady, tnt, globalState.accessToken]);
+	}, [authReady]);
 
 	// Fetch data when auth is ready
 	useEffect(() => {
@@ -134,7 +134,7 @@ const Dashboard = () => {
 			fetchPayrollData();
 			fetchEmployeesData();
 		}
-	}, [authReady, tnt, fetchPayrollData, fetchEmployeesData]);
+	}, [authReady]);
 
 	// Update global state when tenant is available
 	useEffect(() => {
@@ -146,7 +146,7 @@ const Dashboard = () => {
 				isAuthenticated: true 
 			});
 		}
-	}, [authReady, tnt, updateGlobalState]);
+	}, [authReady]);
 
 	const formatCurrency = (amount: number) => {
 		if (!amount) return '₦0';
