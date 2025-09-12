@@ -115,20 +115,6 @@ const page = () => {
 							/>
 						</SheetContent>
 					</Sheet>
-					<Dialogs
-						title={'Import'}
-						className='border-[#d4d8de] border-2 px-7'>
-						<Import
-							title='Pay Runs'
-							isOpen={false}
-							onClose={function (): void {
-								throw new Error('Function not implemented.');
-							}}
-							onSubmit={function (importData: any): Promise<void> {
-								throw new Error('Function not implemented.');
-							}}
-						/>
-					</Dialogs>
 				</span>
 			</div>
 			{isPayrun === false ? (
@@ -158,7 +144,7 @@ const page = () => {
 											Create Payrun
 										</Button>
 									</SheetTrigger>
-									<SheetContent className='min-w-[500px] p-4 z-[1000]'>
+									<SheetContent className='min-w-[500px] p-4'>
 										<SheetTitle className='hidden'></SheetTitle>
 										<PayrunForm
 											className='absolute'
@@ -167,20 +153,6 @@ const page = () => {
 										/>
 									</SheetContent>
 								</Sheet>
-								<Dialogs
-									title={'Import'}
-									className='border-[#d4d8de] border-2 px-7'>
-									<Import
-										title='Pay Runs'
-										isOpen={false}
-										onClose={function (): void {
-											throw new Error('Function not implemented.');
-										}}
-										onSubmit={function (importData: any): Promise<void> {
-											throw new Error('Function not implemented.');
-										}}
-									/>
-								</Dialogs>
 							</article>
 						</section>
 					</div>

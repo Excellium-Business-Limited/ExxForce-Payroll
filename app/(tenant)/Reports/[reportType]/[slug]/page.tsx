@@ -128,6 +128,12 @@ export default function ReportPage({
 		} catch (err: any) {
 			console.error('Error fetching payroll summary:', err);
 			setError(err.response?.data?.message || 'Failed to fetch payroll data');
+			if (err.response?.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 2000);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -158,6 +164,12 @@ export default function ReportPage({
 		} catch (err: any) {
 			console.error('Error fetching tax summary:', err);
 			setError(err.response?.data?.message || 'Failed to fetch tax data');
+			if (err.response?.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 2000);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -185,6 +197,12 @@ export default function ReportPage({
 		} catch (err: any) {
 			console.error('Error fetching activity log:', err);
 			setError(err.response?.data?.message || 'Failed to fetch payroll data');
+			if (err.response?.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 2000);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -215,6 +233,12 @@ export default function ReportPage({
 		} catch (err: any) {
 			console.error('Error fetching activity log:', err);
 			setError(err.response?.data?.message || 'Failed to fetch payroll data');
+			if (err.response?.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 2000);
+			}
 		} finally {
 			setLoading(false);
 		}

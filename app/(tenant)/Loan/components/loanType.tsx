@@ -27,7 +27,7 @@ const loanType = () => {
     useEffect(()=>{
         const tenant = localStorage.getItem('tenant');
         const accessToken = localStorage.getItem('access_token');
-        const baseURL = `http://${tenant}.localhost:8000`;
+        const baseURL = `https://${tenant}.exxforce.com`;
         const fetchLoanTypes = async () => {
             try {
                 const response = await fetch(
@@ -76,12 +76,12 @@ const loanType = () => {
 	};
 
 	return (
-		<div >
-			<div className='flex flex-row items-center justify-between w-full'>
+		<div className='m-4'>
+			<div className='flex flex-row items-center justify-between w-full m-2'>
 				<span>
 					<h1>Loan Type</h1>
 				</span>
-				<span className='items-end self-end justify-between flex gap-4'>
+				<span className='items-end self-end justify-between flex gap-2'>
 					<Dialog>
 						<DialogTrigger asChild>
 							<Button
@@ -150,7 +150,7 @@ const loanType = () => {
 					</Dialog>
 				</span>
 			</div>
-			<Table border={4} className='w-[500px]'>
+			<Table border={4} className='w-full'>
 				<TableHeader>
 					<TableRow>
 						<TableHead className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>

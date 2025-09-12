@@ -141,7 +141,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 										Add Loan
 									</Button>
 								</SheetTrigger>
-								<SheetContent className='min-w-[500px] p-4 '>
+								<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
 									<SheetTitle className='hidden'></SheetTitle>
 									<LoanForm />
 								</SheetContent>

@@ -348,7 +348,7 @@ export default function LoanDetails({ item, id }: { item: any; id: string }) {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{/* {item.previousPayments.map((payment : { month: string; amountDeducted: string; balanceRemaining: string; dateOfDeduction: string; status: string; }, index : number) => (
+							{item.previousPayments.map((payment : { month: string; amountDeducted: string; balanceRemaining: string; dateOfDeduction: string; status: string; }, index : number) => (
 								<TableRow key={index}>
 									<TableCell>{payment.month}</TableCell>
 									<TableCell>{payment.amountDeducted}</TableCell>
@@ -360,7 +360,7 @@ export default function LoanDetails({ item, id }: { item: any; id: string }) {
 										</h6>
 									</TableCell>
 								</TableRow>
-							))} */}
+							))}
 						</TableBody>
 					</Table>
 				</div>
