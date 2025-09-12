@@ -11,6 +11,7 @@ import { useGlobal } from '@/app/Context/context';
 import { getAccessToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Loading from '@/components/ui/Loading';
+import FilterSort, { FilterOption, SortOption } from '../components/FilterSort';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -44,6 +45,7 @@ interface Filters {
   department: string;
   designation: string;
   status: string;
+  [key: string]: string;
 }
 
 interface PaginationInfo {
@@ -74,13 +76,125 @@ const EmployeePage: React.FC = () => {
   });
   const { tenant, globalState } = useGlobal();
 
+  // FilterSort state
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('first_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
+  // Filter and Sort options
+  const filterOptions: Record<string, FilterOption[]> = {
+    department: [
+      { value: 'Engineering', label: 'Engineering' },
+      { value: 'Marketing', label: 'Marketing' },
+      { value: 'Sales', label: 'Sales' },
+      { value: 'HR', label: 'HR' },
+      { value: 'Finance', label: 'Finance' },
+    ],
+    designation: [
+      { value: 'Manager', label: 'Manager' },
+      { value: 'Developer', label: 'Developer' },
+      { value: 'Designer', label: 'Designer' },
+      { value: 'Analyst', label: 'Analyst' },
+      { value: 'Coordinator', label: 'Coordinator' },
+    ],
+    status: [
+      { value: 'Active', label: 'Active' },
+      { value: 'Inactive', label: 'Inactive' },
+      { value: 'Terminated', label: 'Terminated' },
+    ],
+  };
+
+  const sortOptions: SortOption[] = [
+    { value: 'first_name', label: 'First Name' },
+    { value: 'last_name', label: 'Last Name' },
+    { value: 'employee_id', label: 'Employee ID' },
+    { value: 'department_name', label: 'Department' },
+    { value: 'start_date', label: 'Start Date' },
+    { value: 'custom_salary', label: 'Salary' },
+  ];
+
+  // FilterSort handlers
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (filterKey: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterKey]: value,
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
+    setCurrentPage(1);
+  };
+
+  const handleSortOrderChange = (order: 'asc' | 'desc') => {
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
+  // Filter and sort employees
+  const filteredAndSortedEmployees = useMemo(() => {
+    let filtered = employees.filter(employee => {
+      // Search filter
+      const searchLower = searchValue.toLowerCase();
+      const matchesSearch = !searchValue ||
+        employee.first_name.toLowerCase().includes(searchLower) ||
+        employee.last_name.toLowerCase().includes(searchLower) ||
+        employee.employee_id.toLowerCase().includes(searchLower) ||
+        employee.email.toLowerCase().includes(searchLower) ||
+        employee.job_title.toLowerCase().includes(searchLower) ||
+        employee.department_name.toLowerCase().includes(searchLower);
+
+      // Department filter
+      const matchesDepartment = filters.department === 'All' ||
+        employee.department_name === filters.department;
+
+      // Designation filter
+      const matchesDesignation = filters.designation === 'All' ||
+        employee.job_title === filters.designation;
+
+      // Status filter (assuming all employees are active for now)
+      const matchesStatus = filters.status === 'All' || filters.status === 'Active';
+
+      return matchesSearch && matchesDepartment && matchesDesignation && matchesStatus;
+    });
+
+    // Sort employees
+    filtered.sort((a, b) => {
+      let aValue: any = a[sortBy as keyof Employee];
+      let bValue: any = b[sortBy as keyof Employee];
+
+      // Handle different data types
+      if (sortBy === 'custom_salary') {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      } else if (sortBy === 'start_date') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      } else {
+        aValue = String(aValue).toLowerCase();
+        bValue = String(bValue).toLowerCase();
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [employees, searchValue, filters, sortBy, sortOrder]);
+
   // Pagination calculations
   const paginationInfo: PaginationInfo = useMemo(() => {
-    const totalItems = employees.length;
+    const totalItems = filteredAndSortedEmployees.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
     return {
@@ -89,14 +203,14 @@ const EmployeePage: React.FC = () => {
       totalItems,
       totalPages,
     };
-  }, [employees.length, currentPage, itemsPerPage]);
+  }, [filteredAndSortedEmployees.length, currentPage, itemsPerPage]);
 
   // Get current page data
   const currentEmployees = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return employees.slice(startIndex, endIndex);
-  }, [employees, currentPage, itemsPerPage]);
+    return filteredAndSortedEmployees.slice(startIndex, endIndex);
+  }, [filteredAndSortedEmployees, currentPage, itemsPerPage]);
 
   // Pagination handlers
   const handlePageChange = (page: number): void => {
@@ -558,6 +672,22 @@ const EmployeePage: React.FC = () => {
       </div>
 
       <div className='p-6 border-b'>
+        {/* FilterSort Component */}
+        <FilterSort
+          searchValue={searchValue}
+          onSearchChange={handleSearchChange}
+          searchPlaceholder="Search employees..."
+          filters={filters}
+          filterOptions={filterOptions}
+          onFilterChange={handleFilterChange}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          sortOptions={sortOptions}
+          onSortChange={handleSortChange}
+          onSortOrderChange={handleSortOrderChange}
+          className="mb-6"
+        />
+
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
           <h2 className='text-lg font-medium text-gray-900'>Employees List</h2>
           <div className='flex gap-2'>
@@ -586,30 +716,6 @@ const EmployeePage: React.FC = () => {
         </div>
 
         <div className='flex flex-wrap gap-4 mt-4'>
-          <select
-            className='border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm'
-            value={filters.department}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, department: e.target.value }))
-            }>
-            <option value='All'>Department: All</option>
-          </select>
-          <select
-            className='border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm'
-            value={filters.designation}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, designation: e.target.value }))
-            }>
-            <option value='All'>Designation: All</option>
-          </select>
-          <select
-            className='border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm'
-            value={filters.status}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, status: e.target.value }))
-            }>
-            <option value='All'>Status: All</option>
-          </select>
           <button className='border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm flex items-center gap-2'>
             <svg
               className='w-4 h-4'
@@ -623,9 +729,6 @@ const EmployeePage: React.FC = () => {
               />
             </svg>
             Select Dates
-          </button>
-          <button className='bg-blue-600 text-white px-4 py-2 rounded-lg text-sm'>
-            Filter
           </button>
         </div>
       </div>
@@ -647,8 +750,8 @@ const EmployeePage: React.FC = () => {
         </div>
         <div className='text-sm text-gray-600'>
           Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-          {Math.min(currentPage * itemsPerPage, employees.length)} of{' '}
-          {employees.length} entries
+          {Math.min(currentPage * itemsPerPage, filteredAndSortedEmployees.length)} of{' '}
+          {filteredAndSortedEmployees.length} entries
         </div>
       </div>
 
@@ -750,8 +853,8 @@ const EmployeePage: React.FC = () => {
       <div className='px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4'>
         <div className='text-sm text-gray-600'>
           Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-          {Math.min(currentPage * itemsPerPage, employees.length)} of{' '}
-          {employees.length} entries
+          {Math.min(currentPage * itemsPerPage, filteredAndSortedEmployees.length)} of{' '}
+          {filteredAndSortedEmployees.length} entries
         </div>
 
         <div className='flex items-center gap-2'>
@@ -932,10 +1035,10 @@ const EmployeePage: React.FC = () => {
 								</h2>
 								<button
 									onClick={handleCloseSalaryForm}
-									className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+								 className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
 									aria-label='Close form'>
 									<svg
-										className='w-5 h-5 text-gray-500'
+									className='w-5 h-5 text-gray-500'
 										viewBox='0 0 24 24'
 										fill='none'>
 										<path
