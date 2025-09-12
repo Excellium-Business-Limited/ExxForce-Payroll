@@ -1,0 +1,6 @@
+first_name,last_name,email,phone_number,gender,date_of_birth,address,employee_id,employment_type,start_date,tax_start_date,job_title,department_name,pay_grade_name,bank_name,account_number,account_name,pay_frequency,is_paye_applicable,is_pension_applicable,is_nhf_applicable,is_nsitf_applicable
+Aisha,Balogun,aisha.balogun@nova.io,08010020030,FEMALE,1991-04-12,12 Marina Road,E101,FULL_TIME,2022-01-05,2022-01-10,Software Engineer,Engineering,Level 1,Access Bank,1002003001,Aisha Balogun,MONTHLY,true,true,false,false
+Tunde,Olawale,tunde.olawale@nova.io,08030040050,MALE,1989-09-20,34 Bode Thomas St,E102,PART_TIME,2021-06-01,2021-06-05,Accountant,Accounts,Level 2,GTBank,2003004002,Tunde Olawale,MONTHLY,true,true,true,false
+Chinyere,Okafor,chinyere.okafor@nova.io,08050060070,FEMALE,1993-11-08,56 Opebi Rd,E103,CONTRACTOR,2020-03-15,2020-03-20,HR Manager,Management,Level 1,UBA,3004005003,Chinyere Okafor,BIWEEKLY,true,false,false,true
+Ifeanyi,Obi,ifeanyi.obi@nova.io,08070080090,MALE,1996-02-25,78 Awolowo Rd,E104,INTERN,2023-02-01,2023-02-10,Marketing Intern,Marketing,Level 2,First Bank,4005006004,Ifeanyi Obi,WEEKLY,true,true,false,false
+Fatima,Yusuf,fatima.yusuf@nova.io,08090010020,FEMALE,1992-07-14,90 Allen Avenue,E105,FULL_TIME,2021-11-10,2021-11-15,Data Analyst,Engineering,Level 2,Zenith Bank,5006007005,Fatima Yusuf,MONTHLY,true,true,false,false

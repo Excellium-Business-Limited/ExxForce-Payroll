@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogClose } from '@/components/ui/dialog';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 // Define props interface for the ImportModal component
 interface ImportModalProps {
@@ -24,6 +25,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
 }) => {
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
+	const [parseError, setParseError] = useState<string | null>(null);
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -43,21 +45,23 @@ const ImportModal: React.FC<ImportModalProps> = ({
 		setIsUploading(true);
 
 		try {
-			// Create FormData for file upload
+			// Client-side file size guard (5MB)
+			if (selectedFile.size > 5 * 1024 * 1024) {
+				setParseError('File too large. Maximum allowed size is 5MB.');
+				return;
+			}
+
+			// Prepare FormData as the backend expects multipart/form-data
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 
-			// Call the parent's onSubmit handler
+			// Forward raw FormData to parent handler which will POST to the backend
 			await onSubmit(formData);
 
 			// Reset form
 			setSelectedFile(null);
-			const fileInput = document.getElementById(
-				'file-upload'
-			) as HTMLInputElement;
-			if (fileInput) {
-				fileInput.value = '';
-			}
+			const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+			if (fileInput) fileInput.value = '';
 
 			alert('Employees imported successfully!');
 		} catch (error) {
@@ -81,13 +85,31 @@ const ImportModal: React.FC<ImportModalProps> = ({
 				<div className='space-y-4'>
 					<div className='space-y-2'>
 						<Label htmlFor='file-upload'>Select File</Label>
-						<Input
+						<div className='flex items-center gap-3'>
+							<Input
 							id='file-upload'
 							type='file'
 							accept='.csv,.xlsx,.xls'
 							onChange={handleFileChange}
 							required
-						/>
+							/>
+
+							{/* Download sample template link */}
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<a
+										href='/templates/employee_import_template.csv'
+										download='employee_import_template.csv'
+										className='text-sm text-blue-600 underline ml-2'
+									>
+										Download Sample Template
+									</a>
+								</TooltipTrigger>
+								<TooltipContent>
+									<div>Download template for sample data</div>
+								</TooltipContent>
+							</Tooltip>
+						</div>
 						<p className='text-xs text-gray-500'>
 							Supported formats: CSV, Excel (.xlsx, .xls)
 						</p>
@@ -101,6 +123,12 @@ const ImportModal: React.FC<ImportModalProps> = ({
 							<p className='text-xs text-blue-600'>
 								Size: {(selectedFile.size / 1024).toFixed(2)} KB
 							</p>
+						</div>
+					)}
+
+					{parseError && (
+						<div className='mt-3 text-sm text-red-600 bg-red-50 p-2 rounded'>
+							{parseError}
 						</div>
 					)}
 

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import EmployeeDetails from '../components/EmployeeDetails';
 import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -387,6 +388,24 @@ const EmployeePage: React.FC = () => {
   const handleImportSubmit = async (importData: any): Promise<void> => {
     try {
       console.log('Importing employees:', importData);
+
+      // If importData is FormData (file upload), forward it as multipart/form-data to backend
+      if (importData instanceof FormData) {
+        const token = getAccessToken();
+        const url = `https://${tenant}.exxforce.com/tenant/employee/import-csv`;
+        const response = await axios.post(url, importData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('Import response:', response.data);
+      } else if (Array.isArray(importData)) {
+        // If parent passed parsed data (unlikely now), send JSON to API route we added
+        await axios.post(`/tenant/employee/import`, importData);
+      }
+
       await fetchEmployees();
       handleCloseImportModal();
     } catch (error) {
@@ -625,11 +644,18 @@ const EmployeePage: React.FC = () => {
           </svg>
           Add employee
         </button>
-        <button
-          onClick={handleImportEmployee}
-          className='bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors'>
-          Import employee
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleImportEmployee}
+              className='bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors'>
+              Import employee
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div>Download template for sample data</div>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
@@ -707,11 +733,18 @@ const EmployeePage: React.FC = () => {
               </svg>
               Add employee
             </button>
-            <button
-              onClick={handleImportEmployee}
-              className='bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors'>
-              Import employee
-            </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleImportEmployee}
+                      className='bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors'>
+                      Import employee
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div>Download template for sample data</div>
+                  </TooltipContent>
+                </Tooltip>
           </div>
         </div>
 
