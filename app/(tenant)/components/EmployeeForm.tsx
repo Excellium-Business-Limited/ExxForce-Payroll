@@ -25,14 +25,16 @@ interface Employee {
 	last_name: string;
 	email: string;
 	phone_number: string;
-	gender: 'MALE' | 'FEMALE' | 'OTHER' ;
+	gender: string;
 	date_of_birth: string;
 	address: string;
-	employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
+	employment_type: string;
 	start_date: string;
 	tax_start_date: string;
 	job_title: string;
-	department_name: string;
+	// Support both field names from API
+	department?: string;
+	department_name?: string;
 	pay_grade_name?: string;
 	custom_salary?: number;
 	bank_name?: string;
@@ -118,30 +120,31 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	// Get global context for tenant and auth
 	const { tenant, globalState } = useGlobal();
 
-	// Helper function to format date for input (YYYY-MM-DD) using date-fns
+	// Helper function to get department value from employee data
+	const getDepartmentValue = (employee: Employee | null): string => {
+		if (!employee) return '';
+		// Check both possible field names
+		return employee.department || employee.department_name || '';
+	};
+
+	// Helper function to format date for input (YYYY-MM-DD)
 	const formatDateForInput = (dateString: string): string => {
 		if (!dateString) return '';
 		
 		try {
-			// Try parsing as ISO string first
 			let date = parseISO(dateString);
 			
-			// If parseISO fails, try creating a new Date object
 			if (!isValid(date)) {
 				date = new Date(dateString);
 			}
 			
-			// If still invalid, try manual parsing for different formats
 			if (!isValid(date)) {
 				const parts = dateString.split(/[-\/]/);
 				if (parts.length === 3) {
-					// Try YYYY-MM-DD or YYYY/MM/DD
 					if (parts[0].length === 4) {
 						date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 					}
-					// Try MM/DD/YYYY or DD/MM/YYYY formats
 					else if (parts[2].length === 4) {
-						// Assume MM/DD/YYYY format (can be adjusted based on your data)
 						date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
 					}
 				}
@@ -156,26 +159,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			console.warn('Error formatting date for input:', dateString, error);
 			return '';
 		}
-	};
-
-	// Helper function to format date for display in YYYY-MM-DD format
-	const formatDateForDisplay = (dateString: string): string => {
-		if (!dateString) return '';
-		
-		try {
-			const date = parseISO(dateString);
-			if (isValid(date)) {
-				return format(date, 'yyyy-MM-dd');
-			}
-			return dateString;
-		} catch (error) {
-			return dateString;
-		}
-	};
-
-	// Get today's date in YYYY-MM-DD format for max date validation
-	const getTodayFormatted = (): string => {
-		return format(new Date(), 'yyyy-MM-dd');
 	};
 
 	// Function to format date for API (YYYY-MM-DD format)
@@ -213,10 +196,15 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		}
 	};
 
+	// Get today's date in YYYY-MM-DD format for max date validation
+	const getTodayFormatted = (): string => {
+		return format(new Date(), 'yyyy-MM-dd');
+	};
+
 	// Function to prepare employee data for API
 	const prepareEmployeeDataForAPI = () => {
 		return {
-			employee_id: formData.employeeId,
+			employee_id: isEdit ? (employeeData?.employee_id || formData.employeeId) : formData.employeeId,
 			job_title: formData.jobTitle,
 			department_name: formData.department,
 			employment_type: formData.employmentType,
@@ -236,7 +224,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	const fetchDepartments = async () => {
 		setLoadingDepartments(true);
 		setDepartmentError('');
-		const baseURL=`${tenant}.exxforce.com`
+		const baseURL = `${tenant}.exxforce.com`;
 		
 		try {
 			const response = await axios.get(
@@ -250,29 +238,34 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			
 			console.log('Departments fetched:', response.data);
 			
+			let departments: Department[] = [];
 			if (Array.isArray(response.data)) {
-				setDepartments(response.data);
+				departments = response.data;
 			}
 			else if (response.data.data && Array.isArray(response.data.data)) {
-				setDepartments(response.data.data);
+				departments = response.data.data;
 			}
 			else if (response.data.departments && Array.isArray(response.data.departments)) {
-				setDepartments(response.data.departments);
+				departments = response.data.departments;
 			}
 			else {
 				console.warn('Unexpected departments API response structure:', response.data);
 				setDepartmentError('Unexpected response format');
+				departments = [];
 			}
+			
+			console.log('Processed departments:', departments);
+			setDepartments(departments);
 			
 		} catch (error) {
 			console.error('Error fetching departments:', error);
 			setDepartmentError('Failed to load departments');
 			
-			// Fallback to hardcoded departments in case of API failure
+			// Fallback to hardcoded departments that match your data
 			setDepartments([
+				{ id: 'engineering-tech', name: 'Engineering & Tech' },
 				{ id: 'hr', name: 'Human Resources' },
 				{ id: 'finance', name: 'Finance' },
-				{ id: 'engineering', name: 'Engineering' },
 				{ id: 'marketing', name: 'Marketing' }
 			]);
 		} finally {
@@ -285,18 +278,23 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		fetchDepartments();
 	}, []);
 
-	// Populate form when editing - FIXED to properly handle all field types
+	// Populate form when editing
 	useEffect(() => {
+		console.log('useEffect triggered - isEdit:', isEdit, 'employeeData:', employeeData);
+		
 		if (isEdit && employeeData) {
 			console.log('Populating form with employee data:', employeeData);
+			console.log('Employee department:', getDepartmentValue(employeeData));
+			console.log('Employee employment_type:', employeeData.employment_type);
+			console.log('Employee gender:', employeeData.gender);
 			
 			// Split address if it contains a comma
 			const addressParts = employeeData.address ? employeeData.address.split(', ') : ['', ''];
 			
-			setFormData({
+			const newFormData = {
 				employeeId: employeeData.employee_id || '',
 				jobTitle: employeeData.job_title || '',
-				department: employeeData.department_name || '',
+				department: getDepartmentValue(employeeData),
 				employmentType: employeeData.employment_type || '',
 				startDate: formatDateForInput(employeeData.start_date),
 				taxStartDate: formatDateForInput(employeeData.tax_start_date),
@@ -308,7 +306,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				dob: formatDateForInput(employeeData.date_of_birth),
 				address1: addressParts[0] || '',
 				address2: addressParts[1] || '',
-			});
+			};
+			
+			console.log('Setting form data to:', newFormData);
+			setFormData(newFormData);
 		} else {
 			// Reset form for new employee
 			setFormData({
@@ -359,12 +360,24 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		return true;
 	};
 
-	// Handle save employee (posts immediately)
+	// Handle save employee
 	const handleSaveEmployee = async () => {
 		console.log('Form submission started...');
 		console.log('Form data:', formData);
+		console.log('Employee data:', employeeData);
+		console.log('Is edit mode:', isEdit);
 
 		if (!validateFormData()) {
+			return false;
+		}
+
+		// Additional validation for edit mode
+		if (isEdit && (!employeeData?.employee_id || !formData.employeeId)) {
+			console.error('Edit mode but missing employee_id:', {
+				employeeData_employee_id: employeeData?.employee_id,
+				formData_employeeId: formData.employeeId
+			});
+			alert('Error: Employee ID is required for updates');
 			return false;
 		}
 
@@ -373,15 +386,19 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 		try {
 			console.log('Starting API call...');
+			console.log('Is edit mode:', isEdit);
+			console.log('Employee data:', employeeData);
 			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
+			console.log('Target URL:', isEdit ? `https://${tenant}.exxforce.com/tenant/employee/update/${employeeData?.employee_id}` : `https://${tenant}.exxforce.com/tenant/employee/create`);
 
 			let response;
 			
 			if (isEdit && employeeData?.employee_id) {
 				console.log('Updating employee with employee_id:', employeeData.employee_id);
-				// Use employee_id in the URL (not the numeric id field)
+				// Use employee_id from employeeData (not from form since it's disabled)
+				const updateEmployeeId = employeeData.employee_id;
 				response = await axios.put(
-					`https://${tenant}.exxforce.com/tenant/employee/update/${employeeData.employee_id}`,
+					`https://${tenant}.exxforce.com/tenant/employee/update/${updateEmployeeId}`,
 					apiData,
 					{ 
 						headers: { 
@@ -423,9 +440,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				console.error('Request that failed:', JSON.stringify(apiData, null, 2));
 				console.error('Response status:', error.response?.status);
 				console.error('Response data:', error.response?.data);
+				console.error('Request URL:', error.config?.url);
+				console.error('Request method:', error.config?.method);
+				console.error('Request headers:', error.config?.headers);
 				
 				if (error.response?.status === 422) {
 					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
+				} else if (error.response?.status === 500) {
+					alert(`Server Error (500): ${error.response?.data?.message || 'Internal server error occurred'}`);
 				} else {
 					alert(`Failed to save employee: ${error.response?.data?.message || error.message}`);
 				}
@@ -438,7 +460,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		}
 	};
 
-	// Handle save and next - now directly submits employee and shows salary form
+	// Handle save and next
 	const handleSaveAndNext = async () => {
 		console.log('Save and Next clicked...');
 		
@@ -467,7 +489,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 			console.log('Employee created for salary setup:', response.data);
 
-			// Store the created employee data with the employee_id from response
+			// Store the created employee data
 			const createdEmployee = {
 				...apiData,
 				employee_id: response.data?.employee_id || apiData.employee_id,
@@ -514,11 +536,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		await handleSaveEmployee();
 	};
 
-	// Debug log to check form data
-	console.log('Current form data:', formData);
-	console.log('Employee data:', employeeData);
-	console.log('Is edit mode:', isEdit);
-
 	return (
 		<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
 			<div className='mb-8'>
@@ -541,7 +558,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								value={formData.employeeId}
 								required 
 								onChange={handleChange}
-								disabled={isEdit} // Disable editing employee ID in edit mode
+								disabled={isEdit}
 							/>
 						</div>
 						<div className='space-y-2'>
@@ -565,20 +582,27 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 									<SelectValue placeholder={
 										loadingDepartments 
 											? 'Loading departments...' 
-											: departmentError 
-												? 'Error loading departments' 
-												: 'Select department'
+											: 'Select department'
 									} />
 								</SelectTrigger>
 								<SelectContent>
-									{departments.map((dept) => (
-										<SelectItem 
-											key={dept.id} 
-											value={typeof dept.id === 'string' ? dept.id : dept.name}
-										>
-											{dept.name}
+									{/* Always show the current value as an option */}
+									{formData.department && (
+										<SelectItem value={formData.department}>
+											{formData.department}
 										</SelectItem>
-									))}
+									)}
+									{/* Show fetched departments, avoiding duplicates */}
+									{departments
+										.filter(dept => dept.name !== formData.department)
+										.map((dept) => (
+											<SelectItem 
+												key={dept.id}
+												value={dept.name}
+											>
+												{dept.name}
+											</SelectItem>
+										))}
 								</SelectContent>
 							</Select>
 							{departmentError && (
@@ -624,9 +648,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								onChange={handleChange}
 								className="block w-full"
 							/>
-							<p className="text-xs text-gray-500">
-								{formData.startDate && `Format: ${formatDateForDisplay(formData.startDate)}`}
-							</p>
 						</div>
 						<div className='space-y-2'>
 							<Label htmlFor='taxStartDate'>Tax Start Date</Label>
@@ -640,9 +661,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								onChange={handleChange}
 								className="block w-full"
 							/>
-							<p className="text-xs text-gray-500">
-								{formData.taxStartDate && `Format: ${formatDateForDisplay(formData.taxStartDate)}`}
-							</p>
 						</div>
 					</div>
 				</div>
@@ -717,9 +735,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								onChange={handleChange}
 								className="block w-full"
 							/>
-							<p className="text-xs text-gray-500">
-								{formData.dob && `Format: ${formatDateForDisplay(formData.dob)}`}
-							</p>
 						</div>
 						<div className='space-y-2 md:col-span-2'>
 							<Label htmlFor='address1'>Address Line 1</Label>

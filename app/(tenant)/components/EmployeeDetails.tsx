@@ -384,15 +384,14 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 	// Handler for form submission
 	const handleEmployeeSubmit = async (employeeFormData: any) => {
 		try {
-			console.log('Updating employee:', employeeFormData);
-			// Call the parent's onEdit handler to update the employee
-			onEdit(employee, editType);
-			// Refresh employee detail after update
+			console.log('Employee form submitted with data:', employeeFormData);
+			// The EmployeeForm component handles the API call directly
+			// Just refresh employee detail after successful update
 			await fetchEmployeeDetail();
 			// Close the form after successful submission
 			setShowEmployeeForm(false);
 		} catch (error) {
-			console.error('Error submitting employee:', error);
+			console.error('Error after employee submission:', error);
 		}
 	};
 
@@ -1372,16 +1371,17 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 								onSubmit={handleEmployeeSubmit}
 							// /> */}
 							<EmployeeForm
-  isOpen={showEmployeeForm}
-  isEdit={true}
-  employeeData={{
-    ...employee,
-    email: employee.email ?? ''  // Default to empty string if undefined
-  }}
-  editType={editType}
-  onClose={handleCloseEmployeeForm}
-  onSubmit={handleEmployeeSubmit}
-/>
+								key={`employee-form-${employee.employee_id}-${employee.department_name}-${employee.employment_type}-${employee.gender}`}
+								isOpen={showEmployeeForm}
+								isEdit={true}
+								employeeData={{
+									...employee,
+									email: employee.email ?? ''  // Default to empty string if undefined
+								}}
+								editType={editType}
+								onClose={handleCloseEmployeeForm}
+								onSubmit={handleEmployeeSubmit}
+							/>
 						</div>
 					</div>
 				)}
