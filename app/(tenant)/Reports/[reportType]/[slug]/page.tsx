@@ -7,6 +7,9 @@ import TaxSummaryReport from '../[slug]/_components/taxSum';
 import ActivityLogReport from '../[slug]/_components/activityLog';
 import Loading from '@/components/ui/Loading';
 import EmployeeHistoryReport from './_components/employeeHistory';
+import { ca } from 'date-fns/locale';
+import JournalSummaryReport from './_components/journalSum';
+import LoanReport from './_components/loanRep';
 
 // Payroll Data interfaces
 interface PayrollTotals {
@@ -244,6 +247,79 @@ export default function ReportPage({
 		}
 	}
 
+	const fetchJournalSummary = async () => {
+		if (!tenant || !token) {
+			console.log('Missing tenant or token');
+			return;
+		}
+		const baseURL = `https://${tenant}.exxforce.com`;
+		setLoading(true);
+		setError(null);
+
+		try {
+			console.log(`Fetching Journal Summary: ${reportType}`);
+
+			const res = await axios.get(
+				`${baseURL}/tenant/reports/journal-summary/all?from_date=2025-01-01&to_date=2026-03-31`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+
+			console.log('API response:', res.data);
+			setData(res.data);
+		} catch (err: any) {
+			console.error('Error fetching journal summary:', err);
+			setError(
+				err.response?.data?.message || 'Failed to fetch journal summary data'
+			);
+			if (err.response?.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 2000);
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const fetchLoanReport = async () => {
+		if (!tenant || !token) {
+			console.log('Missing tenant or token');
+			return;
+		}
+		const baseURL = `https://${tenant}.exxforce.com`;
+		setLoading(true);
+		setError(null);
+		try{
+			console.log(`Fetching Loan Report: ${reportType}`);
+
+			const res = await axios.get(
+				`${baseURL}/tenant/loans/list`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+
+			console.log('API response:', res.data);
+			setData(res.data);
+		}catch(err:any){
+			console.error('Error fetching loan report:', err);
+			setError(
+				err.response?.data?.message || 'Failed to fetch loan report data'
+			);
+			if (err.status === 401) {
+				// Redirect to login if unauthorized
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 2000);
+			}
+		}
+	}
+
+
+
 	const fetchData = () => {
 		if (reportType === 'payroll-summary') {
 			fetchPayrollSummary();
@@ -253,6 +329,10 @@ export default function ReportPage({
 			fetchActivityLog();
 		}else if(reportType === 'employee-history'){
 			fetchEmployeesHistory();
+		}else if (reportType === 'journal-summary') {
+			fetchJournalSummary();
+		}else if(reportType === 'loan-report'){
+			fetchLoanReport();
 		}
 	};
 
@@ -261,7 +341,7 @@ export default function ReportPage({
 		if (
 			tenant &&
 			token &&
-			(reportType === 'payroll-summary' || reportType === 'tax-summary' || reportType === 'activity-log' || reportType === 'employee-history')
+			(reportType === 'payroll-summary' || reportType === 'tax-summary' || reportType === 'activity-log' || reportType === 'employee-history' || reportType === 'journal-summary' || reportType === 'loan-report')
 		) {
 			fetchData();
 		}
@@ -342,6 +422,27 @@ export default function ReportPage({
 			);
 		}
 		return <EmployeeHistoryReport data={data as EmployeeHistoryData} />;
+	}
+
+	if (reportType === 'journal-summary') {
+		if (!data) {
+			return ( 
+				<div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+					<p className='text-lg text-gray-600'>No Journal Summary data available</p>
+				</div>
+			)}
+			return <JournalSummaryReport data={data as any} />;
+		}
+
+	if (reportType === 'loan-report') {
+		if (!data) {
+			return (
+				<div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+					<p className='text-lg text-gray-600'>No Loan Report data available</p>
+				</div>
+			);
+		}
+		return <LoanReport data={data as any} />;
 	}
 
 	// Default case for other report types
