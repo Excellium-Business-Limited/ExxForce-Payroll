@@ -135,7 +135,7 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href={`/Reports/activity-log/all`}
+								href={`/Reports/activity-log/all?`}
 								className='text-[#3D56A8]'>{`View Reports >`}</a>
 						</Card>
 						<Card className='p-3 w-[300px]'>
@@ -177,7 +177,7 @@ const page = () => {
 								</p>
 							</article>
 							<a
-								href={`/Reports/employee-report/all`}
+								href={`/Reports/employee-history/all?from_date=2025-01-01&to_date=2026-03-31`}
 								className='text-[#3D56A8]'>{`View Report >`}</a>
 						</Card>
 					</div>

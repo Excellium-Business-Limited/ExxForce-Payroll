@@ -4,7 +4,9 @@ import axios from 'axios';
 import React, { use, useEffect, useState } from 'react';
 import PayrollSummaryReport from '../[slug]/_components/payrollSum';
 import TaxSummaryReport from '../[slug]/_components/taxSum';
+import ActivityLogReport from '../[slug]/_components/activityLog';
 import Loading from '@/components/ui/Loading';
+import EmployeeHistoryReport from './_components/employeeHistory';
 
 // Payroll Data interfaces
 interface PayrollTotals {
@@ -58,6 +60,28 @@ interface TaxSummaryData {
 	employees: EmployeeTaxData[];
 }
 
+interface ActivityLog {
+	id: string;
+	action: string;
+	model: string;
+	object_id: string;
+	timestamp: string;
+	user: string;
+}
+
+interface ActivityLogsData {
+	activities: ActivityLog[];
+	length: number;
+	map: any;
+}
+interface EmployeeHistoryData {
+	period: string;
+	employees_count: number;
+	employees: any;
+	stats?: any;
+	department_summary?: any;
+}
+
 export default function ReportPage({
 	params,
 }: {
@@ -67,7 +91,7 @@ export default function ReportPage({
 	const { reportType, slug } = use(params);
 	const [tenant, setTenant] = useState<string | null>(null);
 	const [token, setToken] = useState<string | null>(null);
-	const [data, setData] = useState<PayrollData | TaxSummaryData | null>(null);
+	const [data, setData] = useState<PayrollData | TaxSummaryData | ActivityLogsData | EmployeeHistoryData | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -139,11 +163,72 @@ export default function ReportPage({
 		}
 	};
 
+	const fetchActivityLog = async() =>{
+		if (!tenant || !token) {
+			console.log('Missing tenant or token');
+			return;
+		}
+
+		const baseURL = `https://${tenant}.exxforce.com`;
+		setLoading(true);
+		setError(null);
+
+		try {
+			console.log(`Fetching Activity Logs: ${reportType}`);
+
+			const res = await axios.get(`${baseURL}/tenant/reports/activity-log`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+
+			console.log('API response:', res.data);
+			setData(res.data);
+		} catch (err: any) {
+			console.error('Error fetching activity log:', err);
+			setError(err.response?.data?.message || 'Failed to fetch payroll data');
+		} finally {
+			setLoading(false);
+		}
+
+	}
+
+	const fetchEmployeesHistory = async () =>{
+		if (!tenant || !token ){
+			console.log('Missing tenant or token');
+			return;
+		}
+		const baseURL = `https://${tenant}.exxforce.com`;
+		setLoading(true);
+		setError(null);
+
+		try {
+			console.log(`Fetching Employee History: ${reportType}`);
+
+			const res = await axios.get(
+				`${baseURL}/tenant/reports/employee-history/all?from_date=2025-01-01&to_date=2026-03-31`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+
+			console.log('API response:', res.data);
+			setData(res.data);
+		} catch (err: any) {
+			console.error('Error fetching activity log:', err);
+			setError(err.response?.data?.message || 'Failed to fetch payroll data');
+		} finally {
+			setLoading(false);
+		}
+	}
+
 	const fetchData = () => {
 		if (reportType === 'payroll-summary') {
 			fetchPayrollSummary();
 		} else if (reportType === 'tax-summary') {
 			fetchTaxSummary();
+		}else if(reportType === 'activity-log'){
+			fetchActivityLog();
+		}else if(reportType === 'employee-history'){
+			fetchEmployeesHistory();
 		}
 	};
 
@@ -152,10 +237,11 @@ export default function ReportPage({
 		if (
 			tenant &&
 			token &&
-			(reportType === 'payroll-summary' || reportType === 'tax-summary')
+			(reportType === 'payroll-summary' || reportType === 'tax-summary' || reportType === 'activity-log' || reportType === 'employee-history')
 		) {
 			fetchData();
 		}
+		setLoading(false);
 	}, [tenant, token, reportType]); // Only run when these values change
 
 	// Handle loading state
@@ -212,6 +298,28 @@ export default function ReportPage({
 		return <TaxSummaryReport data={data as TaxSummaryData} />;
 	}
 
+	if(reportType === 'activity-log'){
+		if (!data) {
+			return (
+				<div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+					<p className='text-lg text-gray-600'>No activity log data available</p>
+				</div>
+			);
+		}
+		return <ActivityLogReport data={data as ActivityLogsData} />;
+	}
+
+	if(reportType === 'employee-history'){
+		if (!data) {
+			return (
+				<div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+					<p className='text-lg text-gray-600'>No employee history data available</p>
+				</div>
+			);
+		}
+		return <EmployeeHistoryReport data={data as EmployeeHistoryData} />;
+	}
+
 	// Default case for other report types
 	return (
 		<div className='min-h-screen bg-gray-50 p-6'>
@@ -223,7 +331,7 @@ export default function ReportPage({
 				<div className='mt-8 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded'>
 					<p>This report type is not yet implemented.</p>
 					<p className='mt-2 text-sm'>
-						Available report types: payroll-summary, tax-summary
+						Available report types: payroll-summary, tax-summary, employee-pay-history, activity-log
 					</p>
 				</div>
 			</div>

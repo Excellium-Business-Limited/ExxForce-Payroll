@@ -1,20 +1,24 @@
-'use client'
+'use client';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import React, { useEffect, useState } from 'react'
+import {
+	Sheet,
+	SheetContent,
+	SheetTitle,
+	SheetTrigger,
+} from '@/components/ui/sheet';
+import React, { useEffect, useState } from 'react';
 import Import from '../components/Import';
-import Dialogs from '../components/dialog'
+import Dialogs from '../components/dialog';
 import PayrunForm from './_components/PayrunForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Submit from './_components/payrunSubmit';
-import {payrans} from './_components/payrunData'
+import { payrans } from './_components/payrunData';
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
-import  { useGlobal } from '@/app/Context/context';
+import { useGlobal } from '@/app/Context/context';
 import { getAccessToken, getTenant } from '@/lib/auth';
 import { ST } from 'next/dist/shared/lib/utils';
 import Loading from '@/components/ui/Loading';
-
 
 interface PayRun {
 	id: number;
@@ -29,63 +33,68 @@ interface PayRun {
 }
 
 const page = () => {
-  const [isPayrun, setIsPayrun] = React.useState(true)
-   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+	const [isPayrun, setIsPayrun] = React.useState(true);
+	const [isSheetOpen, setIsSheetOpen] = React.useState(false);
 	const [isLoading, setIsLoading] = useState(false);
-   const router = useRouter();
-		const pathname = usePathname();
-		
-		// const tenantName = tenant ? tenant : pathname.split('/')[1];
+	const router = useRouter();
+	const pathname = usePathname();
 
-		const [payruns, setPayruns] = useState<PayRun[]>([]);
-		const [error, setError] = useState('');
-		
-		useEffect(() => {
-			const tenant = getTenant();
-			const fetchPayRuns = async () => {
-				try {
-					setIsLoading(true);
-						const token = getAccessToken()
-						const baseURL = `${tenant}.exxforce.com`
-						const res = await axios.get<PayRun[]>(
-							`https://${baseURL}/tenant/payrun/list`,
-							{ headers: { Authorization: `Bearer ${token}` } }
-						);
-					setPayruns(res.data);
-					
-					setIsLoading(false);
-					console.log(res.data);
-					if (res.data.length <= 0) setIsPayrun(false);
-				} catch (err: any) {
-					console.error(err);
-					setError(err.response?.data?.detail || 'Failed to load pay runs');
-					if (err.response?.status === 401) {
-						// Redirect to login if unauthorized
-						setTimeout(()=>{
-							redirect('/login')
-						}, 2000)
-					}
+	// const tenantName = tenant ? tenant : pathname.split('/')[1];
+
+	const [payruns, setPayruns] = useState<PayRun[]>([]);
+	const [error, setError] = useState('');
+
+	useEffect(() => {
+		const tenant = getTenant();
+		const fetchPayRuns = async () => {
+			try {
+				setIsLoading(true);
+				const token = getAccessToken();
+				const baseURL = `${tenant}.exxforce.com`;
+				const res = await axios.get<PayRun[]>(
+					`https://${baseURL}/tenant/payrun/list`,
+					{ headers: { Authorization: `Bearer ${token}` } }
+				);
+				setPayruns(res.data);
+
+				setIsLoading(false);
+				console.log(res.data);
+				if (res.data.length <= 0) setIsPayrun(false);
+			} catch (err: any) {
+				console.error(err);
+				setError(err.response?.data?.detail || 'Failed to load pay runs');
+				if (err.response?.status === 401) {
+					// Redirect to login if unauthorized
+					setTimeout(() => {
+						redirect('/login');
+					}, 2000);
 				}
-			};
-			fetchPayRuns();
-			
-		}, []);
-	
-		useEffect(() => {
-			
-		}, [])
-		if (error) return <p >{error}</p>;
+			}
+		};
+		fetchPayRuns();
+	}, []);
 
-		if (isLoading) return <div className='self-center font-extrabold'><Loading/></div>;
+	useEffect(() => {}, []);
+	if (error) return <p>{error}</p>;
 
-		
+	if (isLoading)
+		return (
+			<div className='self-center font-extrabold'>
+				<Loading
+					message='Loading Payruns...'
+					variant='spinner'
+					overlay={false}
+					className='my-4'
+				/>
+			</div>
+		);
 
-  return (
+	return (
 		<div className='h-[2000px]'>
 			<div className='flex flex-row items-center justify-between w-full my-7 px-3 gap-4'>
 				<span>
 					<h1>Pay Runs</h1>
-					<p className='text-xs'>Create and Mange your Payruns</p>
+					<p className='text-xs'>Create and Manage your Payruns</p>
 				</span>
 				<span className='items-end self-end justify-between flex gap-4'>
 					<Sheet
@@ -219,9 +228,7 @@ const page = () => {
 							<TabsContent value='bi-weekly'>
 								<Submit
 									payruns={payruns
-										.filter(
-											(payrun: any) => payrun.pay_period === 'BIWEEKLY'
-										)
+										.filter((payrun: any) => payrun.pay_period === 'BIWEEKLY')
 										.map((payrun: any) => ({
 											...payrun,
 											PAY_PERIOD: payrun.pay_period || '',
@@ -258,6 +265,6 @@ const page = () => {
 			)}
 		</div>
 	);
-}
+};
 
-export default page
+export default page;

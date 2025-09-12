@@ -1,4 +1,5 @@
 'use client';
+import Loading from '@/components/ui/Loading';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface RefreshTokenResponse {
@@ -159,8 +160,14 @@ export const TokenRefreshProvider: React.FC<TokenRefreshProviderProps> = ({
 		return (
 			<div className='flex items-center justify-center min-h-screen bg-white text-blue-700'>
 				<div className='text-center'>
-					<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto mb-4'></div>
-					<p>Refreshing authentication...</p>
+					{/* <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto mb-4'></div>
+					<p>Refreshing authentication...</p> */}
+					<Loading
+						message='Authenticating...'
+						variant='spinner'
+						overlay={false}
+						className='my-4'
+					/>
 				</div>
 			</div>
 		);
