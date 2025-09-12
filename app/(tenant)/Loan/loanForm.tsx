@@ -200,7 +200,7 @@ export default function LoanForm({ className }: { className?: string }) {
 		};
 		return (
 			<div>
-				<form action=''>
+				<form action='' className='scroll-auto'>
 					<span className='mt-2 ml-2'>
 						<Label htmlFor='name'>Loan Type Name</Label>
 						<Input
