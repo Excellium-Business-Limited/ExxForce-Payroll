@@ -60,7 +60,7 @@ const FilterSort: React.FC<FilterSortProps> = ({
 }) => {
   return (
     <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm ${className}`}>
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+      <div className="flex lg:flex-row gap-2 lg:items-center">
         {/* Search */}
         <div className="flex-1 min-w-0">
           <div className="relative">
@@ -70,7 +70,7 @@ const FilterSort: React.FC<FilterSortProps> = ({
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 w-full"
+              className="pl-10 w-[340px]"
             />
           </div>
         </div>

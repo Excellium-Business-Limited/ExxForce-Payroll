@@ -55,64 +55,9 @@ interface Employee {
 }
 
 export default function LoanDetails({ item, id }: { item: any; id: string }) {
-	const details = {
-		employeeDetails: {
-			fullName: 'John Smith',
-			employeeId: 'EMP-1233',
-			emailAddress: 'johnsmith@example.com',
-			monthlySalary: '600,000.00',
-			jobPosition: 'Software Engineer',
-		},
-		loan: {
-			loanSummary: {
-				status: 'Ongoing',
-				loanAmount: '600,000.00',
-				startDate: 'May 25th 2025',
-				duration: '6 Months',
-				monthlyDeductions: '60,000.00',
-				endDate: 'October 29, 2025',
-			},
-			paymentDetails: {
-				amountPaid: '600,000',
-				balanceRemaining: '600,000',
-				nextDeduction: 'July 2nd, 2025',
-			},
-			previousPayments: [
-				{
-					month: 'May',
-					amountDeducted: '₦60,000.00',
-					balanceRemaining: '₦540,000.00',
-					dateOfDeduction: 'May 29, 2025',
-					status: 'Paid',
-				},
-				{
-					month: 'June',
-					amountDeducted: '₦60,000.00',
-					balanceRemaining: '₦480,000.00',
-					dateOfDeduction: 'June 29, 2025',
-					status: 'Paid',
-				},
-				{
-					month: 'July',
-					amountDeducted: '₦60,000.00',
-					balanceRemaining: '₦420,000.00',
-					dateOfDeduction: 'July 29, 2025',
-					status: 'Paid',
-				},
-			],
-		},
-	};
-	const { employeeDetails, loan } = details;
-	const { fullName, employeeId, emailAddress, monthlySalary, jobPosition } =
-		employeeDetails;
-	const { loanSummary, paymentDetails, previousPayments } = loan;
-	const progressValue =
-		(previousPayments.length /
-			(loanSummary.duration ? parseInt(loanSummary.duration) : 1)) *
-		100;
 
 	const [employees, setEmployees] = React.useState<Employee[]>();
-
+	const [loading, setLoading] = React.useState(false);
 	const [error, setError] = React.useState<string | null>(null);
 	const [currEmp, setCurrEmp] = React.useState<Employee | undefined>();
 	const { globalState } = useGlobal();

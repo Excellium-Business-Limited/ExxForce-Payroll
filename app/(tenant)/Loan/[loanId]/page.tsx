@@ -6,6 +6,7 @@ import Loans from '../components/loanDetails';
 import { fetchEmployees } from '@/lib/api';
 import { getTenant } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import Loading from '@/components/ui/Loading';
 
 // Remove the mock items if you're fetching from API
 const items = [
@@ -103,9 +104,12 @@ export default function LoanDetails({
 	// Add loading state
 	if (loading) {
 		return (
-			<div className='ml-[470px] flex self-center items-center text-2xl font-bold'>
-				Loading loan details...
-			</div>
+			<Loading
+				message='Loading Loan Details...'
+				size='medium'
+				variant='spinner'
+				overlay={false}
+			/>
 		);
 	}
 
