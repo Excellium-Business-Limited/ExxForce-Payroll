@@ -27,6 +27,11 @@ import { getAccessToken, getTenant } from '@/lib/auth';
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/context';
 import { se } from 'date-fns/locale';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
 interface Employee {
 	id?: number;
 	employee_id: string;
@@ -55,7 +60,6 @@ interface Employee {
 }
 
 export default function LoanDetails({ item, id }: { item: any; id: string }) {
-
 	const [employees, setEmployees] = React.useState<Employee[]>();
 	const [loading, setLoading] = React.useState(false);
 	const [error, setError] = React.useState<string | null>(null);
@@ -103,6 +107,25 @@ export default function LoanDetails({ item, id }: { item: any; id: string }) {
 		console.log('Current Employee state updated:', currEmp);
 	}, [currEmp]);
 
+	const handlePause = async () => {
+		setLoading(true);
+		try {
+			const tenant = getTenant();
+			const baseURL = `${tenant}.exxforce.com`;
+			const res = await axios.post(`https://${baseURL}/tenant/loans/${id}/pause`, {
+				headers: {
+					Authorization: `Bearer ${getAccessToken()}`,
+				},
+			});
+
+			console.log('Loan paused successfully:', res.data);
+		} catch (err: any) {
+			setError(err.message || 'An error occurred');
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
 		<div className='w-full'>
 			<div className=' h-[603px] w-full p-3'>
@@ -119,17 +142,28 @@ export default function LoanDetails({ item, id }: { item: any; id: string }) {
 								<UpdateRepay id={id} />
 							</pre>
 						</Dialogs>
-						<Select>
-							<SelectTrigger className=''>
-								<SelectValue></SelectValue>
+						<Popover>
+							<PopoverTrigger className=''>
 								<MoreHorizontalIcon className='border-2 rounded-4xl border-black h-[30px] w-[30px]' />
-							</SelectTrigger>
-							<SelectContent position='popper'>
-								<SelectItem value='edit'>Edit Loan</SelectItem>
-								<SelectItem value='pause'>Pause Loan</SelectItem>
-								<SelectItem value='reschedule'>Reschedule Loan</SelectItem>
-							</SelectContent>
-						</Select>
+							</PopoverTrigger>
+							<PopoverContent className='w-fit flex flex-col gap-2 p-4'>
+								<Button
+									value='edit'
+									variant={'outline'} className='bg-white text-gray-600 text-xs border-0'>
+									Edit Loan
+								</Button>
+								<Button
+									onClick={() => handlePause()}
+									variant={'outline'} className='bg-white text-gray-600 text-xs border-0'>
+									Pause Loan
+								</Button>
+								<Button
+									value='reschedule'
+									variant={'outline'} className='bg-white text-gray-600 text-xs border-0'>
+									Complete Loan
+								</Button>
+							</PopoverContent>
+						</Popover>
 					</div>
 				</div>
 				<div className='flex justify-between gap-4 my-4'>
@@ -293,19 +327,30 @@ export default function LoanDetails({ item, id }: { item: any; id: string }) {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{item.previousPayments.map((payment : { month: string; amountDeducted: string; balanceRemaining: string; dateOfDeduction: string; status: string; }, index : number) => (
-								<TableRow key={index}>
-									<TableCell>{payment.month}</TableCell>
-									<TableCell>{payment.amountDeducted}</TableCell>
-									<TableCell>{payment.balanceRemaining}</TableCell>
-									<TableCell>{payment.dateOfDeduction}</TableCell>
-									<TableCell>
-										<h6 className='text-xs border border-[#0ac743] px-2 py-1 rounded-lg bg-[#c2eccd] text-[#0ac743] w-fit'>
-											{payment.status}
-										</h6>
-									</TableCell>
-								</TableRow>
-							))}
+							{item.previousPayments.map(
+								(
+									payment: {
+										month: string;
+										amountDeducted: string;
+										balanceRemaining: string;
+										dateOfDeduction: string;
+										status: string;
+									},
+									index: number
+								) => (
+									<TableRow key={index}>
+										<TableCell>{payment.month}</TableCell>
+										<TableCell>{payment.amountDeducted}</TableCell>
+										<TableCell>{payment.balanceRemaining}</TableCell>
+										<TableCell>{payment.dateOfDeduction}</TableCell>
+										<TableCell>
+											<h6 className='text-xs border border-[#0ac743] px-2 py-1 rounded-lg bg-[#c2eccd] text-[#0ac743] w-fit'>
+												{payment.status}
+											</h6>
+										</TableCell>
+									</TableRow>
+								)
+							)}
 						</TableBody>
 					</Table>
 				</div>

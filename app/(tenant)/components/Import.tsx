@@ -1,11 +1,12 @@
 'use client';
 
-import React, { HtmlHTMLAttributes, useState } from 'react';
+import React, { HtmlHTMLAttributes, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogClose } from '@/components/ui/dialog';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { set } from 'date-fns';
 
 // Define props interface for the ImportModal component
 interface ImportModalProps {
@@ -26,6 +27,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
 	const [parseError, setParseError] = useState<string | null>(null);
+	const [tempType, setTempType] = useState<string>('');
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -72,6 +74,15 @@ const ImportModal: React.FC<ImportModalProps> = ({
 		}
 	};
 
+	useEffect(()=>{
+		if(title === 'Import Employees'){
+			setTempType('employee_import_template.csv');
+		}else if (title === 'Loans'){
+			setTempType('loans.csv');
+		}
+	},[])
+
+
 	return (
 		<div className='p-6'>
 			<div className='mb-6'>
@@ -98,8 +109,8 @@ const ImportModal: React.FC<ImportModalProps> = ({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<a
-										href='/templates/employee_import_template.csv'
-										download='employee_import_template.csv'
+										href={`/templates/${tempType}`}
+										download={tempType}
 										className='text-sm text-blue-600 underline ml-2'
 									>
 										Download Sample Template

@@ -1,0 +1,4 @@
+employee_id,loan_type_name,amount,repayment_months,start_date,reason
+E101,Test loan,50000,12,01/01/2025,Medical expenses
+E102,Vehicle Loan,200000,36,01/02/2025,Company car financing
+E103,Test loan,75000,24,01/03/2025,House renovation
