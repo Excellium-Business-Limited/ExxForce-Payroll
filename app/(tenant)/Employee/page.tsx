@@ -298,6 +298,10 @@ const EmployeePage: React.FC = () => {
   const handleCloseSalaryForm = (): void => {
     setShowSalaryForm(false);
     setPendingEmployeeData(null);
+    // Also close the employee form completely when salary form closes after successful submission
+    setShowEmployeeForm(false);
+    setIsEdit(false);
+    setEmployeeData(null);
   };
 
   const handleCloseImportModal = (): void => {
@@ -344,20 +348,6 @@ const EmployeePage: React.FC = () => {
     } catch (error) {
       console.error('Error ending employment:', error);
     }
-  };
-
-  // Handle when EmployeeForm shows salary form
-  const handleShowSalaryForm = (employeeData: any): void => {
-    console.log('Showing salary form with data:', employeeData);
-    setPendingEmployeeData(employeeData);
-    setShowEmployeeForm(false); // Hide employee form
-    setShowSalaryForm(true); // Show salary form
-  };
-
-  // Handle when salary form goes back to employee form
-  const handleBackToEmployeeForm = (): void => {
-    setShowSalaryForm(false);
-    setShowEmployeeForm(true);
   };
 
   const handleEmployeeSubmit = async (employeeFormData: any): Promise<void> => {
@@ -414,7 +404,10 @@ const EmployeePage: React.FC = () => {
   };
 
   // Utility functions
-  const formatCurrency = (amount: number): string => {
+  const formatCurrency = (amount: number | undefined | null): string => {
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '--';
+    }
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
@@ -1052,7 +1045,6 @@ const EmployeePage: React.FC = () => {
 									employeeData={employeeData}
 									onClose={handleCloseEmployeeForm}
 									onSubmit={handleEmployeeSubmit}
-									onShowSalaryForm={handleShowSalaryForm}
 								/>
 							</div>
 						</div>
@@ -1093,8 +1085,6 @@ const EmployeePage: React.FC = () => {
 									existingEmployeeId={employeeData?.id}
 									onClose={handleCloseSalaryForm}
 									onSubmit={handleSalarySubmit}
-									onBack={handleBackToEmployeeForm}
-									parentOnSubmit={handleEmployeeSubmit}
 								/>
 							</div>
 						</div>

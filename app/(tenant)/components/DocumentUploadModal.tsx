@@ -190,7 +190,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 							value={documentType}
 							onChange={(e) => setDocumentType(e.target.value)}
 							className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-							required
 						>
 							<option value="">Select document type</option>
 							{documentTypes.map((type) => (
@@ -209,7 +208,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 							type="file"
 							accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.xls,.xlsx"
 							onChange={handleFileChange}
-							required
 						/>
 						<p className="text-xs text-gray-500">
 							Supported formats: PDF, DOC, DOCX, JPG, PNG, GIF, XLS, XLSX (Max: 10MB)

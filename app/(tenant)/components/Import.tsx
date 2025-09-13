@@ -65,7 +65,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
 			const fileInput = document.getElementById('file-upload') as HTMLInputElement;
 			if (fileInput) fileInput.value = '';
 
-			alert('Employees imported successfully!');
 		} catch (error) {
 			console.error('Error importing employees:', error);
 			alert('Failed to import employees');
@@ -102,7 +101,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
 							type='file'
 							accept='.csv,.xlsx,.xls'
 							onChange={handleFileChange}
-							required
 							/>
 
 							{/* Download sample template link */}
