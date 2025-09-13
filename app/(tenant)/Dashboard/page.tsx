@@ -37,14 +37,16 @@ const Dashboard = () => {
 		const checkAuth = () => {
 			const token = getAccessToken();
 			const tenantValue = getTenant();
-			
+			setIsLoading(true)
 			if (token && tenantValue) {
 				setAuthReady(true);
 				setTnt(tenantValue);
+				setIsLoading(false)
 			} else {
 				// Keep checking until auth is ready
 				setTimeout(checkAuth, 100);
 			}
+			
 		};
 		
 		checkAuth();
@@ -177,7 +179,9 @@ const Dashboard = () => {
 				<div className='flex gap-1.5 items-center mx-4 mt-4'>
 					<section>
 						<h3 className='font-semibold text-md'>Hi, Welcome Back {tnt}</h3>
-						<p className='text-muted-foreground text-md'>Here's what is happening with your payroll today</p>
+						<p className='text-muted-foreground text-md'>
+							Here's what is happening with your payroll today
+						</p>
 					</section>
 					<div className='flex gap-4 ml-auto'>
 						<Button
@@ -281,10 +285,19 @@ const Dashboard = () => {
 				<Piechrt className='col-span-1 w-[340px]' />
 			</div>
 			<div className='grid grid-cols-3 m-8  gap-4'>
-				<div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px]'>
+				{/* <div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px]'>
 					<DTable
 						data={data1}
 						columns={columns}
+					/>
+
+				</div> */}
+				<div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px] flex flex-col content-center items-center'>
+					<h3 className='font-semibold text-md'>Recent Approved Payrun Activities</h3>
+					<img
+						src={'/notdata.png'}
+						alt=''
+						width={300}
 					/>
 				</div>
 				<div className=' grid grid-cols-2 grid-rows-2 p-5 rounded-xl shadow gap-3 bg-white w-full'>

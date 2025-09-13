@@ -163,7 +163,7 @@ export const TokenRefreshProvider: React.FC<TokenRefreshProviderProps> = ({
 					{/* <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto mb-4'></div>
 					<p>Refreshing authentication...</p> */}
 					<Loading
-						message='Authenticating...'
+						message='Loading...'
 						variant='spinner'
 						overlay={false}
 						className='my-4'

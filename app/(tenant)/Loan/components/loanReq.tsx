@@ -294,7 +294,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 		<div className='mx-2'>
 			<div className='flex flex-row items-center justify-between w-full mb-4 mx-4'>
 				<span>
-					<h1>Loan List</h1>
+					<h1 className='text-xl font-semibold'>Loan List</h1>
 				</span>
 				{/* <span className='items-end self-end justify-between flex gap-4'>
 					<Button

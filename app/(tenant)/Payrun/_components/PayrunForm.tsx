@@ -99,7 +99,9 @@ const PayrunForm = ({
 			);
 		} finally {
 			setIsSubmitting(false);
+			window.location.href = `/Payrun`
 		}
+		
 	};
 	return (
 		<div className={`h screen ${className} flex flex-col`}>

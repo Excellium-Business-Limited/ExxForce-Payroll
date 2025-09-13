@@ -234,7 +234,7 @@ export default function Home() {
 			<div className='self-center h-[603px] ml-7 gap-4'>
 				<div className='flex flex-row items-center justify-between w-full'>
 					<span>
-						<h1>Loan</h1>
+						<h1 className='text-2xl font-semibold'>Loan</h1>
 						<p className='text-xs'>Create and Manage Loans</p>
 					</span>
 					<span className='items-end self-end justify-between flex gap-4'>
@@ -282,12 +282,12 @@ export default function Home() {
 						<TabsList className='w-full justify-start border-b bg-transparent h-auto p-0 rounded-none'>
 							<div className='flex gap-8 px-6 py-4'>
 								<TabsTrigger
-									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-semibold text-lg'
 									value='LType'>
 									Loan Type
 								</TabsTrigger>
 								<TabsTrigger
-									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-semibold text-lg'
 									value='LRequest'>
 									Loan Request
 								</TabsTrigger>
