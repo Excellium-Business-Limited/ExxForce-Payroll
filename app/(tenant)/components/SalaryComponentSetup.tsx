@@ -327,9 +327,18 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           ...existingComponents
         ]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching existing employee components:', error);
+      
+      // Check if it's a 404 error (endpoint doesn't exist)
+      if (error.response?.status === 404) {
+        console.log('Salary components endpoint not available for this employee - this is normal for new employees');
+      } else {
+        console.error('Unexpected error fetching employee salary components:', error.message);
+      }
+      
       // Don't show error to user as this is optional functionality
+      // The form will work normally without existing components
     }
   };
 

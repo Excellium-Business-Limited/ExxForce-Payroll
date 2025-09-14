@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useGlobal } from '@/app/Context/context';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 interface SalarySetupFormProps {
@@ -21,14 +22,13 @@ interface SalarySetupFormProps {
 	existingEmployeeId?: number;
 	onClose: () => void;
 	onSubmit: (salaryData: any) => Promise<void>;
-	onBack: () => void;
-	parentOnSubmit: (employeeFormData: any) => Promise<void>;
 }
 
 interface SalaryFormData {
 	payGradeName: string;
 	payFrequency: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY';
 	customSalary: number;
+	grossSalary: number;
 	bankName: string;
 	accountNumber: string;
 	accountName: string;
@@ -52,13 +52,14 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 	existingEmployeeId,
 	onClose,
 	onSubmit,
-	onBack,
 }) => {
 	const { tenant, globalState } = useGlobal();
+	const router = useRouter();
 	const [formData, setFormData] = useState<SalaryFormData>({
 		payGradeName: '',
 		payFrequency: 'MONTHLY',
 		customSalary: 0,
+		grossSalary: 0,
 		bankName: '',
 		accountNumber: '',
 		accountName: '',
@@ -132,6 +133,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 				setFormData((prev) => ({
 					...prev,
 					customSalary: selectedPayGrade.gross_salary || 0,
+					grossSalary: selectedPayGrade.gross_salary || 0,
 				}));
 			}
 		} else if (value === 'no-paygrade') {
@@ -147,7 +149,10 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 		setFormData((prev) => ({ ...prev, [key]: checked }));
 	};
 
-	const formatCurrency = (amount: number): string => {
+	const formatCurrency = (amount: number | undefined | null): string => {
+		if (amount === null || amount === undefined || isNaN(amount)) {
+			return '--';
+		}
 		return new Intl.NumberFormat('en-NG', {
 			style: 'currency',
 			currency: 'NGN',
@@ -182,28 +187,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Basic validation - removed payGradeName from required fields since it can be empty
-		const requiredFields = [
-			'payFrequency',
-			'customSalary',
-			'bankName',
-			'accountNumber',
-			'accountName',
-		];
-		const missingFields = requiredFields.filter((field) => {
-			const value = formData[field as keyof SalaryFormData];
-			return !value || (typeof value === 'string' && value.trim() === '');
-		});
-
-		if (missingFields.length > 0) {
-			alert(
-				`Please fill in the following required fields: ${missingFields.join(
-					', '
-				)}`
-			);
-			return;
-		}
-
+		// No required field validation - allow submission with partial data
 		setIsSubmitting(true);
 
 		try {
@@ -215,7 +199,8 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 			const salaryData = {
 				pay_grade_name: payGradeValue,
 				pay_frequency: formData.payFrequency,
-				custom_salary: formData.customSalary,
+				custom_salary: formData.grossSalary,
+				gross_salary: formData.grossSalary,
 				bank_name: formData.bankName,
 				account_number: formData.accountNumber,
 				account_name: formData.accountName,
@@ -250,8 +235,11 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 			await onSubmit(salaryData);
 
 			console.log('Success! Salary data saved.');
-			alert('Salary information updated successfully!');
-			onClose();
+			
+			// Hard redirect back to employee list page
+			window.location.href = `/Employee`;
+			return true;
+			
 		} catch (error) {
 			console.error('Error saving salary data:', error);
 
@@ -281,32 +269,12 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 	return (
 		<div className='ml-auto h-full w-full max-w-2xl bg-white p-6 overflow-y-auto'>
 			<div className='mb-8'>
-				<div className='flex items-center gap-4 mb-4'>
-					<Button
-						type='button'
-						variant='ghost'
-						onClick={onBack}
-						className='p-2 hover:bg-gray-100 rounded-full'>
-						<svg
-							className='w-5 h-5'
-							viewBox='0 0 24 24'
-							fill='none'>
-							<path
-								d='M15 18L9 12L15 6'
-								stroke='currentColor'
-								strokeWidth='2'
-								strokeLinecap='round'
-								strokeLinejoin='round'
-							/>
-						</svg>
-					</Button>
-					<div>
-						<h1 className='text-2xl font-bold'>Salary Setup</h1>
-						<p className='text-sm text-muted-foreground'>
-							Configure salary and bank details for {employeeData?.first_name}{' '}
-							{employeeData?.last_name}
-						</p>
-					</div>
+				<div>
+					<h1 className='text-2xl font-bold'>Salary Setup</h1>
+					<p className='text-sm text-muted-foreground'>
+						Configure salary and bank details for {employeeData?.first_name}{' '}
+						{employeeData?.last_name}
+					</p>
 				</div>
 			</div>
 
@@ -386,13 +354,21 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 					</div>
 
 					<div className='space-y-2'>
+						<Label htmlFor='grossSalary'>Gross Salary</Label>
+						<Input
+							id='grossSalary'
+							type='number'
+							value={formData.grossSalary}
+							onChange={handleInputChange}
+							placeholder='Enter gross salary amount'
+							min={0}
+						/>
 						<p className='text-xs text-muted-foreground'>
-							{formData.payGradeName &&
-								formData.payGradeName !== 'no-paygrade' && (
-									<span className='block text-blue-600'>
-										Salary is set by selected pay grade
-									</span>
-								)}
+							{formData.payGradeName && formData.payGradeName !== 'no-paygrade' ? (
+								<span className='block text-blue-600'>Salary is set by selected pay grade</span>
+							) : (
+								<span>Use this to set employee gross/custom salary</span>
+							)}
 						</p>
 					</div>
 				</div>
@@ -407,7 +383,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 								value={formData.bankName}
 								onChange={handleInputChange}
 								placeholder='Enter bank name (e.g., Access Bank, Zenith Bank)'
-								required
 							/>
 						</div>
 
@@ -420,7 +395,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 								maxLength={10}
 								pattern='[0-9]{10}'
 								placeholder='Enter 10-digit account number'
-								required
 							/>
 						</div>
 
@@ -430,7 +404,6 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 								id='accountName'
 								value={formData.accountName}
 								onChange={handleInputChange}
-								required
 							/>
 						</div>
 					</div>
@@ -514,7 +487,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 					</p>
 					<p>
 						<span className='font-medium'>Salary</span>:{' '}
-						{formatCurrency(formData.customSalary)}
+						{formatCurrency(formData.grossSalary)}
 					</p>
 					<p>
 						<span className='font-medium'>Pay Frequency</span>:{' '}

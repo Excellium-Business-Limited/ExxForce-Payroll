@@ -12,6 +12,7 @@ import {
 	SelectItem,
 } from '@/components/ui/select';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { format, parseISO, isValid } from 'date-fns';
 import SalarySetupForm from './SalarySetupForm';
@@ -61,7 +62,6 @@ interface EmployeeFormProps {
 	editType?: 'general' | 'salary';
 	onClose: () => void;
 	onSubmit: (employeeFormData: any) => Promise<void>;
-	onShowSalaryForm?: (employeeData: any) => void;
 }
 
 // Form data interface that matches your form fields
@@ -88,9 +88,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	employeeData,
 	editType,
 	onClose,
-	onSubmit,
-	onShowSalaryForm
+	onSubmit
 }) => {
+	const router = useRouter();
+	const { tenant, globalState } = useGlobal();
 	const [formData, setFormData] = useState<FormData>({
 		employeeId: '',
 		jobTitle: '',
@@ -115,10 +116,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
 	// State for form flow
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [createdEmployeeData, setCreatedEmployeeData] = useState<any>(null);
-
-	// Get global context for tenant and auth
-	const { tenant, globalState } = useGlobal();
 
 	// Helper function to get department value from employee data
 	const getDepartmentValue = (employee: Employee | null): string => {
@@ -341,22 +338,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		setFormData((prev) => ({ ...prev, [key]: value }));
 	};
 
-	// Validate form data
+	// Remove validation - allow submission with partial data
 	const validateFormData = (): boolean => {
-		const requiredFields = [
-			'employeeId', 'jobTitle', 'department', 'employmentType', 
-			'startDate', 'taxStartDate', 'firstName', 'lastName', 
-			'phone', 'email', 'dob', 'address1'
-		];
-
-		const missingFields = requiredFields.filter(field => !formData[field as keyof FormData]);
-		
-		if (missingFields.length > 0) {
-			alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
-			console.log('Missing required fields:', missingFields);
-			return false;
-		}
-
+		// No required field validation - allow submission with any data
 		return true;
 	};
 
@@ -428,12 +412,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 			await onSubmit(apiData);
 			
 			console.log('Success! Employee saved.');
-			alert(isEdit ? 'Employee updated successfully!' : 'Employee created successfully!');
-			onClose();
-
-			return true;
-			
-		} catch (error) {
+		
+		// Hard redirect back to employee list page
+		window.location.href = `/Employee`;
+		return true;		} catch (error) {
 			console.error('Error saving employee:', error);
 			
 			if (axios.isAxiosError(error)) {
@@ -455,77 +437,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				alert('Failed to save employee: Unknown error');
 			}
 			return false;
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
-
-	// Handle save and next
-	const handleSaveAndNext = async () => {
-		console.log('Save and Next clicked...');
-		
-		if (!validateFormData()) {
-			return;
-		}
-
-		const apiData = prepareEmployeeDataForAPI();
-		setIsSubmitting(true);
-
-		try {
-			console.log('Creating employee for Save and Next...');
-			console.log('Complete API payload:', JSON.stringify(apiData, null, 2));
-
-			// Create the employee first
-			const response = await axios.post(
-				`https://${tenant}.exxforce.com/tenant/employee/create`,
-				apiData,
-				{ 
-					headers: { 
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${globalState.accessToken}`,
-					} 
-				}
-			);
-
-			console.log('Employee created for salary setup:', response.data);
-
-			// Store the created employee data
-			const createdEmployee = {
-				...apiData,
-				employee_id: response.data?.employee_id || apiData.employee_id,
-				id: response.data?.id || response.data?.employee_id
-			};
-
-			setCreatedEmployeeData(createdEmployee);
-
-			// Call the parent's onSubmit handler
-			console.log('Calling parent onSubmit...');
-			await onSubmit(apiData);
-
-			// Show salary form with the created employee data
-			if (onShowSalaryForm) {
-				console.log('Showing salary form with employee data:', createdEmployee);
-				onShowSalaryForm(createdEmployee);
-			}
-
-			alert('Employee created successfully! Now configure salary details.');
-
-		} catch (error) {
-			console.error('Error creating employee for salary setup:', error);
-			
-			if (axios.isAxiosError(error)) {
-				console.error('Request that failed:', JSON.stringify(apiData, null, 2));
-				console.error('Response status:', error.response?.status);
-				console.error('Response data:', error.response?.data);
-				
-				if (error.response?.status === 422) {
-					alert(`Validation Error: ${JSON.stringify(error.response.data, null, 2)}`);
-				} else {
-					alert(`Failed to create employee: ${error.response?.data?.message || error.message}`);
-				}
-			} else {
-				alert('Failed to create employee: Unknown error');
-			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -556,7 +467,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Input 
 								id='employeeId' 
 								value={formData.employeeId}
-								required 
 								onChange={handleChange}
 								disabled={isEdit}
 							/>
@@ -566,7 +476,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Input 
 								id='jobTitle' 
 								value={formData.jobTitle}
-								required 
 								onChange={handleChange} 
 							/>
 						</div>
@@ -575,7 +484,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Select 
 								value={formData.department}
 								onValueChange={(val) => handleSelectChange('department', val)} 
-								required
 								disabled={loadingDepartments}
 							>
 								<SelectTrigger>
@@ -623,7 +531,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Select 
 								value={formData.employmentType}
 								onValueChange={(val) => handleSelectChange('employmentType', val)} 
-								required
 							>
 								<SelectTrigger>
 									<SelectValue placeholder='Select type' />
@@ -644,7 +551,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								value={formData.startDate}
 								max="2099-12-31"
 								min="1900-01-01"
-								required 
 								onChange={handleChange}
 								className="block w-full"
 							/>
@@ -657,7 +563,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								value={formData.taxStartDate}
 								max="2099-12-31"
 								min="1900-01-01"
-								required 
+
 								onChange={handleChange}
 								className="block w-full"
 							/>
@@ -673,7 +579,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Input 
 								id='firstName' 
 								value={formData.firstName}
-								required 
+
 								onChange={handleChange} 
 							/>
 						</div>
@@ -682,7 +588,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Input 
 								id='lastName' 
 								value={formData.lastName}
-								required 
+
 								onChange={handleChange} 
 							/>
 						</div>
@@ -692,7 +598,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								id='phone' 
 								type='tel' 
 								value={formData.phone}
-								required 
+
 								onChange={handleChange} 
 							/>
 						</div>
@@ -702,7 +608,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								id='email' 
 								type='email' 
 								value={formData.email}
-								required 
+
 								onChange={handleChange} 
 							/>
 						</div>
@@ -731,7 +637,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 								value={formData.dob}
 								max={getTodayFormatted()}
 								min="1900-01-01"
-								required 
+
 								onChange={handleChange}
 								className="block w-full"
 							/>
@@ -741,7 +647,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 							<Input 
 								id='address1' 
 								value={formData.address1}
-								required 
+
 								onChange={handleChange} 
 							/>
 						</div>
@@ -765,31 +671,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 						className='text-muted-foreground'>
 						Cancel
 					</Button>
-					{isEdit ? (
-						<Button
-							type='submit'
-							disabled={isSubmitting}
-							className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-							{isSubmitting ? 'Updating...' : 'Update Employee'}
-						</Button>
-					) : (
-						<>
-							<Button
-								type='submit'
-								disabled={isSubmitting}
-								variant='outline'
-								className='text-gray-700 border-gray-300'>
-								{isSubmitting ? 'Saving...' : 'Save Employee'}
-							</Button>
-							<Button
-								type='button'
-								onClick={handleSaveAndNext}
-								disabled={isSubmitting}
-								className='bg-[#3D56A8] hover:bg-[#2E4299]'>
-								{isSubmitting ? 'Creating...' : 'Save and Next'}
-							</Button>
-						</>
-					)}
+					<Button
+						type='submit'
+						disabled={isSubmitting}
+						className='bg-[#3D56A8] hover:bg-[#2E4299]'>
+						{isSubmitting ? (isEdit ? 'Updating...' : 'Saving...') : (isEdit ? 'Update Employee' : 'Save Employee')}
+					</Button>
 				</div>
 			</form>
 		</div>

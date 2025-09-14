@@ -153,7 +153,7 @@ const createPayGrade = () => {
 				}
 			);
 			alert('Pay grade created successfully!');
-			router.push(`/${tenant}/payroll_settings/pay_grades`);
+			router.push(`/payroll_settings/pay_grades`);
 		} catch (err: any) {
 			console.error(err);
 			setError(err.response?.data?.detail || 'Failed to create pay grade');

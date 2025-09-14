@@ -79,7 +79,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 	const [loans, setLoans] = useState<Loan[]>([]);
 	const [isLoadingLoans, setIsLoadingLoans] = useState<boolean>(false);
 
-	const formatCurrency = (amount: number) => {
+	const formatCurrency = (amount: number | undefined | null) => {
+		if (amount === null || amount === undefined || isNaN(amount)) {
+			return '--';
+		}
 		return new Intl.NumberFormat('en-NG', {
 			style: 'currency',
 			currency: 'NGN',
@@ -357,7 +360,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
 	// Handler for Add Loan button
 	const handleAddLoan = () => {
-		router.push('/Loan');
+		router.push(`/Loan`);
 	};
 
 	// Handler for closing the inline forms
@@ -1420,8 +1423,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 								employeeData={employee}
 								onClose={handleCloseSalaryForm}
 								onSubmit={handleSalarySubmit}
-								onBack={() => {}}
-								parentOnSubmit={async (data: any) => {}}
 							/>
 						</div>
 					</div>
