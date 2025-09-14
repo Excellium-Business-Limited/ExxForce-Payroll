@@ -1,16 +1,9 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { ReactNode, useEffect, useState, useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import React from 'react';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import {
 	Sheet,
 	SheetContent,
@@ -28,20 +21,12 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 
-import {
-	Dialog,
-	DialogTrigger,
-	DialogContent,
-	DialogTitle,
-} from '@/components/ui/dialog';
 
 import { Card } from '@/components/ui/card';
 import Dialogs from '../../components/dialog';
 import Import from '../../components/Import';
 import { getTenant } from '@/lib/auth';
-import { set } from 'date-fns';
 import { redirect } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LoanForm from '../loanForm';
 import { CheckCircle2, EllipsisVertical } from 'lucide-react';
 import {

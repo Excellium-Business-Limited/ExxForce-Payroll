@@ -21,6 +21,7 @@ import { fetchEmployees } from '@/lib/api';
 import { useGlobal } from '@/app/Context/context';
 import { set } from 'date-fns';
 import Loading from '@/components/ui/Loading';
+import DashTable from './_components/dashTable';
 
 const Dashboard = () => {
 	const { globalState, updateGlobalState, tenant } = useGlobal();
@@ -198,7 +199,7 @@ const Dashboard = () => {
 					</div>
 				</div>
 				<div className='grid grid-cols-4 gap-6 m-8 '>
-					<Card className='m-1 p-3 w-[245px] h-fit'>
+					<Card className='m-1 p-3 w-[245px] h-[150px] shadow-xl'>
 						<article className='flex gap-2 content-center items-center'>
 							<span className='bg-[#dee7f6] rounded-4xl p-2 '>
 								<img
@@ -218,7 +219,7 @@ const Dashboard = () => {
 							</p>
 						</span>
 					</Card>
-					<Card className='m-1 p-3 w-[245px] h-fit'>
+					<Card className='m-1 p-3 w-[245px] h-[150px] shadow-xl'>
 						<article className='flex gap-2 content-center items-center'>
 							<span className='bg-[#d9f2ef] rounded-4xl p-2 '>
 								<img
@@ -238,7 +239,7 @@ const Dashboard = () => {
 							</p>
 						</span>
 					</Card>
-					<Card className='m-1 p-3 w-[245px] h-fit'>
+					<Card className='m-1 p-3 w-[245px] h-[150px] shadow-xl'>
 						<article className='flex gap-2 content-center items-center'>
 							<span className='bg-[#f4e0da] rounded-4xl p-2 '>
 								<img
@@ -258,7 +259,7 @@ const Dashboard = () => {
 							</p>
 						</span>
 					</Card>
-					<Card className='m-1 p-3 w-[245px] h-fit'>
+					<Card className='m-1 p-3 w-[245px] h-[150px] shadow-xl'>
 						<article className='flex gap-2 content-center items-center'>
 							<span className='bg-[#f8edd9] rounded-4xl p-2 '>
 								<img
@@ -281,27 +282,24 @@ const Dashboard = () => {
 				</div>
 			</div>
 			<div className='grid grid-cols-3 gap-x-0 gap-y-0 m-8 w-[980px]'>
-				<BarChart className='col-span-2' />
-				<Piechrt className='col-span-1 w-[340px]' />
+				<BarChart className='col-span-2 shadow-xl' />
+				<Piechrt className='col-span-1 w-[340px] shadow-xl' />
 			</div>
 			<div className='grid grid-cols-3 m-8  gap-4'>
-				{/* <div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px]'>
-					<DTable
-						data={data1}
-						columns={columns}
-					/>
-
-				</div> */}
-				<div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px] flex flex-col content-center items-center'>
+				<div className='col-span-2 bg-white rounded-lg p-4 shadow-xl h-[340px]'>
+					<h3 className='font-semibold text-md'>Employee Loans</h3>
+					<DashTable />
+				</div>
+				{/* <div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px] flex flex-col content-center items-center'>
 					<h3 className='font-semibold text-md'>Recent Approved Payrun Activities</h3>
 					<img
 						src={'/notdata.png'}
 						alt=''
 						width={300}
 					/>
-				</div>
-				<div className=' grid grid-cols-2 grid-rows-2 p-5 rounded-xl shadow gap-3 bg-white w-full'>
-					<Card className='h-[123px] items-center justify-center flex flex-col'>
+				</div> */}
+				<div className=' grid grid-cols-2 grid-rows-2 p-5 rounded-xl shadow-lg gap-3 bg-white w-full'>
+					<Card className='h-[123px] items-center justify-center shadow-xl flex flex-col'>
 						<Link
 							href='/Employee'
 							className='flex flex-col items-center gap-2'>
@@ -316,7 +314,7 @@ const Dashboard = () => {
 							<h4>Employee</h4>
 						</Link>
 					</Card>
-					<Card className=' h-[123px] grid place-content-center'>
+					<Card className=' h-[123px] grid place-content-center shadow-xl'>
 						<Link
 							href='/Payrun'
 							className='flex flex-col items-center gap-2'>
@@ -331,7 +329,7 @@ const Dashboard = () => {
 							<div>Payrun</div>
 						</Link>
 					</Card>
-					<Card className=' h-[123px] grid place-content-center'>
+					<Card className=' h-[123px] grid place-content-center shadow-xl'>
 						<Link
 							href='/Reports'
 							className='flex flex-col items-center gap-2'>
@@ -345,7 +343,7 @@ const Dashboard = () => {
 							<div>Reports</div>
 						</Link>
 					</Card>
-					<Card className=' h-[123px] grid place-content-center'>
+					<Card className=' h-[123px] grid place-content-center shadow-xl'>
 						<Link
 							href='/Setins/CompSet'
 							className='flex flex-col items-center gap-2'>
