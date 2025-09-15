@@ -37,7 +37,6 @@ interface PayrollEmployee extends Employee {
 interface PayrollBreakdownProps {
   employee: PayrollEmployee;
   onProcessPayroll?: (employee: Employee) => void;
-  onGeneratePayslip?: () => void;
 }
 
 interface NetSalaryCalculation {
@@ -73,7 +72,6 @@ interface NetSalaryCalculation {
 const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
   employee,
   onProcessPayroll,
-  onGeneratePayslip
 }) => {
   const [netCalculation, setNetCalculation] = useState<NetSalaryCalculation | null>(null);
   const [showCalculator, setShowCalculator] = useState(false);
@@ -228,20 +226,13 @@ const PayrollBreakdown: React.FC<PayrollBreakdownProps> = ({
       <div className="bg-blue-50 rounded-lg shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-blue-600">
           <h3 className="text-lg font-medium text-black">Salary Components Breakdown</h3>
-          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
             <button
               onClick={() => onProcessPayroll?.(employee)}
               className="inline-flex items-center px-3 py-1.5 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-black bg-blue-50 hover:bg-blue-100"
             >
               <Edit2 className="w-4 h-4 mr-1" />
               Edit Components
-            </button>
-            <button
-              onClick={onGeneratePayslip}
-              className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
-            >
-              <FileText className="w-4 h-4 mr-1" />
-              Generate Payslip
             </button>
           </div>
         </div>

@@ -117,11 +117,124 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 	// State for form flow
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	// Fetch employee details for editing
+	const fetchEmployeeDetails = async () => {
+		if (!isEdit || !employeeData?.employee_id) return;
+
+		const baseURL = `${tenant}.exxforce.com`;
+		try {
+			const response = await axios.get(
+				`https://${baseURL}/tenant/employee/detail/${employeeData.employee_id}`,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
+
+			console.log('Employee details fetched for EmployeeForm editing:', response.data);
+
+			if (response.data) {
+				const employee = response.data;
+				
+				// Split address if it contains a comma
+				const addressParts = employee.address ? employee.address.split(', ') : ['', ''];
+				
+				// Get department value and try to match it with available options
+				const rawDepartmentValue = getDepartmentValue(employee);
+				const matchingDepartment = findMatchingDepartment(rawDepartmentValue);
+				const departmentToUse = matchingDepartment ? matchingDepartment.name : rawDepartmentValue;
+				
+				console.log('Department processing:', {
+					raw: rawDepartmentValue,
+					matched: matchingDepartment?.name,
+					final: departmentToUse
+				});
+				
+				const newFormData = {
+					employeeId: employee.employee_id || '',
+					jobTitle: employee.job_title || '',
+					department: departmentToUse,
+					employmentType: employee.employment_type || '',
+					startDate: formatDateForInput(employee.start_date),
+					taxStartDate: formatDateForInput(employee.tax_start_date),
+					firstName: employee.first_name || '',
+					lastName: employee.last_name || '',
+					phone: employee.phone_number || '',
+					email: employee.email || '',
+					gender: employee.gender || '',
+					dob: formatDateForInput(employee.date_of_birth),
+					address1: addressParts[0] || '',
+					address2: addressParts[1] || '',
+				};
+				
+				console.log('Setting EmployeeForm data to:', newFormData);
+				setFormData(newFormData);
+			}
+		} catch (error) {
+			console.error('Error fetching employee details for EmployeeForm editing:', error);
+			// Keep existing form data if API call fails
+		}
+	};
+
 	// Helper function to get department value from employee data
 	const getDepartmentValue = (employee: Employee | null): string => {
 		if (!employee) return '';
 		// Check both possible field names
-		return employee.department || employee.department_name || '';
+		const deptValue = employee.department || employee.department_name || '';
+		console.log('Raw department value from API:', deptValue);
+		return deptValue;
+	};
+
+	// Helper function to find matching department option
+	// Accepts departmentValue as: string (name), number (id), or object { id, name, department_name }
+	const findMatchingDepartment = (departmentValue: any): Department | null => {
+		if (!departmentValue || departments.length === 0) return null;
+
+		// Normalize possible search tokens
+		let searchId: string | null = null;
+		let searchName: string | null = null;
+
+		if (typeof departmentValue === 'object') {
+			if (departmentValue.id !== undefined && departmentValue.id !== null) {
+				searchId = String(departmentValue.id);
+			}
+			if (departmentValue.name) searchName = String(departmentValue.name);
+			if (!searchName && departmentValue.department_name) searchName = String(departmentValue.department_name);
+		} else if (typeof departmentValue === 'number') {
+			searchId = String(departmentValue);
+		} else {
+			searchName = String(departmentValue);
+		}
+
+		// Try matching by id first (department id returned by API)
+		if (searchId) {
+			const byId = departments.find(d => String(d.id) === searchId);
+			if (byId) return byId;
+		}
+
+		// Then try exact name matches (case sensitive then insensitive)
+		if (searchName) {
+			let match = departments.find(d => d.name === searchName);
+			if (match) return match;
+
+			match = departments.find(d => d.name.toLowerCase() === searchName!.toLowerCase());
+			if (match) return match;
+
+			// Partial match (either contains the other)
+			match = departments.find(d => d.name.toLowerCase().includes(searchName!.toLowerCase()) || searchName!.toLowerCase().includes(d.name.toLowerCase()));
+			if (match) return match;
+		}
+
+		// No match found
+		console.log('Department matching result:', {
+			searchId,
+			searchName,
+			availableDepartments: departments.map(d => ({ id: d.id, name: d.name }))
+		});
+
+		return null;
 	};
 
 	// Helper function to format date for input (YYYY-MM-DD)
@@ -270,43 +383,18 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 		}
 	};
 
-	// Fetch departments on component mount
-	useEffect(() => {
-		fetchDepartments();
-	}, []);
 
-	// Populate form when editing
+
+	// Populate form when editing or fetch fresh data from API
 	useEffect(() => {
 		console.log('useEffect triggered - isEdit:', isEdit, 'employeeData:', employeeData);
 		
+		// First fetch departments
+		fetchDepartments();
+		
 		if (isEdit && employeeData) {
-			console.log('Populating form with employee data:', employeeData);
-			console.log('Employee department:', getDepartmentValue(employeeData));
-			console.log('Employee employment_type:', employeeData.employment_type);
-			console.log('Employee gender:', employeeData.gender);
-			
-			// Split address if it contains a comma
-			const addressParts = employeeData.address ? employeeData.address.split(', ') : ['', ''];
-			
-			const newFormData = {
-				employeeId: employeeData.employee_id || '',
-				jobTitle: employeeData.job_title || '',
-				department: getDepartmentValue(employeeData),
-				employmentType: employeeData.employment_type || '',
-				startDate: formatDateForInput(employeeData.start_date),
-				taxStartDate: formatDateForInput(employeeData.tax_start_date),
-				firstName: employeeData.first_name || '',
-				lastName: employeeData.last_name || '',
-				phone: employeeData.phone_number || '',
-				email: employeeData.email || '',
-				gender: employeeData.gender || '',
-				dob: formatDateForInput(employeeData.date_of_birth),
-				address1: addressParts[0] || '',
-				address2: addressParts[1] || '',
-			};
-			
-			console.log('Setting form data to:', newFormData);
-			setFormData(newFormData);
+			// Fetch fresh employee details from API for editing
+			fetchEmployeeDetails();
 		} else {
 			// Reset form for new employee
 			setFormData({
@@ -326,7 +414,24 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 				address2: '',
 			});
 		}
-	}, [isEdit, employeeData]);
+	}, [isEdit, employeeData, tenant, globalState.accessToken]);
+
+	// Re-process department matching when departments are loaded
+	useEffect(() => {
+		if (departments.length > 0 && formData.department && isEdit) {
+			const matchingDepartment = findMatchingDepartment(formData.department);
+			if (matchingDepartment && matchingDepartment.name !== formData.department) {
+				console.log('Updating department to match available options:', {
+					original: formData.department,
+					matched: matchingDepartment.name
+				});
+				setFormData(prev => ({
+					...prev,
+					department: matchingDepartment.name
+				}));
+			}
+		}
+	}, [departments, formData.department, isEdit]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value } = e.target;
@@ -490,27 +595,26 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 									<SelectValue placeholder={
 										loadingDepartments 
 											? 'Loading departments...' 
-											: 'Select department'
+											: formData.department || 'Select department'
 									} />
 								</SelectTrigger>
 								<SelectContent>
-									{/* Always show the current value as an option */}
-									{formData.department && (
+									{/* Show all available departments */}
+									{departments.map((dept) => (
+										<SelectItem 
+											key={dept.id}
+											value={dept.name}
+										>
+											{dept.name}
+										</SelectItem>
+									))}
+									{/* If current value doesn't match any department, show it as an option */}
+									{formData.department && 
+									 !departments.some(dept => dept.name === formData.department) && (
 										<SelectItem value={formData.department}>
 											{formData.department}
 										</SelectItem>
 									)}
-									{/* Show fetched departments, avoiding duplicates */}
-									{departments
-										.filter(dept => dept.name !== formData.department)
-										.map((dept) => (
-											<SelectItem 
-												key={dept.id}
-												value={dept.name}
-											>
-												{dept.name}
-											</SelectItem>
-										))}
 								</SelectContent>
 							</Select>
 							{departmentError && (

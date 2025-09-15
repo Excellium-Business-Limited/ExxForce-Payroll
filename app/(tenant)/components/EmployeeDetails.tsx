@@ -139,6 +139,20 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		}
 	};
 
+	// Helper function to get department value from employee data
+	const getDepartmentValue = (employee: any): string => {
+		if (!employee) return '';
+		// Check both possible field names from API
+		return employee.department || employee.department_name || '';
+	};
+
+	// Helper function to get salary value from employee data (prefer effective_gross)
+	const getSalaryValue = (employee: any): number => {
+		if (!employee) return 0;
+		// Prefer effective_gross, then gross_salary, then custom_salary
+		return employee.effective_gross ?? employee.gross_salary ?? employee.custom_salary ?? 0;
+	};
+
 	const getLoanStatus = (status: string) => {
 		const normalizedStatus = status.toLowerCase();
 		switch (normalizedStatus) {
@@ -454,12 +468,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 		}
 	};
 
-	// Handler for payslip generation
-	const handleGeneratePayslip = () => {
-		console.log('Generate payslip for employee:', employee.employee_id);
-		// You can implement payslip generation logic here
-		// For example, open a new window or download a PDF
-	};
+
 
 	const tabs = [
 		{ id: 'general', label: 'General' },
@@ -1076,11 +1085,54 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 									</div>
 								) : (
 									<>
-										{/* Basic Details */}
+										{/* Basic Details (personal) */}
 										<div className='bg-white rounded-lg shadow-sm'>
 											<div className='flex items-center justify-between p-6 border-b border-gray-200'>
 												<h3 className='text-lg font-medium text-gray-900'>
 													Basic Details
+												</h3>
+												<button
+													onClick={handleEmployeeEdit}
+													className='inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50'>
+													<Edit2 className='w-4 h-4 mr-1' />
+													Edit
+												</button>
+											</div>
+											<div className='p-6'>
+												<dl className='grid grid-cols-3 gap-x-6 gap-y-4'>
+													<DetailField
+														label='First Name'
+														value={employee.first_name}
+													/>
+													<DetailField
+														label='Last Name'
+														value={employee.last_name}
+													/>
+													<DetailField
+														label='Gender'
+														value={employee.gender}
+													/>
+													<DetailField
+														label='Phone number'
+														value={employee.phone_number}
+													/>
+													<DetailField
+														label='Email Address'
+														value={employee.email}
+													/>
+													<DetailField
+														label='Date of Birth'
+														value={formatDate(employee.date_of_birth)}
+													/>
+												</dl>
+											</div>
+										</div>
+
+										{/* Employment Details */}
+										<div className='bg-white rounded-lg shadow-sm'>
+											<div className='flex items-center justify-between p-6 border-b border-gray-200'>
+												<h3 className='text-lg font-medium text-gray-900'>
+													Employment Details
 												</h3>
 												<button
 													onClick={handleEmployeeEdit}
@@ -1101,7 +1153,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 													/>
 													<DetailField
 														label='Department'
-														value={employee.department_name}
+														value={getDepartmentValue(employee)}
 													/>
 													<DetailField
 														label='Employee Type'
@@ -1148,7 +1200,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 													/>
 													<DetailField
 														label='Salary Amount (NGN)'
-														value={formatCurrency(employee.custom_salary)}
+														value={formatCurrency(getSalaryValue(employee))}
 													/>
 													<DetailField
 														label='Pay Frequency'
@@ -1247,10 +1299,9 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 									</div>
 								) : (
 									<PayrollBreakdown
-										employee={employee}
-										onProcessPayroll={handleProcessPayroll}
-										onGeneratePayslip={handleGeneratePayslip}
-									/>
+											employee={employee}
+											onProcessPayroll={handleProcessPayroll}
+										/>
 								)}
 							</div>
 						)}

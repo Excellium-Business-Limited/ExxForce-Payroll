@@ -161,6 +161,37 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   // Get global context for tenant and auth
   const { tenant, globalState } = useGlobal();
 
+  // Fetch employee details to get the latest gross salary
+  const fetchEmployeeDetails = async (): Promise<void> => {
+    if (!employee?.employee_id) return;
+
+    const baseURL = `${tenant}.exxforce.com`;
+    try {
+      const response = await axios.get(
+        `https://${baseURL}/tenant/employee/detail/${employee.employee_id}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${globalState.accessToken}`,
+          },
+        }
+      );
+
+      console.log('Employee details fetched for SalaryComponentSetup:', response.data);
+
+      if (response.data) {
+        const employeeData = response.data;
+        // Update gross salary with the latest value from API (prefer effective_gross)
+        const salaryFromApi = employeeData.effective_gross ?? employeeData.gross_salary ?? employeeData.custom_salary ?? 0;
+        setGrossSalary(Number(salaryFromApi));
+        setEmployeeName(`${employeeData.first_name} ${employeeData.last_name}`);
+      }
+    } catch (error) {
+      console.error('Error fetching employee details for SalaryComponentSetup:', error);
+      // Keep existing values if API call fails
+    }
+  };
+
   // Hardcoded benefit options (since no API endpoint provided)
   const benefitOptions: BenefitOption[] = [
     { id: 1, name: "Bonus" },
@@ -168,11 +199,14 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     { id: 3, name: "Leave Allowance" }
   ];
 
-  // Initialize form with employee data if provided
+  // Initialize form with employee data and fetch latest details
   useEffect(() => {
     if (employee) {
       setEmployeeName(`${employee.first_name} ${employee.last_name}`);
       setGrossSalary(employee.custom_salary || 0);
+      
+      // Fetch the latest employee details from API
+      fetchEmployeeDetails();
     }
   }, [employee]);
 
@@ -290,11 +324,11 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     if (!employee?.employee_id) return;
 
     const baseURL = `${tenant}.exxforce.com`;
-    
+
     try {
-      // Fetch existing salary components for this employee
-      const response = await axios.get(
-        `https://${baseURL}/tenant/employee/${employee.employee_id}/salary-components`,
+      // Always fetch the authoritative employee detail which contains components
+      const detailResp = await axios.get(
+        `https://${baseURL}/tenant/employee/detail/${employee.employee_id}`,
         {
           headers: {
             Authorization: `Bearer ${globalState.accessToken}`,
@@ -302,75 +336,96 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
         }
       );
 
-      console.log('Existing employee components fetched:', response.data);
+      const data = detailResp.data;
+      console.debug('Employee detail used to populate components:', data);
 
-      // Process the response and populate existing components
-      if (response.data && Array.isArray(response.data)) {
-        const existingComponents: SalaryComponent[] = response.data.map((comp: any) => ({
+      const salaryComps = Array.isArray(data.salary_components)
+        ? data.salary_components
+        : Array.isArray(data.components)
+        ? data.components
+        : [];
+
+      const deductionComps = Array.isArray(data.deduction_components) ? data.deduction_components : [];
+      const benefitComps = Array.isArray(data.benefits) ? data.benefits : [];
+
+      if (salaryComps.length > 0) {
+        const existingEarnings: SalaryComponent[] = salaryComps.map((comp: any) => ({
           id: `existing-${comp.id}`,
           name: comp.name,
-          componentId: comp.component_id,
+          componentId: comp.component_id ?? comp.componentId ?? comp.id,
           existingComponentId: comp.id,
-          calculationType: comp.calculation_type,
-          fixedValue: comp.calculation_type === 'fixed' ? comp.value : undefined,
-          percentageValue: comp.calculation_type === 'percentage' ? comp.value : undefined,
-          calculatedAmount: comp.calculated_amount || 0,
-          isBasic: comp.is_basic || false,
-          isEditable: !comp.is_basic,
-          isPensionable: comp.is_pensionable || false,
-          isTaxable: comp.is_taxable || false,
-          isExisting: true
+          calculationType: comp.calculation_type ?? comp.calculationType ?? (comp.percentage ? 'percentage' : 'fixed'),
+          fixedValue:
+            (comp.calculation_type === 'fixed' || comp.calculationType === 'fixed') ? comp.value : undefined,
+          percentageValue:
+            (comp.calculation_type === 'percentage' || comp.calculationType === 'percentage') ? comp.value : undefined,
+          calculatedAmount: comp.calculated_amount ?? comp.amount ?? 0,
+          isBasic: comp.is_basic || comp.isBasic || false,
+          isEditable: !(comp.is_basic || comp.isBasic),
+          isPensionable: comp.is_pensionable || comp.isPensionable || false,
+          isTaxable: comp.is_taxable || comp.isTaxable || false,
+          isExisting: true,
         }));
 
-        setEarningComponents(prevComponents => [
-          ...prevComponents.filter(comp => !comp.isExisting), // Remove any existing components
-          ...existingComponents
+        setEarningComponents((prevComponents) => [
+          ...prevComponents.filter((c) => !c.isExisting),
+          ...existingEarnings,
         ]);
+      } else {
+        console.debug('No salary components found in employee detail response');
+      }
+
+      if (deductionComps.length > 0) {
+        const existingDeductions: SalaryComponent[] = deductionComps.map((comp: any) => ({
+          id: `existing-ded-${comp.id}`,
+          name: comp.name,
+          componentId: comp.id,
+          existingComponentId: comp.id,
+          calculationType: comp.calculation_type ?? 'fixed',
+          fixedValue: comp.value,
+          calculatedAmount: comp.amount ?? 0,
+          isExisting: true,
+        }));
+
+        setDeductionComponents(existingDeductions);
+      }
+
+      if (benefitComps.length > 0) {
+        const existingBenefits: SalaryComponent[] = benefitComps.map((comp: any) => ({
+          id: `existing-ben-${comp.id}`,
+          name: comp.name,
+          componentId: comp.id,
+          existingComponentId: comp.id,
+          calculationType: comp.calculation_type ?? 'fixed',
+          fixedValue: comp.value,
+          calculatedAmount: comp.amount ?? 0,
+          isExisting: true,
+        }));
+
+        setBenefitComponents(existingBenefits);
       }
     } catch (error: any) {
-      console.error('Error fetching existing employee components:', error);
-      
-      // Check if it's a 404 error (endpoint doesn't exist)
-      if (error.response?.status === 404) {
-        console.log('Salary components endpoint not available for this employee - this is normal for new employees');
-      } else {
-        console.error('Unexpected error fetching employee salary components:', error.message);
-      }
-      
-      // Don't show error to user as this is optional functionality
-      // The form will work normally without existing components
+      // Non-fatal: just log at debug level to avoid dev-overlay noise
+      console.debug('Error fetching employee detail for components:', error);
     }
   };
 
-  // Fetch components on component mount
-  useEffect(() => {
-    fetchEarningComponents();
-    fetchDeductionComponents();
-    // Also fetch existing employee components if we have an employee
-    if (employee?.employee_id) {
-      fetchExistingEmployeeComponents();
-    }
-  }, [employee?.employee_id]);
-
-  // Calculate component amounts and update basic component
+  // Calculate component amounts (basic is auto-calculated as remainder)
   const calculateComponentAmounts = (): void => {
-    if (grossSalary <= 0) return;
-
+    // Reset calculation errors
     setHasCalculationError(false);
     setCalculationError('');
 
-    // Calculate earning components (excluding basic)
+    // Sum non-basic earnings
     let totalNonBasicEarnings = 0;
     const updatedEarningComponents = earningComponents.map(comp => {
-      if (comp.isBasic) {
-        return comp; // Skip basic component calculation for now
-      }
-
       let calculatedAmount = 0;
-      if (comp.calculationType === 'percentage' && comp.percentageValue !== undefined) {
-        calculatedAmount = (grossSalary * comp.percentageValue) / 100;
-      } else if (comp.calculationType === 'fixed' && comp.fixedValue !== undefined) {
-        calculatedAmount = comp.fixedValue;
+      if (!comp.isBasic) {
+        if (comp.calculationType === 'percentage' && comp.percentageValue !== undefined) {
+          calculatedAmount = (grossSalary * comp.percentageValue) / 100;
+        } else if (comp.calculationType === 'fixed' && comp.fixedValue !== undefined) {
+          calculatedAmount = comp.fixedValue;
+        }
       }
 
       totalNonBasicEarnings += calculatedAmount;
@@ -379,7 +434,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
     // Calculate basic component as remainder
     const remainingForBasic = grossSalary - totalNonBasicEarnings;
-    
+
     // Check if basic would go below ₦1
     if (remainingForBasic < 1) {
       setHasCalculationError(true);

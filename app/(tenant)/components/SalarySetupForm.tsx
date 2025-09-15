@@ -73,6 +73,49 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 	const [isLoadingPayGrades, setIsLoadingPayGrades] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	// Fetch employee details for editing
+	const fetchEmployeeDetails = async () => {
+		if (!isEdit || !employeeData?.employee_id) return;
+
+		const baseURL = `${tenant}.exxforce.com`;
+		try {
+			const response = await axios.get(
+				`https://${baseURL}/tenant/employee/detail/${employeeData.employee_id}`,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${globalState.accessToken}`,
+					},
+				}
+			);
+
+			console.log('Employee details fetched for editing:', response.data);
+
+			if (response.data) {
+				const employee = response.data;
+				// Prefer effective_gross from API, then gross_salary, then custom_salary
+				const salaryFromApi = employee.effective_gross ?? employee.gross_salary ?? employee.custom_salary ?? 0;
+				setFormData((prev) => ({
+					...prev,
+					payGradeName: employee.pay_grade_name || '',
+					payFrequency: employee.pay_frequency || 'MONTHLY',
+					customSalary: Number(salaryFromApi),
+					grossSalary: Number(salaryFromApi),
+					bankName: employee.bank_name || '',
+					accountNumber: employee.account_number || '',
+					accountName: employee.account_name || `${employeeData.first_name} ${employeeData.last_name}`.trim(),
+					isPayeApplicable: employee.is_paye_applicable ?? true,
+					isPensionApplicable: employee.is_pension_applicable ?? true,
+					isNhfApplicable: employee.is_nhf_applicable ?? true,
+					isNsitfApplicable: employee.is_nsitf_applicable ?? true,
+				}));
+			}
+		} catch (error) {
+			console.error('Error fetching employee details for editing:', error);
+			// Keep default values if API call fails
+		}
+	};
+
 	// Fetch pay grades from API
 	const fetchPayGrades = async () => {
 		setIsLoadingPayGrades(true);
@@ -98,7 +141,7 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 		}
 	};
 
-	// Pre-populate account name with employee's full name and fetch pay grades
+	// Pre-populate account name with employee's full name, fetch employee details for editing, and fetch pay grades
 	useEffect(() => {
 		if (employeeData) {
 			setFormData((prev) => ({
@@ -108,8 +151,13 @@ const SalarySetupForm: React.FC<SalarySetupFormProps> = ({
 			}));
 		}
 
+		// Fetch employee details if in edit mode
+		if (isEdit) {
+			fetchEmployeeDetails();
+		}
+
 		fetchPayGrades();
-	}, [employeeData, tenant, globalState.accessToken]);
+	}, [employeeData, isEdit, tenant, globalState.accessToken]);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value, type } = e.target;
