@@ -10,7 +10,7 @@ import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/context';
 import { getAccessToken } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import Loading from '@/components/ui/Loading';
 import FilterSort, { FilterOption, SortOption } from '../components/FilterSort';
 
@@ -57,6 +57,7 @@ interface PaginationInfo {
 }
 
 const EmployeePage: React.FC = () => {
+  const router = useRouter();
   // State with proper TypeScript types
   const [editType, setEditType] = useState<'general' | 'salary'>('general');
   const [isEdit, setIsEdit] = useState<boolean>(false);
@@ -309,8 +310,8 @@ const EmployeePage: React.FC = () => {
   };
 
   const handleViewEmployee = (employee: Employee): void => {
-    setSelectedEmployee(employee);
-    setShowEmployeeDetails(true);
+    // Navigate to the employee details page instead of showing the component
+    router.push(`/EmployeeDetails?id=${employee.employee_id}`);
   };
 
   const handleCloseEmployeeDetails = (): void => {
@@ -325,11 +326,18 @@ const EmployeePage: React.FC = () => {
     setSelectedEmployee(employee);
     setIsEdit(true);
     setEmployeeData(employee);
-    setShowEmployeeDetails(false);
-    setShowEmployeeForm(true);
+    
+    // If called from within the component (which should be less common now), fall back to showing form
+    if (showEmployeeDetails) {
+      setShowEmployeeDetails(false);
+      setShowEmployeeForm(true);
+    } else {
+      // Navigate to the employee edit form directly in the new page
+      router.push(`/EmployeeDetails?id=${employee.employee_id}&edit=${editType || 'general'}`);
+    }
 
-    // You can store the editType in state if you need to pass it to EmployeeForm
-    // For example: setEditType(editType || 'general');
+    // Store the editType for reference
+    setEditType(editType || 'general');
   };
 
   const handleEndEmployment = async (employee: Employee): Promise<void> => {

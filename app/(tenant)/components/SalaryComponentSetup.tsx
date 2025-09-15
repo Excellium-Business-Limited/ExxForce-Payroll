@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { JSX } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,6 +131,9 @@ interface BenefitOption {
 }
 
 export default function SalaryComponentSetup({ employee, onClose, onSubmit }: SalaryComponentSetupProps): JSX.Element {
+  // Debug logging to track re-renders
+  console.log('SalaryComponentSetup: Component rendering for employee:', employee?.employee_id, 'gross:', (employee as any)?.effective_gross);
+  
   const [employeeName, setEmployeeName] = useState<string>("");
   const [grossSalary, setGrossSalary] = useState<number>(0);
 
@@ -161,6 +164,39 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   // Get global context for tenant and auth
   const { tenant, globalState } = useGlobal();
 
+  // Stable normalization function to prevent recreating on every render
+  const normalizeBackendComp = useCallback((comp: any): SalaryComponent => {
+    const base: SalaryComponent = {
+      id: `existing-${comp.id ?? comp.component_id ?? comp.componentId ?? Math.random()}`,
+      name: comp.name ?? comp.component_name ?? '',
+      componentId: comp.component_id ?? comp.componentId ?? comp.id,
+      existingComponentId: comp.id ?? undefined,
+      calculationType: comp.calculation_type ?? comp.calculationType ?? undefined,
+      fixedValue: undefined,
+      percentageValue: undefined,
+      calculatedAmount: 0,
+      isBasic: comp.is_basic || comp.isBasic || false,
+      isEditable: !(comp.is_basic || comp.isBasic),
+      isPensionable: comp.is_pensionable || comp.isPensionable || false,
+      isTaxable: comp.is_taxable || comp.isTaxable || false,
+      isExisting: true
+    };
+
+    // Prefer explicit amount fields
+    const amt = Number(comp.amount ?? comp.calculated_amount ?? comp.value ?? 0) || 0;
+    if (amt > 0) {
+      base.calculatedAmount = amt;
+      // If calculationType missing, treat as fixed when amount exists
+      base.calculationType = base.calculationType ?? 'fixed';
+      base.fixedValue = amt;
+    } else {
+      base.calculatedAmount = comp.calculated_amount ?? comp.amount ?? comp.calculatedAmount ?? 0;
+      if (!base.calculationType && comp.percentage) base.calculationType = 'percentage';
+    }
+
+    return base;
+  }, []);
+
   // Fetch employee details to get the latest gross salary
   const fetchEmployeeDetails = async (): Promise<void> => {
     if (!employee?.employee_id) return;
@@ -181,10 +217,63 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
       if (response.data) {
         const employeeData = response.data;
-        // Update gross salary with the latest value from API (prefer effective_gross)
-        const salaryFromApi = employeeData.effective_gross ?? employeeData.gross_salary ?? employeeData.custom_salary ?? 0;
-        setGrossSalary(Number(salaryFromApi));
+        // Update gross salary with the latest value from API (prefer effective_gross) - treat empty string as missing
+        const pickFirstNonEmpty = (...vals: any[]) => vals.find(v => v !== undefined && v !== null && v !== '');
+        let salaryFromApi = pickFirstNonEmpty(employeeData.effective_gross, employeeData.payroll_data?.gross_salary, employeeData.gross_salary, employeeData.custom_salary);
+        // If still missing, attempt to sum component amounts from detail
+        if (salaryFromApi === undefined || salaryFromApi === null || salaryFromApi === '') {
+          const compsForSum = Array.isArray(employeeData.salary_components) ? employeeData.salary_components : (Array.isArray(employeeData.components) ? employeeData.components : (Array.isArray(employeeData.payroll_data?.earnings) ? employeeData.payroll_data.earnings : null));
+          if (Array.isArray(compsForSum) && compsForSum.length > 0) {
+            const sum = compsForSum.reduce((acc: number, c: any) => {
+              const amt = Number(c.amount ?? c.calculated_amount ?? c.value ?? 0);
+              return acc + (isNaN(amt) ? 0 : amt);
+            }, 0);
+            if (sum > 0) salaryFromApi = sum;
+          }
+        }
+
+        setGrossSalary(Number(salaryFromApi ?? 0));
         setEmployeeName(`${employeeData.first_name} ${employeeData.last_name}`);
+
+        // Also try to initialize existing components if present in the employee detail
+        try {
+          // Look for possible arrays in the response
+          const salaryComps = Array.isArray(employeeData.salary_components) ? employeeData.salary_components : (Array.isArray(employeeData.components) ? employeeData.components : (Array.isArray(employeeData.payroll_data?.earnings) ? employeeData.payroll_data.earnings : null));
+          const deductionComps = Array.isArray(employeeData.deduction_components) ? employeeData.deduction_components : (Array.isArray(employeeData.payroll_data?.deductions) ? employeeData.payroll_data.deductions : null);
+          const benefitComps = Array.isArray(employeeData.benefits) ? employeeData.benefits : (Array.isArray(employeeData.payroll_data?.benefits) ? employeeData.payroll_data.benefits : null);
+
+          if (salaryComps && salaryComps.length > 0) {
+            // Filter out Basic components since Basic is already handled by the form
+            const nonBasicComps = salaryComps.filter((c: any) => !(c.name || '').toLowerCase().includes('basic'));
+            const existing = nonBasicComps.map((c: any) => normalizeBackendComp(c));
+
+            setEarningComponents(prev => {
+              const prevNonExisting = prev.filter(p => !p.isExisting);
+              // Only add non-Basic components from API
+              return [ ...prevNonExisting, ...existing ];
+            });
+
+            // If gross is still zero, compute from sum of ALL components (including Basic for gross calculation)
+            const allComps = salaryComps.map((c: any) => normalizeBackendComp(c));
+            const grossFromComps = allComps.reduce((s: number, it: SalaryComponent) => s + (Number(it.calculatedAmount) || 0), 0);
+            if (grossFromComps > 0 && (!salaryFromApi || Number(salaryFromApi) === 0)) {
+              setGrossSalary(grossFromComps);
+            }
+          }
+
+          if (deductionComps && deductionComps.length > 0) {
+            const existing = deductionComps.map((c: any) => normalizeBackendComp(c));
+            setDeductionComponents(prev => [ ...prev.filter(p=>!p.isExisting), ...existing ]);
+          }
+
+          if (benefitComps && benefitComps.length > 0) {
+            const existing = benefitComps.map((c: any) => normalizeBackendComp(c));
+            setBenefitComponents(prev => [ ...prev.filter(p=>!p.isExisting), ...existing ]);
+          }
+        } catch (e) {
+          // ignore normalization errors
+          console.debug('No components found in employee detail or unable to normalize', e);
+        }
       }
     } catch (error) {
       console.error('Error fetching employee details for SalaryComponentSetup:', error);
@@ -199,16 +288,38 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     { id: 3, name: "Leave Allowance" }
   ];
 
-  // Initialize form with employee data and fetch latest details
+  // Initialize form with employee data - only run once when employee ID changes
   useEffect(() => {
     if (employee) {
+      console.log('SalaryComponentSetup: Initializing with employee:', employee.employee_id);
       setEmployeeName(`${employee.first_name} ${employee.last_name}`);
-      setGrossSalary(employee.custom_salary || 0);
-      
-      // Fetch the latest employee details from API
+
+      // Immediate population from provided employee prop (prefer effective_gross)
+      const initialGross = (employee as any).effective_gross ?? (employee as any).payroll_data?.gross_salary ?? employee.custom_salary ?? (employee as any).gross_salary ?? 0;
+      setGrossSalary(Number(initialGross ?? 0));
+
+      // If salary_components exists on the employee prop, populate components immediately
+      try {
+        const comps = (employee as any).salary_components ?? (employee as any).components ?? (employee as any).payroll_data?.earnings ?? null;
+        if (Array.isArray(comps) && comps.length > 0) {
+          // Filter out Basic components since Basic is already handled by the form
+          const nonBasicComps = comps.filter((c: any) => !(c.name || '').toLowerCase().includes('basic'));
+          const existing = nonBasicComps.map((c: any) => normalizeBackendComp(c));
+
+          setEarningComponents(prev => {
+            const prevNonExisting = prev.filter(p => !p.isExisting);
+            // Only add non-Basic components from API
+            return [ ...prevNonExisting, ...existing ];
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Fetch the latest employee details from API only once per employee
       fetchEmployeeDetails();
     }
-  }, [employee]);
+  }, [employee?.employee_id]); // Only trigger when employee ID changes, not on every employee object change
 
   // Function to fetch earning components from API
   const fetchEarningComponents = async (): Promise<void> => {
@@ -340,26 +451,16 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
       // Process the response and populate existing components
       if (response.data && Array.isArray(response.data)) {
-        const existingComponents: SalaryComponent[] = response.data.map((comp: any) => ({
-          id: `existing-${comp.id}`,
-          name: comp.name,
-          componentId: comp.component_id,
-          existingComponentId: comp.id,
-          calculationType: comp.calculation_type,
-          fixedValue: comp.calculation_type === 'fixed' ? comp.value : undefined,
-          percentageValue: comp.calculation_type === 'percentage' ? comp.value : undefined,
-          calculatedAmount: comp.calculated_amount || 0,
-          isBasic: comp.is_basic || false,
-          isEditable: !comp.is_basic,
-          isPensionable: comp.is_pensionable || false,
-          isTaxable: comp.is_taxable || false,
-          isExisting: true
-        }));
+        const existingComponents: SalaryComponent[] = response.data.map((comp: any) => normalizeBackendComp(comp));
 
-        setEarningComponents(prevComponents => [
-          ...prevComponents.filter(comp => !comp.isExisting), // Remove any existing components
-          ...existingComponents
-        ]);
+        // Filter out Basic components since Basic is already handled by the form
+        const nonBasicComponents = existingComponents.filter(comp => !(comp.name || '').toLowerCase().includes('basic'));
+
+        setEarningComponents(prevComponents => {
+          const prevNonExisting = prevComponents.filter(comp => !comp.isExisting);
+          // Only add non-Basic components from API
+          return [ ...prevNonExisting, ...nonBasicComponents ];
+        });
       }
     } catch (error: any) {
       // If the dedicated endpoint is not available (404), treat as a normal case and fall back.
@@ -379,32 +480,30 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           const data = detailResp.data;
           console.debug('Employee detail fallback response for components:', data);
 
-          // Look for salary_components or similarly named arrays in the detail response
-          const comps = Array.isArray(data.salary_components) ? data.salary_components : (Array.isArray(data.components) ? data.components : null);
+          // Reuse the same normalization strategy used in fetchEmployeeDetails
+          const salaryComps = Array.isArray(data.salary_components) ? data.salary_components : (Array.isArray(data.components) ? data.components : (Array.isArray(data.payroll_data?.earnings) ? data.payroll_data.earnings : null));
+          const deductionComps = Array.isArray(data.deduction_components) ? data.deduction_components : (Array.isArray(data.payroll_data?.deductions) ? data.payroll_data.deductions : null);
+          const benefitComps = Array.isArray(data.benefits) ? data.benefits : (Array.isArray(data.payroll_data?.benefits) ? data.payroll_data.benefits : null);
 
-          if (comps && comps.length > 0) {
-            const existingComponents: SalaryComponent[] = comps.map((comp: any) => ({
-              id: `existing-${comp.id}`,
-              name: comp.name,
-              componentId: comp.component_id ?? comp.componentId ?? comp.id,
-              existingComponentId: comp.id,
-              calculationType: comp.calculation_type ?? comp.calculationType ?? (comp.percentage ? 'percentage' : 'fixed'),
-              fixedValue: comp.calculation_type === 'fixed' || comp.calculationType === 'fixed' ? comp.value : undefined,
-              percentageValue: comp.calculation_type === 'percentage' || comp.calculationType === 'percentage' ? comp.value : undefined,
-              calculatedAmount: comp.calculated_amount ?? comp.amount ?? 0,
-              isBasic: comp.is_basic || comp.isBasic || false,
-              isEditable: !(comp.is_basic || comp.isBasic),
-              isPensionable: comp.is_pensionable || comp.isPensionable || false,
-              isTaxable: comp.is_taxable || comp.isTaxable || false,
-              isExisting: true
-            }));
+          if (salaryComps && salaryComps.length > 0) {
+            // Filter out Basic components since Basic is already handled by the form
+            const nonBasicComps = salaryComps.filter((c: any) => !(c.name || '').toLowerCase().includes('basic'));
+            const existingComponents: SalaryComponent[] = nonBasicComps.map((comp: any) => normalizeBackendComp(comp));
 
             setEarningComponents(prevComponents => [
               ...prevComponents.filter(comp => !comp.isExisting),
               ...existingComponents
             ]);
-            } else {
-            console.debug('No salary components found inside employee detail response — likely normal for new employees');
+          }
+
+          if (deductionComps && deductionComps.length > 0) {
+            const existingDeducts: SalaryComponent[] = deductionComps.map((comp: any) => normalizeBackendComp(comp));
+            setDeductionComponents(prev => [...prev.filter(p=>!p.isExisting), ...existingDeducts]);
+          }
+
+          if (benefitComps && benefitComps.length > 0) {
+            const existingBenefits: SalaryComponent[] = benefitComps.map((comp: any) => normalizeBackendComp(comp));
+            setBenefitComponents(prev => [...prev.filter(p=>!p.isExisting), ...existingBenefits]);
           }
 
         } catch (detailError) {
@@ -417,15 +516,16 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }
   };
 
-  // Fetch components on component mount
+  // Fetch components on component mount - only run once when employee ID is available
   useEffect(() => {
+    console.log('SalaryComponentSetup: Fetching component options for employee:', employee?.employee_id);
     fetchEarningComponents();
     fetchDeductionComponents();
     // Also fetch existing employee components if we have an employee
     if (employee?.employee_id) {
       fetchExistingEmployeeComponents();
     }
-  }, [employee?.employee_id]);
+  }, [employee?.employee_id, tenant, globalState.accessToken]);
 
   // Calculate component amounts and update basic component
   const calculateComponentAmounts = (): void => {
@@ -493,19 +593,25 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     setNetSalary(grossSalary - totalDeductionsAmount);
   };
 
-  // Recalculate when components or gross salary changes
+  // Recalculate when components or gross salary changes - with debouncing
   useEffect(() => {
     if (grossSalary > 0 && (earningComponents.length > 0 || deductionComponents.length > 0)) {
-      calculateComponentAmounts();
+      console.log('SalaryComponentSetup: Recalculating component amounts');
+      const timeoutId = setTimeout(() => {
+        calculateComponentAmounts();
+      }, 100); // Reduced debounce time for faster response
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [grossSalary, earningComponents.length, deductionComponents.length]);
 
-  // Also recalculate when component values change
+  // Also recalculate when component values change - more aggressive debouncing
   useEffect(() => {
     if (grossSalary > 0) {
       const timeoutId = setTimeout(() => {
+        console.log('SalaryComponentSetup: Recalculating due to component changes');
         calculateComponentAmounts();
-      }, 300); // Debounce calculations
+      }, 500); // Longer debounce for value changes
       
       return () => clearTimeout(timeoutId);
     }
