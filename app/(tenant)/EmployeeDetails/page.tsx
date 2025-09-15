@@ -21,6 +21,7 @@ import LeaveRequestForm from '../components/LeaveRequestForm';
 import PayrollBreakdown from '../components/PayrollBreakdown';
 import DocumentUploadModal from '../components/DocumentUploadModal';
 import DocumentsList from '../components/DocumentsList';
+import PaymentHistoryDisplay from '../components/PaymentHistoryDisplay';
 import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
@@ -316,6 +317,17 @@ const EmployeeDetailsPage: React.FC = () => {
 	const handleRequestLeave = () => {
 		setShowLeaveRequestForm(true);
 	};
+
+	// Handler for payslip generation
+	const handleGeneratePayslip = useCallback((paymentRecord: any) => {
+		console.log('Generating payslip for payment record:', paymentRecord);
+		// Navigate to payslip component or open payslip modal
+		// This could navigate to a dedicated payslip page or open a modal
+		// router.push(`/payslip/${paymentRecord.id}`);
+		
+		// For now, we'll log the action - you can implement the actual payslip logic
+		alert(`Generating payslip for ${paymentRecord.pay_period || 'payment record'}`);
+	}, []);
 
 	// Handler for form submission
 	const handleEmployeeSubmit = async (employeeFormData: any) => {
@@ -1187,69 +1199,10 @@ const stableSalaryComponentEmployee = useMemo(() => {
 						)}
 
 						{activeTab === 'payment-history' && (
-							<div className='flex flex-col items-center justify-center min-h-[400px] text-center'>
-								<div className='mb-8'>
-									<div className='relative'>
-										<div className='bg-white rounded-lg shadow-lg p-6 w-56 h-36 border'>
-											<div className='flex items-center justify-between mb-4'>
-												<div className='w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center'>
-													<svg
-														className='w-4 h-4 text-blue-600'
-														viewBox='0 0 24 24'
-														fill='none'>
-														<path
-															d='M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z'
-															stroke='currentColor'
-															strokeWidth='2'
-															strokeLinecap='round'
-															strokeLinejoin='round'
-														/>
-													</svg>
-												</div>
-												<div className='text-xs text-gray-400'>Payments</div>
-											</div>
-											<div className='space-y-2'>
-												<div className='flex justify-between items-center'>
-													<div className='h-2 bg-blue-200 rounded w-2/3'></div>
-													<div className='text-xs text-gray-400'>₦0</div>
-												</div>
-												<div className='flex justify-between items-center'>
-													<div className='h-2 bg-blue-100 rounded w-1/2'></div>
-													<div className='text-xs text-gray-400'>₦0</div>
-												</div>
-												<div className='flex justify-between items-center'>
-													<div className='h-2 bg-blue-100 rounded w-3/4'></div>
-													<div className='text-xs text-gray-400'>₦0</div>
-												</div>
-											</div>
-										</div>
-
-										<div className='absolute -bottom-3 -right-3'>
-											<div className='w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg'>
-												<Clock className='w-5 h-5 text-white' />
-											</div>
-										</div>
-									</div>
-								</div>
-
-								<h3 className='text-lg font-semibold text-gray-800 mb-2'>
-									No payment history
-								</h3>
-								<p className='text-gray-600 max-w-md mb-6 leading-relaxed'>
-									Payment history for {employee.first_name} {employee.last_name} will
-									appear here once salary payments are processed.
-								</p>
-
-								<div className='flex gap-3'>
-									<button className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-										<span className='w-4 h-4 text-sm font-bold'>₦</span>
-										Process Payment
-									</button>
-									<button className='bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-medium transition-colors'>
-										View Reports
-									</button>
-								</div>
-							</div>
+							<PaymentHistoryDisplay
+								employee={employee}
+								onGeneratePayslip={handleGeneratePayslip}
+							/>
 						)}
 					</div>
 				</div>
