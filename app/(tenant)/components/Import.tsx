@@ -1,12 +1,11 @@
 'use client';
 
-import React, { HtmlHTMLAttributes, useEffect, useState } from 'react';
+import React, { HtmlHTMLAttributes, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogClose } from '@/components/ui/dialog';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { set } from 'date-fns';
 
 // Define props interface for the ImportModal component
 interface ImportModalProps {
@@ -27,7 +26,14 @@ const ImportModal: React.FC<ImportModalProps> = ({
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
 	const [parseError, setParseError] = useState<string | null>(null);
-	const [tempType, setTempType] = useState<string>('');
+
+	// Derive template file based on title
+	const templateFile = useMemo(() => {
+		const t = title.toLowerCase();
+		if (t.includes('employee')) return 'employee_import_template.csv';
+		if (t.includes('loan')) return 'loans.csv';
+		return '';
+	}, [title]);
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -73,15 +79,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
 		}
 	};
 
-	useEffect(()=>{
-		if(title === 'Import Employees'){
-			setTempType('employee_import_template.csv');
-		}else if (title === 'Loans'){
-			setTempType('loans.csv');
-		}
-	},[])
-
-
 	return (
 		<div className='p-6'>
 			<div className='mb-6'>
@@ -107,9 +104,9 @@ const ImportModal: React.FC<ImportModalProps> = ({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<a
-										href={`/templates/${tempType}`}
-										download={tempType}
-										className='text-sm text-blue-600 underline ml-2'
+										href={templateFile ? `/templates/${templateFile}` : '#'}
+										download={templateFile}
+										className={`text-sm text-blue-600 underline ml-2 ${!templateFile ? 'pointer-events-none opacity-50' : ''}`}
 									>
 										Download Sample Template
 									</a>
@@ -160,7 +157,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
 						<Button
 							type='button'
 							variant='outline'
-							onClick={() => onClose}
+							onClick={onClose}
 							disabled={isUploading}>
 							Cancel
 						</Button>

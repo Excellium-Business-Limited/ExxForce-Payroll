@@ -305,15 +305,49 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       try {
         const comps = (employee as any).salary_components ?? (employee as any).components ?? (employee as any).payroll_data?.earnings ?? null;
         if (Array.isArray(comps) && comps.length > 0) {
-          // Filter out Basic components since Basic is already handled by the form
-          const nonBasicComps = comps.filter((c: any) => !(c.name || '').toLowerCase().includes('basic'));
-          const existing = nonBasicComps.map((c: any) => normalizeBackendComp(c));
+          const normalizedEarnings = comps.map((comp: any) => normalizeBackendComp(comp));
+          setEarningComponents(normalizedEarnings);
+        }
+      } catch (e) {
+        // ignore
+      }
 
-          setEarningComponents(prev => {
-            const prevNonExisting = prev.filter(p => !p.isExisting);
-            // Only add non-Basic components from API
-            return [ ...prevNonExisting, ...existing ];
-          });
+      // If deduction_components exists on the employee prop, populate deduction components
+      try {
+        const dedComps = (employee as any).deduction_components ?? null;
+        if (Array.isArray(dedComps) && dedComps.length > 0) {
+          const normalizedDeductions = dedComps.map((comp: any) => ({
+            id: `deduction-${comp.id}`,
+            name: comp.name,
+            componentId: comp.id,
+            calculationType: comp.calculation_type,
+            fixedValue: Number(comp.amount) || 0,
+            calculatedAmount: Number(comp.amount) || 0,
+            isEditable: true,
+            isPensionable: comp.is_pensionable,
+            isTaxable: comp.is_taxable,
+            isExisting: true,
+            existingComponentId: comp.id
+          }));
+          setDeductionComponents(normalizedDeductions);
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // If benefits exist on the employee prop, populate benefit components
+      try {
+        const benefits = (employee as any).benefits ?? null;
+        if (Array.isArray(benefits) && benefits.length > 0) {
+          const normalizedBenefits = benefits.map((b: any) => ({
+            id: `benefit-${b.id}`,
+            name: b.component_name,
+            calculatedAmount: Number(b.amount) || 0,
+            isEditable: false,
+            isPensionable: b.is_pensionable,
+            isTaxable: b.is_taxable
+          }));
+          setBenefitComponents(normalizedBenefits);
         }
       } catch (e) {
         // ignore
@@ -793,10 +827,12 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     const payload: any = {
       custom_salary: Number(grossSalary ?? 0),
       effective_gross: Number(grossSalary ?? 0),
+      // Sync paygrade assignment if applicable
+      ...(employee?.pay_grade_name ? { pay_grade_name: employee.pay_grade_name } : {}),
     };
 
     if (typeof net === 'number') {
-      // Send net using the `net` field per new contract (server expects `net`)
+      // Send net using the `net` field per new contract (server expects `net`
       payload.net = Number(net);
     }
 
@@ -818,55 +854,31 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       .filter(comp => comp.componentId && comp.name && (comp.fixedValue || comp.percentageValue))
       .map(async (comp) => {
         const baseURL = `${tenant}.exxforce.com`;
+        // Construct payload with override fields per backend spec
+        const payload: any = {
+          component_id: comp.componentId
+        };
+        if (comp.calculationType === 'fixed' && comp.fixedValue !== undefined) {
+          payload.fixed_override = comp.fixedValue;
+        } else if (comp.calculationType === 'percentage' && comp.percentageValue !== undefined) {
+          payload.percentage_override = comp.percentageValue;
+        }
 
-        // Check if this is an existing component that needs editing
         if (comp.isExisting && comp.existingComponentId) {
-          // For PUT requests, don't include component_id in payload since it's in the URL
-          const payload: any = {};
-
-          if (comp.fixedValue !== undefined && comp.fixedValue > 0) {
-            payload.fixed_override = comp.fixedValue;
-          } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
-            payload.percentage_override = comp.percentageValue;
-          }
-
-          // Use PUT endpoint for editing existing components (component ID in URL, not payload)
+          // Update existing component using PUT
           return axios.put(
-            `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/${comp.existingComponentId}/edit`,
+            `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/${comp.existingComponentId}/update`,
             payload,
-            {
-              headers: {
-                Authorization: `Bearer ${globalState.accessToken}`,
-                'Content-Type': 'application/json'
-              },
-            }
-          );
-        } else {
-          // For POST requests, include component_id in payload
-          const payload: any = {
-            component_id: comp.componentId
-          };
-
-          if (comp.fixedValue !== undefined && comp.fixedValue > 0) {
-            payload.fixed_override = comp.fixedValue;
-          } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
-            payload.percentage_override = comp.percentageValue;
-          }
-
-          // Use POST endpoint for creating new components
-          return axios.post(
-            `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
-            payload,
-            {
-              headers: {
-                Authorization: `Bearer ${globalState.accessToken}`,
-                'Content-Type': 'application/json'
-              },
-            }
+            { headers: { Authorization: `Bearer ${globalState.accessToken}`, 'Content-Type': 'application/json' } }
           );
         }
+        // Create new component using POST
+        return axios.post(
+          `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
+          payload,
+          { headers: { Authorization: `Bearer ${globalState.accessToken}`, 'Content-Type': 'application/json' } }
+        );
       });
-
     await Promise.all(promises);
   };
 
@@ -874,29 +886,45 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     const promises = deductionComponents
       .filter(comp => comp.componentId && comp.name && (comp.fixedValue || comp.percentageValue))
       .map(async (comp) => {
+        const baseURL = `${tenant}.exxforce.com`;
         const payload: any = {
-          deduction_id: comp.componentId
+          deduction_component_id: comp.componentId,
+          name: comp.name,
+          is_pensionable: comp.isPensionable,
+          is_taxable: comp.isTaxable
         };
-
-        if (comp.fixedValue !== undefined && comp.fixedValue > 0) {
-          payload.fixed_override = comp.fixedValue;
-        } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
-          payload.percentage_override = comp.percentageValue;
+        if (comp.calculationType === 'fixed') {
+          payload.value = comp.fixedValue;
+        } else if (comp.calculationType === 'percentage') {
+          payload.value = comp.percentageValue;
         }
 
-        const baseURL = `${tenant}.exxforce.com`
-        return axios.post(
-          `https://${baseURL}/tenant/employee/${employee?.employee_id}/deduction-components/create`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${globalState.accessToken}`,
-              'Content-Type': 'application/json'
-            },
-          }
-        );
+        if (comp.isExisting && comp.existingComponentId) {
+          // Update existing deduction using PUT
+          return axios.put(
+            `https://${baseURL}/tenant/employee/${employee?.employee_id}/deduction-components/${comp.existingComponentId}/update`,
+            payload,
+            {
+              headers: {
+                Authorization: `Bearer ${globalState.accessToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+        } else {
+          // Create new deduction using POST
+          return axios.post(
+            `https://${baseURL}/tenant/employee/${employee?.employee_id}/deduction-components/create`,
+            payload,
+            {
+              headers: {
+                Authorization: `Bearer ${globalState.accessToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+        }
       });
-
     await Promise.all(promises);
   };
 
