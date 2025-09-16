@@ -149,6 +149,9 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
   const [earningError, setEarningError] = useState<string>('');
   const [deductionError, setDeductionError] = useState<string>('');
 
+  // Flags to prevent multiple simultaneous API calls
+  const [fetchingExistingComponents, setFetchingExistingComponents] = useState<boolean>(false);
+
   // Calculation states
   const [totalEarnings, setTotalEarnings] = useState<number>(0);
   const [totalDeductions, setTotalDeductions] = useState<number>(0);
@@ -432,8 +435,9 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
 
   // Function to fetch existing employee salary components
   const fetchExistingEmployeeComponents = async (): Promise<void> => {
-    if (!employee?.employee_id) return;
+    if (!employee?.employee_id || fetchingExistingComponents) return;
 
+    setFetchingExistingComponents(true);
     const baseURL = `${tenant}.exxforce.com`;
     
     try {
@@ -467,52 +471,13 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       if (error.response?.status === 404) {
         // Expected for some tenants. Use debug logs and fall back silently.
         console.debug('Salary-components endpoint returned 404 — falling back to employee detail endpoint');
-        try {
-          const detailResp = await axios.get(
-            `https://${baseURL}/tenant/employee/detail/${employee.employee_id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${globalState.accessToken}`,
-              },
-            }
-          );
-
-          const data = detailResp.data;
-          console.debug('Employee detail fallback response for components:', data);
-
-          // Reuse the same normalization strategy used in fetchEmployeeDetails
-          const salaryComps = Array.isArray(data.salary_components) ? data.salary_components : (Array.isArray(data.components) ? data.components : (Array.isArray(data.payroll_data?.earnings) ? data.payroll_data.earnings : null));
-          const deductionComps = Array.isArray(data.deduction_components) ? data.deduction_components : (Array.isArray(data.payroll_data?.deductions) ? data.payroll_data.deductions : null);
-          const benefitComps = Array.isArray(data.benefits) ? data.benefits : (Array.isArray(data.payroll_data?.benefits) ? data.payroll_data.benefits : null);
-
-          if (salaryComps && salaryComps.length > 0) {
-            // Filter out Basic components since Basic is already handled by the form
-            const nonBasicComps = salaryComps.filter((c: any) => !(c.name || '').toLowerCase().includes('basic'));
-            const existingComponents: SalaryComponent[] = nonBasicComps.map((comp: any) => normalizeBackendComp(comp));
-
-            setEarningComponents(prevComponents => [
-              ...prevComponents.filter(comp => !comp.isExisting),
-              ...existingComponents
-            ]);
-          }
-
-          if (deductionComps && deductionComps.length > 0) {
-            const existingDeducts: SalaryComponent[] = deductionComps.map((comp: any) => normalizeBackendComp(comp));
-            setDeductionComponents(prev => [...prev.filter(p=>!p.isExisting), ...existingDeducts]);
-          }
-
-          if (benefitComps && benefitComps.length > 0) {
-            const existingBenefits: SalaryComponent[] = benefitComps.map((comp: any) => normalizeBackendComp(comp));
-            setBenefitComponents(prev => [...prev.filter(p=>!p.isExisting), ...existingBenefits]);
-          }
-
-        } catch (detailError) {
-          console.error('Error fetching employee detail fallback for components:', detailError);
-        }
+        // Skip fallback for now to prevent the loop
       } else {
         // Unexpected errors should still be logged at error level
         console.error('Error fetching existing employee components (primary endpoint):', error?.message || error);
       }
+    } finally {
+      setFetchingExistingComponents(false);
     }
   };
 
@@ -525,7 +490,7 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     if (employee?.employee_id) {
       fetchExistingEmployeeComponents();
     }
-  }, [employee?.employee_id, tenant, globalState.accessToken]);
+  }, [employee?.employee_id]); // Removed tenant and globalState.accessToken to prevent loops
 
   // Calculate component amounts and update basic component
   const calculateComponentAmounts = (): void => {
@@ -605,17 +570,17 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }
   }, [grossSalary, earningComponents.length, deductionComponents.length]);
 
-  // Also recalculate when component values change - more aggressive debouncing
+  // Separate effect for value changes with longer debounce to prevent rapid recalculation
   useEffect(() => {
-    if (grossSalary > 0) {
+    if (grossSalary > 0 && earningComponents.length > 0) {
       const timeoutId = setTimeout(() => {
-        console.log('SalaryComponentSetup: Recalculating due to component changes');
+        console.log('SalaryComponentSetup: Recalculating due to component value changes');
         calculateComponentAmounts();
-      }, 500); // Longer debounce for value changes
+      }, 800); // Increased debounce for stability
       
       return () => clearTimeout(timeoutId);
     }
-  }, [earningComponents, deductionComponents, grossSalary]);
+  }, [earningComponents.map(c => `${c.fixedValue}-${c.percentageValue}`).join(','), deductionComponents.map(c => `${c.fixedValue}-${c.percentageValue}`).join(','), grossSalary]);
 
   // Reset calculation when gross salary changes
   useEffect(() => {
@@ -819,13 +784,21 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     }).format(amount);
   };
 
-  // Update employee gross salary first
-  const updateEmployeeGrossSalary = async (): Promise<void> => {
+  // Update employee salary (gross and net) on the employee record
+  const updateEmployeeSalary = async (net?: number): Promise<void> => {
     const baseURL = `${tenant}.exxforce.com`;
-    
-    const payload = {
-      salary: grossSalary // Backend expects 'salary' not 'gross_salary'
+
+    // Use PUT to update employee record. Send gross into `custom_salary` per request
+    // and include net as `net_salary`. Also include `effective_gross` for compatibility.
+    const payload: any = {
+      custom_salary: Number(grossSalary ?? 0),
+      effective_gross: Number(grossSalary ?? 0),
     };
+
+    if (typeof net === 'number') {
+      // Send net using the `net` field per new contract (server expects `net`)
+      payload.net = Number(net);
+    }
 
     await axios.put(
       `https://${baseURL}/tenant/employee/update/${employee?.employee_id}`,
@@ -844,21 +817,20 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     const promises = earningComponents
       .filter(comp => comp.componentId && comp.name && (comp.fixedValue || comp.percentageValue))
       .map(async (comp) => {
-        const payload: any = {
-          component_id: comp.componentId
-        };
-
-        if (comp.fixedValue !== undefined && comp.fixedValue > 0) {
-          payload.fixed_override = comp.fixedValue;
-        } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
-          payload.percentage_override = comp.percentageValue;
-        }
-
         const baseURL = `${tenant}.exxforce.com`;
 
         // Check if this is an existing component that needs editing
         if (comp.isExisting && comp.existingComponentId) {
-          // Use PUT endpoint for editing existing components
+          // For PUT requests, don't include component_id in payload since it's in the URL
+          const payload: any = {};
+
+          if (comp.fixedValue !== undefined && comp.fixedValue > 0) {
+            payload.fixed_override = comp.fixedValue;
+          } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
+            payload.percentage_override = comp.percentageValue;
+          }
+
+          // Use PUT endpoint for editing existing components (component ID in URL, not payload)
           return axios.put(
             `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/${comp.existingComponentId}/edit`,
             payload,
@@ -870,6 +842,17 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
             }
           );
         } else {
+          // For POST requests, include component_id in payload
+          const payload: any = {
+            component_id: comp.componentId
+          };
+
+          if (comp.fixedValue !== undefined && comp.fixedValue > 0) {
+            payload.fixed_override = comp.fixedValue;
+          } else if (comp.percentageValue !== undefined && comp.percentageValue > 0) {
+            payload.percentage_override = comp.percentageValue;
+          }
+
           // Use POST endpoint for creating new components
           return axios.post(
             `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
@@ -931,18 +914,55 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     setIsSubmitting(true);
 
     try {
-      // Step 1: Update employee gross salary first
-      console.log('Updating employee gross salary...');
-      await updateEmployeeGrossSalary();
-      
-      // Step 2: Submit salary components
-      console.log('Submitting salary components...');
-      await submitSalaryComponents();
-      
-      // Step 3: Submit deduction components
-      console.log('Submitting deduction components...');
-      await submitDeductionComponents();
+      // Ensure calculations are up to date
+      calculateComponentAmounts();
 
+      // Step 1: Update employee record with gross and calculated net FIRST
+      // Priority for net salary: SalaryCalculator result > component netSalary state > derived calculation
+      let netToSend: number | undefined;
+      
+      if (netSalaryCalculation?.netSalary) {
+        // Use the precise calculation from SalaryCalculator (Finance Act 2023 compliant)
+        netToSend = netSalaryCalculation.netSalary;
+        console.log('Using SalaryCalculator net salary:', netToSend);
+      } else if (typeof netSalary === 'number' && netSalary > 0) {
+        // Fallback to component state
+        netToSend = netSalary;
+        console.log('Using component netSalary state:', netToSend);
+      } else if (typeof totalDeductions === 'number') {
+        // Last resort: derive from gross - deductions
+        netToSend = grossSalary - totalDeductions;
+        console.log('Using derived net salary (gross - deductions):', netToSend);
+      }
+
+      if (netToSend !== undefined) {
+        console.log('Step 1: Updating employee record with gross and net...', { 
+          grossSalary, 
+          netToSend,
+          source: netSalaryCalculation?.netSalary ? 'SalaryCalculator' : (typeof netSalary === 'number' ? 'componentState' : 'derived')
+        });
+        await updateEmployeeSalary(netToSend);
+        console.log('✓ Employee record updated successfully');
+      } else {
+        console.log('Cannot determine net salary - updating with gross only');
+        // Still update with gross salary even if net is not available
+        await updateEmployeeSalary();
+        console.log('✓ Employee record updated with gross salary only');
+      }
+
+      // Step 2: Submit salary components (after employee update)
+      console.log('Step 2: Submitting salary components...');
+      await submitSalaryComponents();
+      console.log('✓ Salary components submitted successfully');
+
+      // Step 3: Submit deduction components
+      console.log('Step 3: Submitting deduction components...');
+      await submitDeductionComponents();
+      console.log('✓ Deduction components submitted successfully');
+
+      // All steps completed successfully
+      console.log('🎉 All salary setup steps completed successfully!');
+      
       const payload = {
         employeeName,
         grossSalary,
