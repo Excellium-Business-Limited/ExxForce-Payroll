@@ -59,12 +59,10 @@ interface Loan {
 	start_date: string;
 }
 
-
-
 export default function Home() {
 	const pathname = usePathname();
 	const router = useRouter();
-	
+
 	const [isloan, setisLoan] = React.useState<boolean>(false);
 	const [loans, setLoans] = useState<Loan[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -103,7 +101,6 @@ export default function Home() {
 			setLoading(true);
 			fetchLoans();
 			setLoading(false);
-			
 		}, 2000);
 		fetchLoans();
 		console.log(loans);
@@ -111,13 +108,49 @@ export default function Home() {
 		setisLoan(true);
 		return () => clearTimeout(timeout);
 	}, []);
+	const handleImport = async (importData: FormData) => {
+		try {
+			const tenant = getTenant();
+			const baseURL = `https://${tenant}.exxforce.com`;
+			const token = localStorage.getItem('access_token');
+			if (!token) throw new Error('No access token');
 
+			const response = await axios.post(
+				`${baseURL}/tenant/loans/import-csv`,
+				importData,
+				{
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'multipart/form-data',
+					},
+				}
+			);
+			console.log('Import successful', response.data);
+			alert('Import Successful');
+			// Close the modal after successful import
+			// Refresh the page or refetch data
+			window.location.href = '/Loan';
+		} catch (err: any) {
+			console.error('Error importing loans:', err);
+			if (err.response?.data?.message) {
+				alert('Error importing loans: ' + err.response.data.message);
+			} else {
+				alert('Error importing loans: ' + (err.message || 'Unknown error'));
+			}
+			if (err.response?.status === 401) {
+				alert('Session expired. Please log in again.');
+				setTimeout(() => {
+					redirect('/login');
+				}, 2000);
+			}
+		}
+	};
 	// const handleCreate = () => {
 	// 	router.push(`/${tenant}/loans/create`);
 	// };
 
-	
-	  if (loading) return (
+	if (loading)
+		return (
 			<Loading
 				message='Loading Loans...'
 				size='medium'
@@ -156,9 +189,7 @@ export default function Home() {
 								onClose={function (): void {
 									throw new Error('Function not implemented.');
 								}}
-								onSubmit={function (importData: any): Promise<void> {
-									throw new Error('Function not implemented.');
-								}}
+								onSubmit={handleImport}
 								children={
 									<div>
 										<li>• Loan Type (required)</li>
@@ -208,9 +239,7 @@ export default function Home() {
 								onClose={function (): void {
 									throw new Error('Function not implemented.');
 								}}
-								onSubmit={function (importData: any): Promise<void> {
-									throw new Error('Function not implemented.');
-								}}
+								onSubmit={handleImport}
 								children={
 									<div>
 										<li>• Loan Type (required)</li>
@@ -258,9 +287,7 @@ export default function Home() {
 								onClose={function (): void {
 									throw new Error('Function not implemented.');
 								}}
-								onSubmit={function (importData: any): Promise<void> {
-									throw new Error('Function not implemented.');
-								}}
+								onSubmit={handleImport}
 								children={
 									<div>
 										<li>• Loan Type (required)</li>
