@@ -827,10 +827,12 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
     const payload: any = {
       custom_salary: Number(grossSalary ?? 0),
       effective_gross: Number(grossSalary ?? 0),
+      // Sync paygrade assignment if applicable
+      ...(employee?.pay_grade_name ? { pay_grade_name: employee.pay_grade_name } : {}),
     };
 
     if (typeof net === 'number') {
-      // Send net using the `net` field per new contract (server expects `net`)
+      // Send net using the `net` field per new contract (server expects `net`
       payload.net = Number(net);
     }
 
@@ -852,16 +854,14 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
       .filter(comp => comp.componentId && comp.name && (comp.fixedValue || comp.percentageValue))
       .map(async (comp) => {
         const baseURL = `${tenant}.exxforce.com`;
+        // Construct payload with override fields per backend spec
         const payload: any = {
-          salary_component_id: comp.componentId,
-          name: comp.name,
-          is_pensionable: comp.isPensionable,
-          is_taxable: comp.isTaxable
+          component_id: comp.componentId
         };
-        if (comp.calculationType === 'fixed') {
-          payload.value = comp.fixedValue;
-        } else if (comp.calculationType === 'percentage') {
-          payload.value = comp.percentageValue;
+        if (comp.calculationType === 'fixed' && comp.fixedValue !== undefined) {
+          payload.fixed_override = comp.fixedValue;
+        } else if (comp.calculationType === 'percentage' && comp.percentageValue !== undefined) {
+          payload.percentage_override = comp.percentageValue;
         }
 
         if (comp.isExisting && comp.existingComponentId) {
@@ -869,26 +869,15 @@ export default function SalaryComponentSetup({ employee, onClose, onSubmit }: Sa
           return axios.put(
             `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/${comp.existingComponentId}/update`,
             payload,
-            {
-              headers: {
-                Authorization: `Bearer ${globalState.accessToken}`,
-                'Content-Type': 'application/json'
-              }
-            }
-          );
-        } else {
-          // Create new component using POST
-          return axios.post(
-            `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
-            payload,
-            {
-              headers: {
-                Authorization: `Bearer ${globalState.accessToken}`,
-                'Content-Type': 'application/json'
-              }
-            }
+            { headers: { Authorization: `Bearer ${globalState.accessToken}`, 'Content-Type': 'application/json' } }
           );
         }
+        // Create new component using POST
+        return axios.post(
+          `https://${baseURL}/tenant/employee/${employee?.employee_id}/salary-components/create`,
+          payload,
+          { headers: { Authorization: `Bearer ${globalState.accessToken}`, 'Content-Type': 'application/json' } }
+        );
       });
     await Promise.all(promises);
   };
