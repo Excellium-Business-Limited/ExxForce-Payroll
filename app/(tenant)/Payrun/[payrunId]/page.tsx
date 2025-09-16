@@ -75,7 +75,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 		setToken(accessToken);
 		const tenant = getTenant();
 
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 
 		const fetchData = async () => {
 			try {
@@ -119,15 +119,26 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 		};
 		fetchData();
 	}, []);
+
+	const formatCurrency = (amount: number): string => {
+		if (amount === null || amount === undefined || isNaN(amount)) {
+			return '₦0.00';
+		}
+		return new Intl.NumberFormat('en-NG', {
+			style: 'currency',
+			currency: 'NGN',
+			minimumFractionDigits: 2,
+		}).format(amount);
+	};
 	const handleSubmit = async () => {
 		const tenant = getTenant();
-		const baseURL = `http://${tenant}.localhost:8000`;
+		const baseURL = `https://${tenant}.exxforce.com`;
 		const accessToken = getAccessToken();
 
 		try {
 			setIsLoading(true);
 			const res = await axios.post(
-				`http://${tenant}.localhost:8000/tenant/payrun/${payrunId}/submit`,
+				`${baseURL}/tenant/payrun/${payrunId}/submit`,
 				{}, // empty request body
 				{ headers: { Authorization: `Bearer ${accessToken}` } }
 			);
@@ -203,9 +214,8 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<hr />
 					<span>
 						<h2 className='font-bold'>
-							₦
-							{paySummary?.total_net_salary ||
-								employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0)}
+							{formatCurrency(Number(paySummary?.total_net_salary)) ||
+								formatCurrency(employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0))}
 						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Total payroll after deductions
@@ -227,8 +237,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<hr />
 					<span>
 						<h2 className='font-bold'>
-							₦
-							{paySummary?.total_deductions ||
+							{formatCurrency(Number(paySummary?.total_deductions)) ||
 								employees.reduce((acc, emp) => acc + Number(emp.deductions), 0)}
 						</h2>
 						<p className='text-xs text-muted-foreground'>
