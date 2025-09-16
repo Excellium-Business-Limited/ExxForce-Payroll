@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import {
 	X,
 	Edit2,
@@ -1091,6 +1091,7 @@ const stableSalaryComponentEmployee = useMemo(() => {
 																stroke='currentColor'
 																strokeWidth='2'
 																strokeLinecap='round'
+																strokeLinejoin='round'
 															/>
 														</svg>
 													</div>
@@ -1123,7 +1124,7 @@ const stableSalaryComponentEmployee = useMemo(() => {
 									<div className='flex items-center justify-center min-h-[400px]'>
 										<div className='flex items-center space-x-2'>
 											<svg
-												className='animate-spin h-5 w-5 text-blue-600'
+											className='animate-spin h-5 w-5 text-blue-600'
 												viewBox='0 0 24 24'>
 												<circle
 													className='opacity-25'
@@ -1411,4 +1412,10 @@ const stableSalaryComponentEmployee = useMemo(() => {
 	);
 };
 
-export default EmployeeDetailsPage;
+export default function EmployeeDetailsPageWrapper() {
+	return (
+		<Suspense fallback={<div>Loading Employee Details...</div>}>
+			<EmployeeDetailsPage />
+		</Suspense>
+	);
+}
