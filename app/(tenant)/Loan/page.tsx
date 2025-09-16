@@ -309,12 +309,12 @@ export default function Home() {
 						<TabsList className='w-full justify-start border-b bg-transparent h-auto p-0 rounded-none'>
 							<div className='flex gap-8 px-6 py-4'>
 								<TabsTrigger
-									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-semibold text-lg'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-b-blue-600 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-semibold text-lg mb-2'
 									value='LType'>
 									Loan Type
 								</TabsTrigger>
 								<TabsTrigger
-									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-semibold text-lg'
+									className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-b-blue-600 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-semibold text-lg mb-2'
 									value='LRequest'>
 									Loan Request
 								</TabsTrigger>
