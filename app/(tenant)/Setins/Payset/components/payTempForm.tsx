@@ -304,9 +304,9 @@ const PayTempForm: React.FC<PayTempFormProps> = ({
 							min='1'
 							max='31'
 							value={payScheduleData.start_day}
-							// onChange={(e) =>
-							// 	handleInputChange('start_day', )
-							// }
+							onChange={(e) =>
+								handleInputChange('start_day', e.target.value )
+							}
 						/>
 					</div>
 
@@ -318,9 +318,9 @@ const PayTempForm: React.FC<PayTempFormProps> = ({
 							min='0'
 							max='31'
 							value={payScheduleData.payment_day}
-							// onChange={(e) =>
-							// 	handleInputChange('payment_day', parseInt(e.target.value) || 0)
-							// }
+							onChange={(e) =>
+								handleInputChange('payment_day', e.target.value)
+							}
 							disabled={payScheduleData.payment_rule === 'LAST_DAY'}
 						/>
 					</div>
@@ -330,11 +330,15 @@ const PayTempForm: React.FC<PayTempFormProps> = ({
 						<select
 							id='week_start_day'
 							value={payScheduleData.week_start_day}
-							// onChange={(e) =>
-							// 	handleInputChange('week_start_day', parseInt(e.target.value))
-							// }
+							onChange={(e) => handleInputChange('week_start_day', e.target.value)}
 							className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-							<option value='opt1'>opt1</option>
+							<option value='monday'>Monday</option>
+							<option value='tuesday'>Tuesday</option>
+							<option value='wednesday'>Wednesday</option>
+							<option value='thursday'>Thursday</option>
+							<option value='friday'>Friday</option>
+							<option value='saturday'>Saturday</option>
+							<option value='sunday'>Sunday</option>
 						</select>
 					</div>
 				</div>
@@ -342,10 +346,6 @@ const PayTempForm: React.FC<PayTempFormProps> = ({
 				<div className='flex items-center gap-2'>
 					<Checkbox
 						id='is_active'
-						// checked={}
-						// onCheckedChange={(checked) =>
-						// 	handleInputChange('is_active', checked as boolean)
-						// }
 					/>
 					<Label htmlFor='is_active'>Active Schedule</Label>
 				</div>

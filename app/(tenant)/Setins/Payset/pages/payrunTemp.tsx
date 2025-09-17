@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Edit, Info, Plus } from 'lucide-react';
@@ -22,6 +22,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PayTempForm from '../components/payTempForm';
+import axios from 'axios';
+import { getAccessToken, getTenant } from '@/lib/auth';
 
 interface PayrollPeriod {
 	month: string;
@@ -161,6 +163,26 @@ const PayScheduleTemplates = () => {
 			isActive: false,
 		},
 	]);
+	const fetchTemplates = async () =>{
+			const tenant = getTenant()
+			const token = getAccessToken()
+			try{
+				const res = await axios.get(
+					`https://${tenant}.exxforce.com/tenant/payrun/list-templates`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					}
+				); 
+				console.log(res.data)
+			}catch(err:any){
+				console.log(err)
+			}
+		}
+		useEffect(()=>{
+			fetchTemplates()
+		},[])
 
 	const [editingSchedule, setEditingSchedule] = useState<PaySchedule | null>(
 		null
@@ -373,7 +395,8 @@ const PayScheduleTemplates = () => {
 			<Dialog
 				open={showForm}
 				onOpenChange={setShowForm}>
-				<DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto'>
+					<DialogTrigger hidden></DialogTrigger>
+				<DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto bg-white' aria-describedby=''>
 					<DialogTitle hidden></DialogTitle>
 					<PayTempForm
 						initialData={

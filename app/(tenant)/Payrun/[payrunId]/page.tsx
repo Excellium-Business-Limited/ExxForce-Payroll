@@ -27,7 +27,7 @@ interface PayRun {
 	id: number;
 	name: string;
 	pay_period: string;
-
+	next_payrun_date: string;
 	deductions: string;
 	start_date: string;
 	end_date: string;
@@ -61,7 +61,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 	const [isLoading, setIsLoading] = useState<Boolean>(false);
 	const [employees, setEmployees] = useState<Employee[]>([]);
 	const [planName, setPlanName] = useState<string>('');
-	const [paySummary, setPaySummary] = useState<Summary>()
+	const [paySummary, setPaySummary] = useState<Summary>();
 	const [error, setError] = useState<string>('');
 	const [token, setToken] = useState<string>('');
 	const { payrunId } = React.use(params);
@@ -92,19 +92,21 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					axios.get<{ plan_name: string }>(`${baseURL}/tenant/payrun/plan`, {
 						headers: { Authorization: `Bearer ${accessToken}` },
 					}),
-					axios.get<Summary>(
-						`${baseURL}/tenant/payrun/${payrunId}/summary`,
-						{
-							headers: { Authorization: `Bearer ${accessToken}` },
-						}
-					),
+					axios.get<Summary>(`${baseURL}/tenant/payrun/${payrunId}/summary`, {
+						headers: { Authorization: `Bearer ${accessToken}` },
+					}),
 				]);
 
 				setPayRun(payRunRes.data);
 				setEmployees(employeesRes.data);
 				setPlanName(planRes.data.plan_name);
-				setPaySummary(paySum.data)
-				console.log(payRunRes.data, employeesRes.data, planRes.data, paySum.data);
+				setPaySummary(paySum.data);
+				console.log(
+					payRunRes.data,
+					employeesRes.data,
+					planRes.data,
+					paySum.data
+				);
 			} catch (err: any) {
 				console.error('Error loading data', err);
 				setError(
@@ -191,9 +193,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					</article>
 					<hr />
 					<span>
-						<h2 className='font-bold'>
-							{ employees.length}
-						</h2>
+						<h2 className='font-bold'>{employees.length}</h2>
 						<p className='text-xs text-muted-foreground'>
 							Employees are eligible for this run
 						</p>
@@ -215,7 +215,12 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					<span>
 						<h2 className='font-bold'>
 							{formatCurrency(Number(paySummary?.total_net_salary)) ||
-								formatCurrency(employees.reduce((acc, emp) => acc + Number(emp.net_salary), 0))}
+								formatCurrency(
+									employees.reduce(
+										(acc, emp) => acc + Number(emp.net_salary),
+										0
+									)
+								)}
 						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Total payroll after deductions
@@ -245,7 +250,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 						</p>
 					</span>
 				</Card>
-				<Card className='m-1 p-3 w-[245px] h-fit'>
+				{/* <Card className='m-1 p-3 w-[245px] h-fit'>
 					<article className='flex gap-2 content-center items-center'>
 						<span className='bg-[#f8edd9] rounded-4xl p-2 '>
 							<img
@@ -265,6 +270,26 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 						</h2>
 						<p className='text-xs text-muted-foreground'>
 							Had prorated pay
+						</p>
+					</span>
+				</Card> */}
+				<Card className='m-1 p-3 w-[245px] h-fit'>
+					<article className='flex gap-2 content-center items-center'>
+						<span className='bg-[#f8edd9] rounded-4xl p-2 '>
+							<img
+								src='/icons/CalendarDots.png'
+								alt=''
+								width={20}
+								height={20}
+							/>
+						</span>
+						<h4 className=''>Next Payroll Date</h4>
+					</article>
+					<hr />
+					<span>
+						<h2 className='font-bold'>{payRun?.next_payrun_date}</h2>
+						<p className='text-xs text-muted-foreground'>
+							Scheduled next payroll run
 						</p>
 					</span>
 				</Card>

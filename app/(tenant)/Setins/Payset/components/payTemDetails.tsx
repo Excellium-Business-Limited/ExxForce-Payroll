@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
+import { getAccessToken, getTenant } from '@/lib/auth';
+import axios from 'axios';
 import { Edit } from 'lucide-react';
-import React from 'react'
+import React, { useEffect } from 'react'
 
 // const payTemDetails = ({paySchedule, upcomingPayrolls} : {paySchedule:any, upcomingPayrolls:any}) => {
 //     function handleChangePayDay(): void {
@@ -103,6 +105,26 @@ const PayTemDetails = ({
 	upcomingPayrolls: PayrollPeriod[];
 	onEdit: () => void;
 }) => {
+	const fetchTemplates = async () =>{
+		const tenant = getTenant()
+		const token = getAccessToken()
+		try{
+			const res = await axios.get(
+				`https://${tenant}.exxforce.com/tenant/payrun/list-templates`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			); 
+			console.log(res.data)
+		}catch(err:any){
+			console.log(err)
+		}
+	}
+	useEffect(()=>{
+		fetchTemplates()
+	},[])
 	return (
 		<div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
 			<div className='lg:col-span-2'>
