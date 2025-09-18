@@ -214,9 +214,9 @@ const Dashboard = () => {
 						<hr />
 						<span>
 							<h2 className='font-bold text-sm '>{employees.length}</h2>
-							<p className='text-xs text-muted-foreground'>
+							{/* <p className='text-xs text-muted-foreground'>
 								90% of employees are regular staff
-							</p>
+							</p> */}
 						</span>
 					</Card>
 					<Card className='m-1 p-3 w-[245px] h-[150px] shadow-xl'>
@@ -275,7 +275,7 @@ const Dashboard = () => {
 						<span>
 							<h2 className='font-bold'>{paid} Employees</h2>
 							<p className='text-xs text-muted-foreground'>
-								30% of employees had prorated pay
+								Paid Employees
 							</p>
 						</span>
 					</Card>
