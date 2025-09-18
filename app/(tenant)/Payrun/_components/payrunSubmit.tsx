@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DatePicker from '../../components/datepicker';
-import React, { use, useEffect } from 'react';
+import React, { use, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import {
 	Table,
@@ -43,7 +43,8 @@ import {
 	SheetTrigger,
 } from '@/components/ui/sheet';
 import PayrunForm from './PayrunForm';
-// import {payruns} from './payrunData'
+import FilterSort, { FilterOption, SortOption } from '../../components/FilterSort';
+import { Pagination, PageSizeSelector } from '../../components/pagination';
 
 interface payrun {
 	id: number;
@@ -59,17 +60,109 @@ interface MonthlyProps {
 	payruns: payrun[];
 }
 
-const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
+const monthly = ({ payruns, value }: MonthlyProps & { value: string }) => {
 	const [currentApprovalId, setCurrentApprovalId] = React.useState<
 		number | null
 	>(null);
 	const router = useRouter();
 	const [isPayrun, setIsPayrun] = React.useState(true);
 	const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+	const [currentPage, setCurrentPage] = React.useState(1);
+	const [pageSize, setPageSize] = React.useState(10);
+
+	// Filter and search states
+	const [searchValue, setSearchValue] = React.useState('');
+	const [filters, setFilters] = React.useState<Record<string, string>>({
+		status: 'All',
+	});
+	const [sortBy, setSortBy] = React.useState('NAME');
+	const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
+
+	// Filter options
+	const filterOptions: Record<string, FilterOption[]> = {
+		status: [
+			{ value: 'APPROVED', label: 'Approved' },
+			{ value: 'PENDING', label: 'Pending Approval' },
+			{ value: 'DRAFT', label: 'Draft' },
+			{ value: 'SCHEDULED', label: 'Scheduled' },
+		],
+	};
+
+	// Sort options
+	const sortOptions: SortOption[] = [
+		{ value: 'NAME', label: 'Name' },
+		{ value: 'PAY_PERIOD', label: 'Pay Period' },
+		{ value: 'TOTAL_EMPLOYEES', label: 'Total Employees' },
+		{ value: 'PAYMENT_DATE', label: 'Payment Date' },
+		{ value: 'START_DATE', label: 'Start Date' },
+		{ value: 'STATUS', label: 'Status' },
+	];
+
+	// Filter and sort logic
+	const filteredAndSortedPayruns = useMemo(() => {
+		let filtered = payruns.filter((payrun) => {
+			// Search filter
+			const searchMatch =
+				searchValue === '' ||
+				payrun.NAME.toLowerCase().includes(searchValue.toLowerCase()) ||
+				payrun.PAY_PERIOD.toLowerCase().includes(searchValue.toLowerCase()) ||
+				payrun.STATUS.toLowerCase().includes(searchValue.toLowerCase());
+
+			// Status filter
+			const statusMatch =
+				filters.status === 'All' || payrun.STATUS === filters.status;
+
+			return searchMatch && statusMatch;
+		});
+
+		// Sort
+		filtered.sort((a, b) => {
+			let aValue = a[sortBy as keyof payrun];
+			let bValue = b[sortBy as keyof payrun];
+
+			// Handle numeric sorting
+			if (sortBy === 'TOTAL_EMPLOYEES') {
+				aValue = Number(aValue);
+				bValue = Number(bValue);
+			}
+
+			// Handle date sorting
+			if (sortBy === 'PAYMENT_DATE' || sortBy === 'START_DATE') {
+				aValue = new Date(aValue as string).getTime();
+				bValue = new Date(bValue as string).getTime();
+			}
+
+			if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+			return 0;
+		});
+
+		return filtered;
+	}, [payruns, searchValue, filters, sortBy, sortOrder]);
+
+	// Pagination logic
+	const paginatedPayruns = useMemo(() => {
+		const startIndex = (currentPage - 1) * pageSize;
+		return filteredAndSortedPayruns.slice(startIndex, startIndex + pageSize);
+	}, [filteredAndSortedPayruns, currentPage, pageSize]);
+
+	// Reset page when filters change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchValue, filters, sortBy, sortOrder]);
+
+	const handleFilterChange = (filterKey: string, value: string) => {
+		setFilters((prev) => ({
+			...prev,
+			[filterKey]: value,
+		}));
+	};
+
 	useEffect(() => {
 		const tenant = localStorage.getItem('tenant');
 		const accessToken = localStorage.getItem('access_token');
 	}, []);
+
 	const handleDraftSubmit = async (id: string) => {
 		const tenant = getTenant();
 		const baseURL = `http://${tenant}.localhost:8000`;
@@ -178,38 +271,36 @@ const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
 			<Card>
 				<CardHeader className='flex justify-between content-center align-middle '>
 					<h3>PAYRUN OVERVIEW</h3>
-					<article className='self-end flex justify-evenly gap-3 text-[10px]/6 content-center align-middle items-center '>
-						<span>
-							<Input
-								id='status'
-								list='statuses'
-								placeholder='Status:All'
-								type='text'
-							/>
-							<datalist
-								id='statuses'
-								className='bg-white text-black shadow border rounded-lg '>
-								<option value={'All'} />
-								<option value={'Approved'} />
-								<option value={'Pending Approval'} />
-								<option value={'Scheduled'} />
-							</datalist>
-						</span>
-						<DatePicker
-							title={''}
-							cla='flex !gap-0'
-							className='!left-2'
-							place=' placeholder:flex  placeholder:pl-[80px]'
-							placeholder='Select Date'
-						/>
-						<Button
-							variant={'secondary'}
-							className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-							Filter
-						</Button>
-					</article>
 				</CardHeader>
-				<CardContent>
+				<CardContent className='space-y-4'>
+					{/* Filter and Search Component */}
+					<FilterSort
+						searchValue={searchValue}
+						onSearchChange={setSearchValue}
+						searchPlaceholder='Search payruns...'
+						filters={filters}
+						filterOptions={filterOptions}
+						onFilterChange={handleFilterChange}
+						sortBy={sortBy}
+						sortOrder={sortOrder}
+						sortOptions={sortOptions}
+						onSortChange={setSortBy}
+						onSortOrderChange={setSortOrder}
+					/>
+
+					{/* Page Size Selector */}
+					<div className='flex justify-between items-center'>
+						<PageSizeSelector
+							pageSize={pageSize}
+							onChange={setPageSize}
+							options={[5, 10, 25, 50]}
+						/>
+						<div className='text-sm text-gray-600'>
+							Showing {filteredAndSortedPayruns.length} of {payruns.length}{' '}
+							payruns
+						</div>
+					</div>
+
 					<Table>
 						<TableHeader>
 							<TableRow>
@@ -237,7 +328,7 @@ const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{payruns.map((payrun) => {
+							{paginatedPayruns.map((payrun) => {
 								return (
 									<TableRow key={payrun.id}>
 										<TableCell className='px-6 py-3 text-left text-xs font-medium b tracking-wider'>
@@ -265,9 +356,6 @@ const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
 												</PopoverTrigger>
 												<PopoverContent
 													className={`grid grid-cols-1  !m-0 w-fit  bg-white ${
-														// payrun.STATUS === 'Approved'
-														// 	? 'bg-green-100 text-green-800'
-														// 	: 'bg-gray-100 text-gray-800'
 														payrun.id === 1 ? 'text-black' : 'text-grey'
 													}
 													`}>
@@ -296,9 +384,9 @@ const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
 																	</DialogTitle>
 																	<div>
 																		<p>
-																			You are about to approve the payrun “
+																			You are about to approve the payrun â€œ
 																			{`${payrun.NAME} ${payrun.PAY_PERIOD}`}
-																			”. This action cannot be undone
+																			â€. This action cannot be undone
 																		</p>
 																	</div>
 																	<div>
@@ -312,7 +400,7 @@ const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
 																		</section>
 																		<section className='flex justify-between my-4'>
 																			<p>Total Net Pay</p>
-																			<p>₦147,000.00</p>
+																			<p>â‚¦147,000.00</p>
 																		</section>
 																	</div>
 																	<div className='flex gap-3 right-0 bottom-0 self-end justify-end'>
@@ -385,11 +473,18 @@ const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
 							})}
 						</TableBody>
 					</Table>
+
+					{/* Pagination */}
+					<Pagination
+						currentPage={currentPage}
+						pageSize={pageSize}
+						totalItems={filteredAndSortedPayruns.length}
+						onPageChange={setCurrentPage}
+					/>
 				</CardContent>
 			</Card>
 		</div>
 	);
 };
-3;
 
 export default monthly;

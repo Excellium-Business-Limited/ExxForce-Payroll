@@ -7,7 +7,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import payRunList from '../_components/payrunList';
 import {
 	Popover,
@@ -22,7 +22,11 @@ import { useGlobal } from '@/app/Context/context';
 import { getAccessToken, getTenant } from '@/lib/auth';
 // import { Router } from 'next/router';
 import { useRouter } from 'next/navigation';
-
+import FilterSort, {
+	FilterOption,
+	SortOption,
+} from '../../components/FilterSort';
+import { Pagination, PageSizeSelector } from '../../components/pagination';
 interface PayRun {
 	id: number;
 	name: string;
@@ -65,6 +69,103 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 	const [error, setError] = useState<string>('');
 	const [token, setToken] = useState<string>('');
 	const { payrunId } = React.use(params);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
+	const [searchValue, setSearchValue] = useState('');
+	const [filters, setFilters] = useState<Record<string, string>>({
+		status: 'All',
+		paygrade: 'All',
+	});
+	const [sortBy, setSortBy] = useState('name');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+	const filterOptions: Record<string, FilterOption[]> = useMemo(() => {
+		const uniqueStatuses = [...new Set(employees.map((emp) => emp.status))];
+		const uniquePaygrades = [...new Set(employees.map((emp) => emp.paygrade))];
+
+		return {
+			status: uniqueStatuses.map((status) => ({
+				value: status,
+				label: status,
+			})),
+			paygrade: uniquePaygrades.map((paygrade) => ({
+				value: paygrade,
+				label: paygrade,
+			})),
+		};
+	}, [employees]);
+	const sortOptions: SortOption[] = [
+		{ value: 'name', label: 'Employee Name' },
+		{ value: 'paygrade', label: 'Pay Grade' },
+		{ value: 'gross', label: 'Gross Salary' },
+		{ value: 'deductions', label: 'Deductions' },
+		{ value: 'benefits', label: 'Benefits' },
+		{ value: 'net_salary', label: 'Net Salary' },
+		{ value: 'status', label: 'Status' },
+	];
+	const filteredAndSortedEmployees = useMemo(() => {
+		let filtered = employees.filter((employee) => {
+			// Search filter
+			const searchMatch =
+				searchValue === '' ||
+				employee.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+				employee.paygrade.toLowerCase().includes(searchValue.toLowerCase()) ||
+				employee.status.toLowerCase().includes(searchValue.toLowerCase()) ||
+				employee.employee_id.toLowerCase().includes(searchValue.toLowerCase());
+
+			// Status filter
+			const statusMatch =
+				filters.status === 'All' || employee.status === filters.status;
+
+			// Paygrade filter
+			const paygradeMatch =
+				filters.paygrade === 'All' || employee.paygrade === filters.paygrade;
+
+			return searchMatch && statusMatch && paygradeMatch;
+		});
+
+		// Sort
+		filtered.sort((a, b) => {
+			let aValue = a[sortBy as keyof Employee];
+			let bValue = b[sortBy as keyof Employee];
+
+			// Handle numeric sorting for salary fields
+			if (['gross', 'deductions', 'benefits', 'net_salary'].includes(sortBy)) {
+				aValue = Number(aValue) || 0;
+				bValue = Number(bValue) || 0;
+			}
+
+			// Handle string sorting
+			if (typeof aValue === 'string' && typeof bValue === 'string') {
+				aValue = aValue.toLowerCase();
+				bValue = bValue.toLowerCase();
+			}
+
+			if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+			return 0;
+		});
+
+		return filtered;
+	}, [employees, searchValue, filters, sortBy, sortOrder]);
+
+	// Pagination logic
+	const paginatedEmployees = useMemo(() => {
+		const startIndex = (currentPage - 1) * pageSize;
+		return filteredAndSortedEmployees.slice(startIndex, startIndex + pageSize);
+	}, [filteredAndSortedEmployees, currentPage, pageSize]);
+
+	// Reset page when filters change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchValue, filters, sortBy, sortOrder]);
+
+	const handleFilterChange = (filterKey: string, value: string) => {
+		setFilters((prev) => ({
+			...prev,
+			[filterKey]: value,
+		}));
+	};
 
 	useEffect(() => {
 		const accessToken = localStorage.getItem('access_token');
@@ -152,9 +253,9 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 		} catch (err: any) {
 			console.log(err); // Also fixed: was logging "Error" instead of the actual error
 			// Uncomment if you want to handle 401 specifically
-			// if (err.response?.status === 401) {
-			//     router.push('/login');
-			// }
+			if (err.response?.status === 401) {
+			    router.push('/login');
+			}
 		} finally {
 			setIsLoading(false); // Don't forget to reset loading state
 		}
@@ -295,6 +396,19 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 				</Card>
 			</section>
 			<section className='mx-2 mt-4'>
+				<FilterSort
+					searchValue={searchValue}
+					onSearchChange={setSearchValue}
+					filters={filters}
+					filterOptions={filterOptions}
+					onFilterChange={handleFilterChange}
+					sortBy={sortBy}
+					sortOrder={sortOrder}
+					sortOptions={sortOptions}
+					onSortChange={setSortBy}
+					onSortOrderChange={setSortOrder}
+					className='mb-4'
+				/>
 				<Card>
 					<Table>
 						<TableHeader>
@@ -327,7 +441,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{employees.map((payrun, index) => {
+							{paginatedEmployees.map((payrun, index) => {
 								return (
 									<TableRow
 										key={index}
@@ -384,6 +498,18 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 						</TableBody>
 					</Table>
 				</Card>
+				<div className='flex justify-between items-center mt-4'>
+					<PageSizeSelector
+						pageSize={pageSize}
+						onChange={setPageSize}
+					/>
+					<Pagination
+						currentPage={currentPage}
+						pageSize={pageSize}
+						totalItems={filteredAndSortedEmployees.length}
+						onPageChange={setCurrentPage}
+					/>
+				</div>
 			</section>
 		</div>
 	);

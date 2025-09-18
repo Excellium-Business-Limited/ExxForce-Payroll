@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import { Pagination, PageSizeSelector } from '../../components/pagination';
 import { Card } from '@/components/ui/card';
 import Dialogs from '../../components/dialog';
 import Import from '../../components/Import';
@@ -66,6 +66,11 @@ const loanReq = ({ loans }: LoanReqProps) => {
 	});
 	const [sortBy, setSortBy] = useState('loan_number');
 	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+	//Pagination States
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
+	
 
 	useEffect(() => {
 		const tenant = getTenant();
@@ -257,6 +262,15 @@ const loanReq = ({ loans }: LoanReqProps) => {
 	const goToDetail = (loanId: number) => {
 		router.push(`/Loan/${loanId}`);
 	};
+		const totalItems = filteredAndSortedLoans.length;
+		const startIndex = (currentPage - 1) * pageSize;
+		const paginatedLoans = filteredAndSortedLoans.slice(
+			startIndex,
+			startIndex + pageSize
+		);
+			useEffect(() => {
+				setCurrentPage(1);
+			}, [searchValue, filters, sortBy, sortOrder]);
 
 	if (isloan === false) {
 		return (
@@ -338,6 +352,14 @@ const loanReq = ({ loans }: LoanReqProps) => {
 				onSortOrderChange={setSortOrder}
 				className='mb-4'
 			/>
+			<div className='flex justify-between items-center mb-4'>
+				<PageSizeSelector
+					pageSize={pageSize}
+					options={[5, 10, 25, 50]}
+					onChange={setPageSize}
+				/>
+				<div className='text-sm text-gray-600'>Total: {totalItems} loans</div>
+			</div>
 
 			<Table border={2}>
 				<TableHeader>
@@ -369,7 +391,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{filteredAndSortedLoans.map((loan) => {
+					{paginatedLoans.map((loan) => {
 						return (
 							<TableRow key={loan.id}>
 								<TableCell className='px-4 py-3 text-left tracking-wider'>
@@ -438,6 +460,16 @@ const loanReq = ({ loans }: LoanReqProps) => {
 					})}
 				</TableBody>
 			</Table>
+			<div className='mt-6'>
+				<Pagination
+					currentPage={currentPage}
+					pageSize={pageSize}
+					totalItems={totalItems}
+					onPageChange={setCurrentPage}
+					showSummary={true}
+					showGoTo={true}
+				/>
+			</div>
 
 			{/* Import Modal */}
 			{isImportModalOpen && (

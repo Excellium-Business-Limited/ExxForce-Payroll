@@ -185,7 +185,7 @@ const sidebar = ({ className }: { className?: string }) => {
 							</SidebarMenuItem>
 						</Collapsible>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={'https://support.exxforce.com/portal/en/kb'}>
+							<Link href='https://support.exxforce.com/portal/en/kb'>
 								<div className='flex gap-1'>
 									<img
 										src='/sidebar/carbon_help.png'
