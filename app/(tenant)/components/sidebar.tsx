@@ -94,9 +94,7 @@ const sidebar = ({ className }: { className?: string }) => {
 							<Link href={'/Loan'}>
 								<div
 									className={`${
-										pathname === '/Loan'
-											? 'bg-[#3D56A8] rounded p-1 mx-1'
-											: ''
+										pathname === '/Loan' ? 'bg-[#3D56A8] rounded p-1 mx-1' : ''
 									} flex gap-1`}>
 									<img
 										src='/sidebar/money-linear.png'
@@ -126,7 +124,7 @@ const sidebar = ({ className }: { className?: string }) => {
 						</SidebarMenuItem>
 						<Collapsible className='group/collapsible'>
 							<SidebarMenuItem className='p-3 m-0.5'>
-								<CollapsibleTrigger className='flex justify-between items-end w-full'> 
+								<CollapsibleTrigger className='flex justify-between items-end w-full'>
 									<div className='text-white flex gap-1'>
 										<img
 											src='/sidebar/Gear.png'
@@ -187,7 +185,7 @@ const sidebar = ({ className }: { className?: string }) => {
 							</SidebarMenuItem>
 						</Collapsible>
 						<SidebarMenuItem className='p-3 m-0.5'>
-							<Link href={''}>
+							<Link href={'https://support.exxforce.com/portal/en/kb'}>
 								<div className='flex gap-1'>
 									<img
 										src='/sidebar/carbon_help.png'
@@ -203,15 +201,15 @@ const sidebar = ({ className }: { className?: string }) => {
 			</div>
 			<SidebarFooter className='bg-black'>
 				<Link href={'/Authorization/login'}>
-				<div className='flex items-center gap-2 p-4 text-sm text-muted-foreground'>
-					<img
-						src='/sidebar/SignOut.png'
-						alt=''
-						className='h-4 self-center justify-center'
+					<div className='flex items-center gap-2 p-4 text-sm text-muted-foreground'>
+						<img
+							src='/sidebar/SignOut.png'
+							alt=''
+							className='h-4 self-center justify-center'
 						/>
-					<h4>Log Out</h4>
-				</div>
-						</Link>
+						<h4>Log Out</h4>
+					</div>
+				</Link>
 			</SidebarFooter>
 		</Sidebar>
 	);

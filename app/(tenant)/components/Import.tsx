@@ -157,7 +157,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
 						<Button
 							type='button'
 							variant='outline'
-							onClick={onClose}
 							disabled={isUploading}>
 							Cancel
 						</Button>

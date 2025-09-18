@@ -201,56 +201,6 @@ const PayScheduleTemplates = () => {
 	);
 
 	// Generate upcoming payrolls based on frequency
-	const generateUpcomingPayrolls = (schedule: PayScheduleData): PayrollPeriod[] => {
-		const currentDate = new Date();
-		const payrolls: PayrollPeriod[] = [];
-
-		if (schedule.pay_period === 'Monthly') {
-			for (let i = 1; i <= 3; i++) {
-				const date = new Date(
-					currentDate.getFullYear(),
-					currentDate.getMonth() + i,
-					0
-				);
-				payrolls.push({
-					month: `${date.toLocaleString('default', {
-						month: 'long',
-					})}-${date.getFullYear()}`,
-					payDate: `${date.getDate()} ${date.toLocaleString('default', {
-						month: 'short',
-					})} ${date.getFullYear()}`,
-				});
-			}
-		} else if (schedule.pay_period === 'Weekly') {
-			for (let i = 1; i <= 4; i++) {
-				const date = new Date();
-				date.setDate(date.getDate() + i * 7);
-				payrolls.push({
-					month: `Week ${i} - ${date.toLocaleString('default', {
-						month: 'long',
-					})}`,
-					payDate: `${date.getDate()} ${date.toLocaleString('default', {
-						month: 'short',
-					})} ${date.getFullYear()}`,
-				});
-			}
-		} else if (schedule.pay_period === 'Bi-Weekly') {
-			for (let i = 1; i <= 3; i++) {
-				const date = new Date();
-				date.setDate(date.getDate() + i * 14);
-				payrolls.push({
-					month: `Bi-Week ${i} - ${date.toLocaleString('default', {
-						month: 'long',
-					})}`,
-					payDate: `${date.getDate()} ${date.toLocaleString('default', {
-						month: 'short',
-					})} ${date.getFullYear()}`,
-				});
-			}
-		}
-
-		return payrolls;
-	};
 
 	const handleRowClick = (schedule: PayScheduleData) => {
 		setSelectedSchedule(schedule);
@@ -377,12 +327,11 @@ const PayScheduleTemplates = () => {
 			<Dialog
 				open={showDetails}
 				onOpenChange={setShowDetails}>
-				<DialogContent className='max-w-4xl max-h-[80vh] overflow-y-auto'>
+				<DialogContent className='max-w-4xl max-h-[80vh] overflow-y-auto bg-white' aria-describedby=''>
 					<DialogTitle hidden></DialogTitle>
 					{selectedSchedule && (
 						<PayTemDetails
-							paySchedule={payTemplates}
-							upcomingPayrolls={generateUpcomingPayrolls(selectedSchedule)}
+							paySchedule={selectedSchedule}
 							onEdit={() => handleEdit(selectedSchedule)}
 						/>
 					)}
@@ -402,32 +351,20 @@ const PayScheduleTemplates = () => {
 								? {
 										name: editingSchedule.name,
 										pay_period: editingSchedule.pay_period,
-										start_day: 1,
-										payment_rule: 'LAST_DAY',
-										payment_day: 0,
-										week_start_day: 1,
+										start_day: editingSchedule.start_day,
+										payment_rule: editingSchedule.payment_rule,
+										payment_day: editingSchedule.payment_day,
+										week_start_day: editingSchedule.week_start_day,
 										is_active: editingSchedule.is_active,
 								  }
 								: undefined
 						}
 						onSubmit={handleFormSubmit}
-						onCancel={handleFormCancel}
 						isEditing={!!editingSchedule}
 					/>
 				</DialogContent>
 			</Dialog>
 		</div>
-		// <div className='p-6 max-w-6xl mx-auto'>
-		// 	{payTemplates.length > 0 && (
-		// 		<PayTemDetails
-		// 			paySchedule={payTemplates}
-		// 			upcomingPayrolls={[]}
-		// 			onEdit={function (): void {
-		// 				throw new Error('Function not implemented.');
-		// 			}}
-		// 		/>
-		// 	)}
-		// </div>
 	);
 };
 
