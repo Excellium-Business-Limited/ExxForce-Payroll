@@ -91,5 +91,112 @@ export async function fetchEmployees(tenant: string) {
   return res.data; // Assuming it returns an array of employees
 }
 
+// ------------------------------
+// Employees cache (in-memory + localStorage)
+// ------------------------------
+type EmployeesCacheEntry = {
+  ts: number;
+  data: any[];
+};
+
+const memEmployeesCache = new Map<string, EmployeesCacheEntry>();
+const memInFlight = new Map<string, Promise<any[]>>();
+
+function cacheKeyForEmployees(tenant: string, token?: string) {
+  // Include a short token suffix to avoid cross-user cache collisions in the same tenant
+  const tkn = token || getAccessToken() || '';
+  const suffix = tkn ? ':' + (tkn.slice(0, 8) || 'anon') : ':anon';
+  return `employees:${tenant}${suffix}`;
+}
+
+export function invalidateEmployeesCache(tenant: string) {
+  const key = cacheKeyForEmployees(tenant);
+  memEmployeesCache.delete(key);
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  } catch {}
+}
+
+export function peekEmployeesCache(tenant: string, ttlMs = 60_000): any[] | null {
+  const key = cacheKeyForEmployees(tenant);
+  const now = Date.now();
+
+  // Check memory first
+  const mem = memEmployeesCache.get(key);
+  if (mem && now - mem.ts < ttlMs) return mem.data;
+
+  // Fallback to localStorage
+  try {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const entry = JSON.parse(raw) as EmployeesCacheEntry;
+        if (entry && now - entry.ts < ttlMs) {
+          memEmployeesCache.set(key, entry);
+          return entry.data;
+        }
+      }
+    }
+  } catch {}
+  return null;
+}
+
+export async function fetchEmployeesCached(
+  tenant: string,
+  opts?: { ttlMs?: number; force?: boolean }
+): Promise<any[]> {
+  const ttlMs = opts?.ttlMs ?? 60_000; // default 60s
+  const force = opts?.force ?? false;
+  const token = getAccessToken() || undefined;
+  const key = cacheKeyForEmployees(tenant, token);
+  const now = Date.now();
+
+  // Return memory cache if fresh and not forcing
+  const mem = memEmployeesCache.get(key);
+  if (!force && mem && now - mem.ts < ttlMs) return mem.data;
+
+  // Return localStorage cache if fresh and not forcing
+  if (!force) {
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const entry = JSON.parse(raw) as EmployeesCacheEntry;
+          if (entry && now - entry.ts < ttlMs) {
+            memEmployeesCache.set(key, entry);
+            return entry.data;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // Deduplicate in-flight network requests
+  const existing = memInFlight.get(key);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    const data = await fetchEmployees(tenant);
+    const entry: EmployeesCacheEntry = { ts: Date.now(), data };
+    memEmployeesCache.set(key, entry);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(key, JSON.stringify(entry));
+      }
+    } catch {}
+    return data;
+  })();
+
+  memInFlight.set(key, promise);
+  try {
+    const data = await promise;
+    return data;
+  } finally {
+    memInFlight.delete(key);
+  }
+}
+
 // Export the axios instance for other API calls
 export default apiClient;

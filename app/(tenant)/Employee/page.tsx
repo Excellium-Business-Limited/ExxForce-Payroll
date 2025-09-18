@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import axios from 'axios';
+import { fetchEmployeesCached, peekEmployeesCache } from '@/lib/api';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportModal from '../components/Import';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import EmployeeDetails from '../components/EmployeeDetails';
+const EmployeeDetails = lazy(() => import('../components/EmployeeDetails'));
 import SalarySetupForm from '../components/SalarySetupForm';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useGlobal } from '@/app/Context/context';
@@ -81,6 +82,7 @@ const EmployeePage: React.FC = () => {
 
   // FilterSort state
   const [searchValue, setSearchValue] = useState<string>('');
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('first_name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -120,35 +122,43 @@ const EmployeePage: React.FC = () => {
     { value: 'custom_salary', label: 'Salary' },
   ];
 
+  // Debounce search value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
   // FilterSort handlers
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleFilterChange = (filterKey: string, value: string) => {
+  const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setFilters(prev => ({
       ...prev,
       [filterKey]: value,
     }));
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSortChange = (newSortBy: string) => {
+  const handleSortChange = useCallback((newSortBy: string) => {
     setSortBy(newSortBy);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSortOrderChange = (order: 'asc' | 'desc') => {
+  const handleSortOrderChange = useCallback((order: 'asc' | 'desc') => {
     setSortOrder(order);
     setCurrentPage(1);
-  };
+  }, []);
   // Filter and sort employees
   const filteredAndSortedEmployees = useMemo(() => {
     let filtered = employees.filter(employee => {
       // Search filter
-      const searchLower = searchValue.toLowerCase();
-      const matchesSearch = !searchValue ||
+      const searchLower = debouncedSearchValue.toLowerCase();
+      const matchesSearch = !debouncedSearchValue ||
         employee.first_name.toLowerCase().includes(searchLower) ||
         employee.last_name.toLowerCase().includes(searchLower) ||
         employee.employee_id.toLowerCase().includes(searchLower) ||
@@ -193,7 +203,7 @@ const EmployeePage: React.FC = () => {
     });
 
     return filtered;
-  }, [employees, searchValue, filters, sortBy, sortOrder]);
+  }, [employees, debouncedSearchValue, filters, sortBy, sortOrder]);
 
   // Pagination calculations
   const paginationInfo: PaginationInfo = useMemo(() => {
@@ -512,48 +522,28 @@ const EmployeePage: React.FC = () => {
   };
 
   const fetchEmployees = async (): Promise<void> => {
-    const token = getAccessToken()
     try {
-      console.log(tenant)
-      const response = await axios.get<Employee[]>(
-				`https://${tenant}.exxforce.com/tenant/employee/list`,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
-			);
+      // Show cached data immediately if available (stale-while-revalidate)
+      const cached = peekEmployeesCache(tenant, 60_000);
+      if (cached) setEmployees(cached as Employee[]);
 
-      console.log('Raw employee data from API:', response.data);
-
-      if (response.data && response.data.length > 0) {
-        const firstEmployee = response.data[0];
-        console.log('First employee date fields:', {
-          start_date: firstEmployee.start_date,
-          date_of_birth: firstEmployee.date_of_birth,
-          tax_start_date: firstEmployee.tax_start_date,
-        });
-      }
-
-      setEmployees(response.data || []);
+      const data = (await fetchEmployeesCached(tenant, { ttlMs: 60_000 })).slice();
+      setEmployees(data as Employee[]);
       setError(null);
 
-      const newTotalPages = Math.ceil(
-        (response.data?.length || 0) / itemsPerPage
-      );
+      const newTotalPages = Math.ceil((data?.length || 0) / itemsPerPage);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(1);
       }
-    } catch (err : any) {
+    } catch (err: any) {
       console.error('Error fetching employees:', err);
       setError('Failed to fetch employees');
       setEmployees([]);
-      if (err.response?.status === 401) {
-                // Redirect to login if unauthorized
-                setTimeout(() => {
-                  redirect('/login');
-                }, 2000);
-              }
+      if (err?.response?.status === 401) {
+        setTimeout(() => {
+          redirect('/login');
+        }, 2000);
+      }
     }
   };
 
@@ -663,7 +653,7 @@ const EmployeePage: React.FC = () => {
   );
 
   // Employee table component
-  const EmployeeTable: React.FC = () => (
+  const EmployeeTable: React.FC = React.memo(() => (
     <div className='bg-white rounded-lg shadow-sm'>
       <div className='p-6 border-b'>
         <div className='bg-blue-50 rounded-lg p-4 flex items-center gap-3'>
@@ -884,20 +874,24 @@ const EmployeePage: React.FC = () => {
         />
       </div>
     </div>
-  );
+  ));
+
+  EmployeeTable.displayName = 'EmployeeTable';
 
   return (
 		<div className='flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden'>
 			{/* Show Employee Details Full Screen */}
 			{showEmployeeDetails && selectedEmployee ? (
 				<div className='flex-1 bg-white overflow-auto'>
-					<EmployeeDetails
-						employee={selectedEmployee}
-						onClose={handleCloseEmployeeDetails}
-						onEdit={handleEditFromDetails}
-						onSalaryEdit={handleEditFromDetails}
-						onEndEmployment={handleEndEmployment}
-					/>
+					<Suspense fallback={<Loading message='Loading Employee Details...' size='medium' variant='spinner' overlay={false} />}>
+						<EmployeeDetails
+							employee={selectedEmployee}
+							onClose={handleCloseEmployeeDetails}
+							onEdit={handleEditFromDetails}
+							onSalaryEdit={handleEditFromDetails}
+							onEndEmployment={handleEndEmployment}
+						/>
+					</Suspense>
 				</div>
 			) : (
 				/* Main Content + Overlay Layout */

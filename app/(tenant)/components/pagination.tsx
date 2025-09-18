@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useCallback } from 'react'
 import clsx from 'clsx'
 
 export interface PageSizeSelectorProps {
@@ -10,18 +10,22 @@ export interface PageSizeSelectorProps {
   className?: string
 }
 
-export const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
+export const PageSizeSelector: React.FC<PageSizeSelectorProps> = React.memo(({
   pageSize,
   options = [5, 10, 25, 50, 100],
   onChange,
   className,
 }) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange(Number(e.target.value))
+  }, [onChange])
+
   return (
     <div className={clsx('flex items-center gap-2', className)}>
       <span className='text-sm text-gray-600'>Show</span>
       <select
         value={pageSize}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={handleChange}
         className='border border-gray-300 rounded px-2 py-1 text-sm bg-white'
       >
         {options.map((opt) => (
@@ -33,7 +37,9 @@ export const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
       <span className='text-sm text-gray-600'>entries per page</span>
     </div>
   )
-}
+})
+
+PageSizeSelector.displayName = 'PageSizeSelector'
 
 export interface PaginationProps {
   currentPage: number
@@ -45,7 +51,7 @@ export interface PaginationProps {
   showGoTo?: boolean
 }
 
-export const Pagination: React.FC<PaginationProps> = ({
+export const Pagination: React.FC<PaginationProps> = React.memo(({
   currentPage,
   pageSize,
   totalItems,
@@ -54,17 +60,17 @@ export const Pagination: React.FC<PaginationProps> = ({
   showSummary = true,
   showGoTo = true,
 }) => {
-  const totalPages = Math.max(0, Math.ceil(totalItems / pageSize))
+  const totalPages = useMemo(() => Math.max(0, Math.ceil(totalItems / pageSize)), [totalItems, pageSize])
 
-  const handlePreviousPage = (): void => {
+  const handlePreviousPage = useCallback((): void => {
     if (currentPage > 1) onPageChange(currentPage - 1)
-  }
+  }, [currentPage, onPageChange])
 
-  const handleNextPage = (): void => {
+  const handleNextPage = useCallback((): void => {
     if (currentPage < totalPages) onPageChange(currentPage + 1)
-  }
+  }, [currentPage, totalPages, onPageChange])
 
-  const getPageNumbers = (): (number | string)[] => {
+  const getPageNumbers = useCallback((): (number | string)[] => {
     const pages: (number | string)[] = []
 
     if (totalPages <= 7) {
@@ -82,10 +88,17 @@ export const Pagination: React.FC<PaginationProps> = ({
     }
 
     return pages
-  }
+  }, [totalPages, currentPage])
 
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endItem = Math.min(currentPage * pageSize, totalItems)
+  const startItem = useMemo(() => totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1, [totalItems, currentPage, pageSize])
+  const endItem = useMemo(() => Math.min(currentPage * pageSize, totalItems), [currentPage, pageSize, totalItems])
+
+  const handleGoToChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const page = parseInt(e.target.value)
+    if (!Number.isNaN(page) && page >= 1 && page <= totalPages) {
+      onPageChange(page)
+    }
+  }, [totalPages, onPageChange])
 
   return (
     <div
@@ -176,12 +189,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             min={1}
             max={Math.max(1, totalPages)}
             value={currentPage}
-            onChange={(e) => {
-              const page = parseInt(e.target.value)
-              if (!Number.isNaN(page) && page >= 1 && page <= totalPages) {
-                onPageChange(page)
-              }
-            }}
+            onChange={handleGoToChange}
             className='w-16 px-2 py-1 border border-gray-300 rounded text-center'
           />
           <span className='text-gray-600'>of {totalPages}</span>
@@ -189,6 +197,8 @@ export const Pagination: React.FC<PaginationProps> = ({
       )}
     </div>
   )
-}
+})
+
+Pagination.displayName = 'Pagination'
 
 export default Pagination
