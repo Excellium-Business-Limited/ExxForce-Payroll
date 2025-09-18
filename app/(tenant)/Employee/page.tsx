@@ -13,6 +13,7 @@ import { getAccessToken } from '@/lib/auth';
 import { redirect, useRouter } from 'next/navigation';
 import Loading from '@/components/ui/Loading';
 import FilterSort, { FilterOption, SortOption } from '../components/FilterSort';
+import Pagination, { PageSizeSelector } from '../components/pagination';
 
 // Define proper TypeScript interfaces
 interface Employee {
@@ -768,20 +769,10 @@ const EmployeePage: React.FC = () => {
       </div>
 
       <div className='px-6 py-3 border-b bg-gray-50 flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <span className='text-sm text-gray-600'>Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-            className='border border-gray-300 rounded px-2 py-1 text-sm bg-white'>
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-          <span className='text-sm text-gray-600'>entries per page</span>
-        </div>
+        <PageSizeSelector
+          pageSize={itemsPerPage}
+          onChange={handleItemsPerPageChange}
+        />
         <div className='text-sm text-gray-600'>
           Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
           {Math.min(currentPage * itemsPerPage, filteredAndSortedEmployees.length)} of{' '}
@@ -884,98 +875,13 @@ const EmployeePage: React.FC = () => {
         </table>
       </div>
 
-      <div className='px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4'>
-        <div className='text-sm text-gray-600'>
-          Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-          {Math.min(currentPage * itemsPerPage, filteredAndSortedEmployees.length)} of{' '}
-          {filteredAndSortedEmployees.length} entries
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <button
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-            className={`p-2 rounded border transition-colors ${
-              currentPage === 1
-                ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-            }`}
-            aria-label='Previous page'>
-            <svg
-              className='w-4 h-4'
-              viewBox='0 0 24 24'
-              fill='none'>
-              <path
-                d='M15 18L9 12L15 6'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-          </button>
-
-          <div className='flex items-center gap-1'>
-            {getPageNumbers().map((page, index) => (
-              <React.Fragment key={index}>
-                {page === '...' ? (
-                  <span className='px-3 py-1 text-gray-500 text-sm'>...</span>
-                ) : (
-                  <button
-                    onClick={() => handlePageChange(page as number)}
-                    className={`px-3 py-1 text-sm rounded transition-colors ${
-                      currentPage === page
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}>
-                    {page}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === paginationInfo.totalPages}
-            className={`p-2 rounded border transition-colors ${
-              currentPage === paginationInfo.totalPages
-                ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-            }`}
-            aria-label='Next page'>
-            <svg
-              className='w-4 h-4'
-              viewBox='0 0 24 24'
-              fill='none'>
-              <path
-                d='M9 18L15 12L9 6'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className='flex items-center gap-2 text-sm'>
-          <span className='text-gray-600'>Go to page:</span>
-          <input
-            type='number'
-            min='1'
-            max={paginationInfo.totalPages}
-            value={currentPage}
-            onChange={(e) => {
-              const page = parseInt(e.target.value);
-              if (page >= 1 && page <= paginationInfo.totalPages) {
-                handlePageChange(page);
-              }
-            }}
-            className='w-16 px-2 py-1 border border-gray-300 rounded text-center'
-          />
-          <span className='text-gray-600'>of {paginationInfo.totalPages}</span>
-        </div>
+      <div className='px-6 py-4 border-t border-gray-200'>
+        <Pagination
+          currentPage={currentPage}
+          pageSize={itemsPerPage}
+          totalItems={filteredAndSortedEmployees.length}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );
