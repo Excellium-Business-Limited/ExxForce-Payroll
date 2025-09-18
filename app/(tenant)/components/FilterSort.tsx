@@ -60,31 +60,31 @@ const FilterSort: React.FC<FilterSortProps> = ({
 }) => {
   return (
     <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm ${className}`}>
-      <div className="flex lg:flex-row gap-2 lg:items-center">
+      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
         {/* Search */}
-        <div className="flex-1 min-w-0">
-          <div className="relative">
+        <div className="w-full lg:flex-none lg:w-[340px] xl:w-[400px] min-w-0">
+          <div className="relative z-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               type="text"
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 w-[340px]"
+              className="pl-10 w-full"
             />
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 w-full lg:w-auto">
           {Object.entries(filterOptions).map(([filterKey, options]) => (
-            <div key={filterKey} className="flex items-center gap-2">
+            <div key={filterKey} className="flex items-center gap-2 relative z-10">
               <Filter className="w-4 h-4 text-gray-500" />
               <Select
                 value={filters[filterKey] || 'All'}
                 onValueChange={(value) => onFilterChange(filterKey, value)}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-44">
                   <SelectValue placeholder={`All ${filterKey}`} />
                 </SelectTrigger>
                 <SelectContent>
@@ -101,7 +101,7 @@ const FilterSort: React.FC<FilterSortProps> = ({
         </div>
 
         {/* Sorting */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full lg:w-auto">
           <Select value={sortBy} onValueChange={onSortChange}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Sort by" />

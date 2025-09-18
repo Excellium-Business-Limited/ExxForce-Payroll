@@ -90,28 +90,27 @@ const EmployeePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
-  // Filter and Sort options
-  const filterOptions: Record<string, FilterOption[]> = {
-    department: [
-      { value: 'Engineering', label: 'Engineering' },
-      { value: 'Marketing', label: 'Marketing' },
-      { value: 'Sales', label: 'Sales' },
-      { value: 'HR', label: 'HR' },
-      { value: 'Finance', label: 'Finance' },
-    ],
-    designation: [
-      { value: 'Manager', label: 'Manager' },
-      { value: 'Developer', label: 'Developer' },
-      { value: 'Designer', label: 'Designer' },
-      { value: 'Analyst', label: 'Analyst' },
-      { value: 'Coordinator', label: 'Coordinator' },
-    ],
-    status: [
-      { value: 'Active', label: 'Active' },
-      { value: 'Inactive', label: 'Inactive' },
-      { value: 'Terminated', label: 'Terminated' },
-    ],
-  };
+  // Dynamic Filter options derived from employees
+  const filterOptions: Record<string, FilterOption[]> = useMemo(() => {
+    const deptSet = new Set<string>();
+    const desigSet = new Set<string>();
+    const statusSet = new Set<string>();
+
+    for (const e of employees) {
+      if (e.department_name) deptSet.add(e.department_name);
+      if (e.job_title) desigSet.add(e.job_title);
+      // Status: adjust when backend provides real status; for now assume Active
+      statusSet.add('Active');
+    }
+
+    const toOptions = (arr: string[]) => arr.sort().map(v => ({ value: v, label: v }));
+
+    return {
+      department: toOptions(Array.from(deptSet)),
+      designation: toOptions(Array.from(desigSet)),
+      status: toOptions(Array.from(statusSet)),
+    };
+  }, [employees]);
 
   const sortOptions: SortOption[] = [
     { value: 'first_name', label: 'First Name' },
