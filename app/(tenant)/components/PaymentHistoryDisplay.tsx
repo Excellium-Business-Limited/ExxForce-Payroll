@@ -5,7 +5,7 @@ import { Calendar, Download, FileText, Eye, DollarSign } from 'lucide-react';
 import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
-interface PaymentRecord {
+export interface PaymentRecord {
   id?: number | string;
   employee_id?: string;
   employee_name?: string;

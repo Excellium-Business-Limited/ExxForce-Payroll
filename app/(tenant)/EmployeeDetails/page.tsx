@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DocumentsList from '../components/DocumentsList';
-import PaymentHistoryDisplay from '../components/PaymentHistoryDisplay';
+import PaymentHistoryDisplay, { PaymentRecord } from '../components/PaymentHistoryDisplay';
 // Extracted local components
 import TopBar from './components/TopBar';
 import ProfileHeader from './components/ProfileHeader';
@@ -30,6 +30,8 @@ import LeaveRequestPanel from './components/panels/LeaveRequestPanel';
 import DocumentUploadPanel from './components/panels/DocumentUploadPanel';
 import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PayslipPreview, { PayslipData } from '../Payrun/_components/PayslipPreview';
 
 // Import types from the centralized types file
 import { 
@@ -54,6 +56,10 @@ const EmployeeDetailsPage: React.FC = () => {
 	// Employee data state - using detailed employee data from API
 	const [employee, setEmployee] = useState<DetailedEmployee | null>(null);
 	const [isLoadingEmployeeDetail, setIsLoadingEmployeeDetail] = useState<boolean>(true);
+
+	// Payslip preview state
+	const [isPayslipOpen, setIsPayslipOpen] = useState(false);
+	const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
 
 	// New state for inline editing
 	const [showEmployeeForm, setShowEmployeeForm] = useState<boolean>(false);
@@ -324,16 +330,25 @@ const EmployeeDetailsPage: React.FC = () => {
 		setShowLeaveRequestForm(true);
 	};
 
-	// Handler for payslip generation
-	const handleGeneratePayslip = useCallback((paymentRecord: any) => {
-		console.log('Generating payslip for payment record:', paymentRecord);
-		// Navigate to payslip component or open payslip modal
-		// This could navigate to a dedicated payslip page or open a modal
-		// router.push(`/payslip/${paymentRecord.id}`);
-		
-		// For now, we'll log the action - you can implement the actual payslip logic
-		alert(`Generating payslip for ${paymentRecord.pay_period || 'payment record'}`);
-	}, []);
+	// Handler to open payslip preview using Payrun component
+	const handleGeneratePayslip = useCallback((paymentRecord: PaymentRecord) => {
+		if (!employee) return;
+		const earnings = Object.entries(paymentRecord.earnings_breakdown || {}).map(([description, amount]) => ({ description, amount }));
+		const deductions = Object.entries(paymentRecord.deductions_breakdown || {}).map(([description, amount]) => ({ description, amount }));
+		const data: PayslipData = {
+			employeeName: `${employee.first_name} ${employee.last_name}`,
+			companyName: (employee as any)?.company_name,
+			employeeID: employee.employee_id,
+			position: employee.job_title,
+			payPeriod: paymentRecord.pay_period || paymentRecord.period,
+			paymentDate: paymentRecord.pay_date,
+			earnings,
+			deductions,
+			netPay: paymentRecord.net_salary || paymentRecord.net,
+		};
+		setPayslipData(data);
+		setIsPayslipOpen(true);
+	}, [employee]);
 
 	// Handler for form submission
 	const handleEmployeeSubmit = async (employeeFormData: any) => {
@@ -690,6 +705,16 @@ const stableSalaryComponentEmployee = useMemo(() => {
 								{showDocumentUpload && (
 									<DocumentUploadPanel employee={employee} isOpen={showDocumentUpload} onClose={handleCloseDocumentUpload} onSubmit={handleDocumentUploadSubmit} />
 								)}
+
+				{/* Payslip Preview Modal */}
+				<Dialog open={isPayslipOpen} onOpenChange={setIsPayslipOpen}>
+					<DialogContent className='max-w-3xl w-full'>
+						<DialogHeader>
+							<DialogTitle>Employee Payslip</DialogTitle>
+						</DialogHeader>
+						{payslipData && <PayslipPreview data={payslipData} />}
+					</DialogContent>
+				</Dialog>
 			</div>
 		</div>
 	);
