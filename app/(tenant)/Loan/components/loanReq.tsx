@@ -21,7 +21,6 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 
-
 import { Card } from '@/components/ui/card';
 import Dialogs from '../../components/dialog';
 import Import from '../../components/Import';
@@ -57,6 +56,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 	const [loansList, setLoansList] = useState<Loan[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
+	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
 	// Filter and sort states
 	const [searchValue, setSearchValue] = useState('');
@@ -189,15 +189,57 @@ const loanReq = ({ loans }: LoanReqProps) => {
 		setFilters((prev) => ({ ...prev, [filterKey]: value }));
 	};
 
-	const handleApprove = async (id:any) => {
+	const handleImport = async (importData: FormData) => {
+		try {
+			const tenant = getTenant();
+			const baseURL = `https://${tenant}.exxforce.com`;
+			const token = localStorage.getItem('access_token');
+			if (!token) throw new Error('No access token');
+
+			const response = await axios.post(
+				`${baseURL}/tenant/loans/import-csv`,
+				importData,
+				{
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'multipart/form-data',
+					},
+				}
+			);
+			console.log('Import successful', response.data);
+			alert('Import Successful');
+			setIsImportModalOpen(false); // Close the modal after successful import
+			// Refresh the page or refetch data
+			window.location.href = '/Loan';
+		} catch (err: any) {
+			console.error('Error importing loans:', err);
+			if (err.response?.data?.message) {
+				alert('Error importing loans: ' + err.response.data.message);
+			} else {
+				alert('Error importing loans: ' + (err.message || 'Unknown error'));
+			}
+			if (err.response?.status === 401) {
+				alert('Session expired. Please log in again.');
+				setTimeout(() => {
+					redirect('/login');
+				}, 2000);
+			}
+		}
+	};
+
+	const handleApprove = async (id: any) => {
 		const tenant = getTenant();
 		const baseURL = `https://${tenant}.exxforce.com`;
 		try {
 			const token = localStorage.getItem('access_token');
 			if (!token) throw new Error('No access token');
-			const res = await axios.post(`${baseURL}/tenant/loans/${id}/approve`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await axios.post(
+				`${baseURL}/tenant/loans/${id}/approve`,
+				{},
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
 			console.log('Loan approved', res.data);
 			alert('Loan Approved Successfully');
 			router.refresh();
@@ -227,7 +269,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 					/>
 					<h2 className='text-2xl md:text-3xl  mb-4'>No Loans Yet</h2>
 					<pre className='text-base text-muted-foreground mb-8'>
-						You havenâ€™t added any employee loans.Manage staff
+						You haven't added any employee loans. Manage staff
 						<br />
 						loans easily by adding new loan records or importing
 						<br />
@@ -247,28 +289,32 @@ const loanReq = ({ loans }: LoanReqProps) => {
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-						<Dialogs title={'Import'}>
-							<Import
-								title='Loans'
-								isOpen={false}
-								onClose={function (): void {
-									throw new Error('Function not implemented.');
-								}}
-								onSubmit={function (importData: any): Promise<void> {
-									throw new Error('Function not implemented.');
-								}}
-								children={
-									<div>
-										<li>â€¢ Loan Type (required)</li>
-										<li>â€¢ Employee Name (required)</li>
-										<li>â€¢ Amount (required)</li>
-										<li>â€¢ Start Date (required)</li>
-										<li>â€¢ Interest Rate (optional)</li>
-										<li>â€¢ Repayment Terms (optional)</li>
-									</div>
-								}
-							/>
-						</Dialogs>
+						<Button
+							onClick={() => setIsImportModalOpen(true)}
+							variant={'outline'}
+							className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
+							Import Loans
+						</Button>
+						{isImportModalOpen && (
+							<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+								<div className='bg-white rounded-lg max-w-md w-full mx-4'>
+									<Import
+										title='Loans'
+										isOpen={isImportModalOpen}
+										onClose={() => setIsImportModalOpen(false)}
+										onSubmit={handleImport}>
+										<div>
+											<li>• Loan Type (required)</li>
+											<li>• Employee Name (required)</li>
+											<li>• Amount (required)</li>
+											<li>• Start Date (required)</li>
+											<li>• Interest Rate (optional)</li>
+											<li>• Repayment Terms (optional)</li>
+										</div>
+									</Import>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
@@ -281,26 +327,6 @@ const loanReq = ({ loans }: LoanReqProps) => {
 				<span>
 					<h1 className='text-xl font-semibold'>Loan List</h1>
 				</span>
-				{/* <span className='items-end self-end justify-between flex gap-4'>
-					<Button
-						variant={'outline'}
-						className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-						Export
-					</Button>
-					<Sheet>
-						<SheetTrigger asChild>
-							<Button
-								variant={'outline'}
-								className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-								Add Loan
-							</Button>
-						</SheetTrigger>
-						<SheetContent className='min-w-[500px] p-4 overflow-auto bg-white'>
-							<SheetTitle className='hidden'></SheetTitle>
-							<LoanForm />
-						</SheetContent>
-					</Sheet>
-				</span> */}
 			</div>
 
 			{/* Filter and Sort Component */}
@@ -389,7 +415,7 @@ const loanReq = ({ loans }: LoanReqProps) => {
 											<div className='flex flex-col gap-2'>
 												{loan.status !== 'approved' ? (
 													<Button
-														onClick={()=>handleApprove(loan.id)}
+														onClick={() => handleApprove(loan.id)}
 														className='text-green-600'>
 														<CheckCircle2 size={15} />
 														Approve Loan
@@ -418,6 +444,28 @@ const loanReq = ({ loans }: LoanReqProps) => {
 					})}
 				</TableBody>
 			</Table>
+
+			{/* Import Modal */}
+			{isImportModalOpen && (
+				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+					<div className='bg-white rounded-lg max-w-md w-full mx-4'>
+						<Import
+							title='Loans'
+							isOpen={isImportModalOpen}
+							onClose={() => setIsImportModalOpen(false)}
+							onSubmit={handleImport}>
+							<div>
+								<li>• Loan Type (required)</li>
+								<li>• Employee Name (required)</li>
+								<li>• Amount (required)</li>
+								<li>• Start Date (required)</li>
+								<li>• Interest Rate (optional)</li>
+								<li>• Repayment Terms (optional)</li>
+							</div>
+						</Import>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

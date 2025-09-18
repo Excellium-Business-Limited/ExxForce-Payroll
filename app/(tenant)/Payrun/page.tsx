@@ -163,7 +163,7 @@ const page = () => {
 						<Tabs
 							className='rounded-lg bg-transparent'
 							defaultValue='monthly'>
-							<TabsList className='bg-white w-[500px]'>
+							<TabsList className='bg-transparent w-[500px]'>
 								<TabsTrigger
 									value='monthly'
 									className='data-[state=active]:text-[#3d56a8] text-muted-foreground'>
@@ -194,7 +194,7 @@ const page = () => {
 											STATUS: payrun.status,
 											// Add any other required fields with default values if missing
 										}))}
-									nexts='24th, April 2025'
+										value = 'monthly'
 								/>
 							</TabsContent>
 							<TabsContent value='bi-weekly'>
@@ -211,7 +211,7 @@ const page = () => {
 											STATUS: payrun.status,
 											// Add any other required fields with default values if missing
 										}))}
-									nexts='15th, April 2025'
+									value='bi-weekly'
 								/>
 							</TabsContent>
 							<TabsContent value='weekly'>
@@ -228,7 +228,7 @@ const page = () => {
 											STATUS: payrun.status,
 											// Add any other required fields with default values if missing
 										}))}
-									nexts='5th, April 2025'
+									value = 'weekly'
 								/>
 							</TabsContent>
 						</Tabs>

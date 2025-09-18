@@ -71,7 +71,9 @@ const loanType = () => {
 		} catch (err: any) {
 			console.error(err);
 			const details = err.response?.data?.detail;
-			alert(`Error: ${details}`);
+			// alert(`Error: ${details}`);
+			console.log(err.response)
+			console.log(details)
 		}
 	};
 
@@ -96,7 +98,7 @@ const loanType = () => {
 							</DialogTitle>
 							<form action=''>
 								<span className='mt-2 ml-2'>
-									<Label htmlFor='name'>Loan Type Name</Label>
+									<Label htmlFor='name' className='m-1.5'>Loan Type Name</Label>
 									<Input
 										type='text'
 										id='name'
@@ -105,20 +107,21 @@ const loanType = () => {
 									/>
 								</span>
 								<span className='m-2'> 
-									<Label htmlFor='interestRate'>Interest Rate</Label>
+									<Label htmlFor='interestRate' className='m-1.5'>Interest Rate</Label>
 									<Input
 										type='number'
 										id='interestRate'
 										onChange={e => setRate(e.target.value)}
+										disabled={!isInterest}
 										required
 									/>
 								</span>
 								<span className='flex items-center gap-2 m-2'>
-									<Checkbox onClick={()=> setIsIntrest(!isInterest)}/>
+									<Checkbox onClick={()=> setIsIntrest(!isInterest)}  disabled={interestMethod !== 'simple interest'}/>
 									<Label htmlFor='interestRate'>Interest Applied</Label>
 								</span>
 								<span className='flex items-center m-2'>
-									<Label htmlFor='interestMethod'>Interest Type</Label>
+									<Label htmlFor='interestMethod' className='m-1.5'>Interest Type</Label>
 									<Select
 										value={interestMethod}
 										onValueChange={setInterestMethod}
@@ -169,7 +172,7 @@ const loanType = () => {
 									{loanType.name}
 								</TableCell>
 								<TableCell className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-									{loanType.interest_rate}%
+									{loanType.interest_rate ? `${loanType.interest_rate}%` : '--'}
 								</TableCell>
 								
 							</TableRow>

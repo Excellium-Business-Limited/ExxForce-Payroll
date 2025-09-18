@@ -36,6 +36,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getTenant, getAccessToken } from '@/lib/auth';
 import axios from 'axios';
+import {
+	Sheet,
+	SheetContent,
+	SheetTitle,
+	SheetTrigger,
+} from '@/components/ui/sheet';
+import PayrunForm from './PayrunForm';
 // import {payruns} from './payrunData'
 
 interface payrun {
@@ -52,23 +59,23 @@ interface MonthlyProps {
 	payruns: payrun[];
 }
 
-const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
-	const [currentApprovalId, setCurrentApprovalId] = React.useState<number | null>(
-		null
-	);
-	const router = useRouter()
+const monthly = ({ payruns, value }: MonthlyProps & {value : string}) => {
+	const [currentApprovalId, setCurrentApprovalId] = React.useState<
+		number | null
+	>(null);
+	const router = useRouter();
+	const [isPayrun, setIsPayrun] = React.useState(true);
+	const [isSheetOpen, setIsSheetOpen] = React.useState(false);
 	useEffect(() => {
 		const tenant = localStorage.getItem('tenant');
 		const accessToken = localStorage.getItem('access_token');
-
-	},[])
-	const handleDraftSubmit = async (id : string) => {
+	}, []);
+	const handleDraftSubmit = async (id: string) => {
 		const tenant = getTenant();
 		const baseURL = `http://${tenant}.localhost:8000`;
 		const accessToken = getAccessToken();
 
 		try {
-			
 			const res = await axios.post(
 				`http://${tenant}.localhost:8000/tenant/payrun/${id}/submit`,
 				{}, // empty request body
@@ -83,13 +90,14 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 		} catch (err: any) {
 			console.log(err);
 			if (err.response?.status === 401) {
-			    router.push('/login');
+				router.push('/login');
 			}
 		} finally {
-			 // Don't forget to reset loading state
+			// Don't forget to reset loading state
 		}
-	}
-	const handleApproval = async(id: number) => {
+	};
+
+	const handleApproval = async (id: number) => {
 		const Url = `tenant/payrun/${id}/approve`;
 		const accessToken = getAccessToken();
 		const tenant = getTenant();
@@ -102,7 +110,7 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 
 			if (res.status === 200) {
 				console.log(res);
-				alert('PayRun Approved')
+				alert('PayRun Approved');
 				setCurrentApprovalId(null);
 			}
 			router.refresh();
@@ -113,28 +121,60 @@ const monthly = ({ payruns, nexts }: MonthlyProps & { nexts: string }) => {
 			}
 		} finally {
 			// Don't forget to reset loading state
+			window.location.href = '/Payrun';
 		}
+	};
+
+	if (payruns.length === 0) {
+		return (
+			<div>
+				<div className='h-[680px] m-7 gap-4 '>
+					<section className='text-center flex flex-col items-center max-w-2xl mx-auto mt-[120px]'>
+						<img
+							src='/payrun.jpg'
+							alt='Team Illustration'
+							className='w-32 h-32 md:w-40 md:h-40 mx-auto mb-8'
+						/>
+						<h2 className='text-2xl md:text-3xl  mb-4'>
+							Start Your First{' '}
+							{`${value.charAt(0).toUpperCase()}${value
+								.slice(1)
+								.toLowerCase()}`}{' '}
+							Payroll{' '}
+						</h2>
+						<p className='text-base text-muted-foreground self mb-8 w-[460px]'>
+							Easily create and manage payruns for your employees. Select the
+							pay period, add employee data, and process salaries quickly.
+						</p>
+						<article className='flex flex-col sm:flex-row gap-4 justify-center'>
+							<Sheet
+								open={isSheetOpen}
+								onOpenChange={setIsSheetOpen}>
+								<SheetTrigger asChild>
+									<Button
+										variant={'outline'}
+										className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
+										Create Payrun
+									</Button>
+								</SheetTrigger>
+								<SheetContent className='min-w-[500px] p-4'>
+									<SheetTitle className='hidden'></SheetTitle>
+									<PayrunForm
+										className='absolute'
+										setIsSheetOpen={setIsSheetOpen}
+										setIsPayrun={setIsPayrun}
+									/>
+								</SheetContent>
+							</Sheet>
+						</article>
+					</section>
+				</div>
+			</div>
+		);
 	}
 
 	return (
 		<div>
-			<Card className='w-[250px] p-4 my-4'>
-				<div className='flex gap-4 '>
-					<img
-						src='/icons/CalendarDots.png'
-						alt=''
-						width={20}
-						height={20}
-					/>
-					<h4 className='text-muted-foreground'>Next Payroll Date</h4>
-				</div>
-				<hr />
-				<h2 className='font-bold'>{nexts}</h2>
-				<p className='text-sm text-muted-foreground'>
-					Scheduled next payroll run
-				</p>
-			</Card>
-
 			<Card>
 				<CardHeader className='flex justify-between content-center align-middle '>
 					<h3>PAYRUN OVERVIEW</h3>
