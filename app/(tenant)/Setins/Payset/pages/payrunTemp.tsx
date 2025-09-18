@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import PayTempForm from '../components/payTempForm';
 import axios from 'axios';
 import { getAccessToken, getTenant } from '@/lib/auth';
+import { set } from 'date-fns';
 
 interface PayrollPeriod {
 	month: string;
@@ -41,6 +42,10 @@ interface PaySchedule {
 }
 
 interface PayScheduleData {
+	created_at: string;
+	id: number;
+	updated_at: string;
+	test: string;
 	name: string;
 	pay_period: string;
 	start_day: number;
@@ -134,6 +139,7 @@ interface PayScheduleData {
 // 	);
 // };
 const PayScheduleTemplates = () => {
+	const [payTemplates, setPayTemplates] = useState<PayScheduleData[]>([]);
 	const [paySchedules, setPaySchedules] = useState<PaySchedule[]>([
 		{
 			id: '1',
@@ -176,6 +182,7 @@ const PayScheduleTemplates = () => {
 					}
 				); 
 				console.log(res.data)
+				setPayTemplates(res.data)
 			}catch(err:any){
 				console.log(err)
 			}
@@ -184,21 +191,21 @@ const PayScheduleTemplates = () => {
 			fetchTemplates()
 		},[])
 
-	const [editingSchedule, setEditingSchedule] = useState<PaySchedule | null>(
+	const [editingSchedule, setEditingSchedule] = useState<PayScheduleData | null>(
 		null
 	);
 	const [showForm, setShowForm] = useState(false);
 	const [showDetails, setShowDetails] = useState(false);
-	const [selectedSchedule, setSelectedSchedule] = useState<PaySchedule | null>(
+	const [selectedSchedule, setSelectedSchedule] = useState<PayScheduleData | null>(
 		null
 	);
 
 	// Generate upcoming payrolls based on frequency
-	const generateUpcomingPayrolls = (schedule: PaySchedule): PayrollPeriod[] => {
+	const generateUpcomingPayrolls = (schedule: PayScheduleData): PayrollPeriod[] => {
 		const currentDate = new Date();
 		const payrolls: PayrollPeriod[] = [];
 
-		if (schedule.frequency === 'Monthly') {
+		if (schedule.pay_period === 'Monthly') {
 			for (let i = 1; i <= 3; i++) {
 				const date = new Date(
 					currentDate.getFullYear(),
@@ -214,7 +221,7 @@ const PayScheduleTemplates = () => {
 					})} ${date.getFullYear()}`,
 				});
 			}
-		} else if (schedule.frequency === 'Weekly') {
+		} else if (schedule.pay_period === 'Weekly') {
 			for (let i = 1; i <= 4; i++) {
 				const date = new Date();
 				date.setDate(date.getDate() + i * 7);
@@ -227,7 +234,7 @@ const PayScheduleTemplates = () => {
 					})} ${date.getFullYear()}`,
 				});
 			}
-		} else if (schedule.frequency === 'Bi-Weekly') {
+		} else if (schedule.pay_period === 'Bi-Weekly') {
 			for (let i = 1; i <= 3; i++) {
 				const date = new Date();
 				date.setDate(date.getDate() + i * 14);
@@ -245,12 +252,12 @@ const PayScheduleTemplates = () => {
 		return payrolls;
 	};
 
-	const handleRowClick = (schedule: PaySchedule) => {
+	const handleRowClick = (schedule: PayScheduleData) => {
 		setSelectedSchedule(schedule);
 		setShowDetails(true);
 	};
 
-	const handleEdit = (schedule?: PaySchedule) => {
+	const handleEdit = (schedule?: PayScheduleData) => {
 		if (schedule) {
 			setEditingSchedule(schedule);
 		} else {
@@ -261,43 +268,43 @@ const PayScheduleTemplates = () => {
 	};
 
 	const handleFormSubmit = (data: PayScheduleData) => {
-		if (editingSchedule) {
-			// Update existing schedule
-			setPaySchedules((prev) =>
-				prev.map((schedule) =>
-					schedule.id === editingSchedule.id
-						? {
-								...schedule,
-								name: data.name,
-								frequency: data.pay_period,
-								payDay:
-									data.payment_rule === 'LAST_DAY'
-										? 'Last day of period'
-										: `Day ${data.payment_day}`,
-								isActive: data.is_active,
-						  }
-						: schedule
-				)
-			);
-		} else {
-			// Create new schedule
-			const newSchedule: PaySchedule = {
-				id: Date.now().toString(),
-				name: data.name,
-				frequency: data.pay_period,
-				workingDays: 'Mon, Tue, Wed, Thu, Fri',
-				payDay:
-					data.payment_rule === 'LAST_DAY'
-						? 'Last day of period'
-						: `Day ${data.payment_day}`,
-				firstPayPeriod: 'January 2025',
-				isActive: data.is_active,
-			};
-			setPaySchedules((prev: any) => [...prev, newSchedule]);
-		}
+		// if (editingSchedule) {
+		// 	// Update existing schedule
+		// 	setPaySchedules((prev) =>
+		// 		prev.map((schedule) =>
+		// 			schedule.id === editingSchedule.id
+		// 				? {
+		// 						...schedule,
+		// 						name: data.name,
+		// 						frequency: data.pay_period,
+		// 						payDay:
+		// 							data.payment_rule === 'LAST_DAY'
+		// 								? 'Last day of period'
+		// 								: `Day ${data.payment_day}`,
+		// 						isActive: data.is_active,
+		// 				  }
+		// 				: schedule
+		// 		)
+		// 	);
+		// } else {
+		// 	// Create new schedule
+		// 	const newSchedule: PaySchedule = {
+		// 		id: Date.now().toString(),
+		// 		name: data.name,
+		// 		frequency: data.pay_period,
+		// 		workingDays: 'Mon, Tue, Wed, Thu, Fri',
+		// 		payDay:
+		// 			data.payment_rule === 'LAST_DAY'
+		// 				? 'Last day of period'
+		// 				: `Day ${data.payment_day}`,
+		// 		firstPayPeriod: 'January 2025',
+		// 		isActive: data.is_active,
+		// 	};
+		// 	setPaySchedules((prev: any) => [...prev, newSchedule]);
+		// }
 
-		setShowForm(false);
-		setEditingSchedule(null);
+		// setShowForm(false);
+		// setEditingSchedule(null);
 	};
 
 	const handleFormCancel = () => {
@@ -308,15 +315,6 @@ const PayScheduleTemplates = () => {
 
 	return (
 		<div className='p-6 max-w-6xl mx-auto'>
-			<div className='flex justify-between items-center mb-6'>
-				<h1 className='text-2xl font-semibold'>Pay Schedule Templates</h1>
-				<Button
-					onClick={() => handleEdit()}
-					className='flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700'>
-					<Plus className='h-4 w-4' />
-					Create New Template
-				</Button>
-			</div>
 
 			<Alert className='mb-6 bg-orange-50 border-orange-200'>
 				<Info className='h-4 w-4 text-orange-600' />
@@ -332,29 +330,29 @@ const PayScheduleTemplates = () => {
 						<TableHead>Template Name</TableHead>
 						<TableHead>Pay Frequency</TableHead>
 						<TableHead>Pay Day</TableHead>
-						<TableHead>First Pay Period</TableHead>
+						<TableHead>Updated at</TableHead>
 						<TableHead>Status</TableHead>
 						<TableHead>Actions</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{paySchedules.map((schedule: PaySchedule ) => (
+					{payTemplates.map((schedule) => (
 						<TableRow
 							key={schedule.id}
 							className='cursor-pointer hover:bg-gray-50'
 							onClick={() => handleRowClick(schedule)}>
 							<TableCell className='font-medium'>{schedule.name}</TableCell>
-							<TableCell>{schedule.frequency}</TableCell>
-							<TableCell>{schedule.payDay}</TableCell>
-							<TableCell>{schedule.firstPayPeriod}</TableCell>
+							<TableCell>{schedule.pay_period}</TableCell>
+							<TableCell>{schedule.payment_day}</TableCell>
+							<TableCell>{schedule.updated_at}</TableCell>
 							<TableCell>
 								<span
 									className={`px-2 py-1 rounded text-sm ${
-										schedule.isActive
+										schedule.is_active
 											? 'bg-green-100 text-green-800'
 											: 'bg-gray-100 text-gray-800'
 									}`}>
-									{schedule.isActive ? 'Active' : 'Inactive'}
+									{schedule.is_active ? 'Active' : 'Inactive'}
 								</span>
 							</TableCell>
 							<TableCell>
@@ -383,7 +381,7 @@ const PayScheduleTemplates = () => {
 					<DialogTitle hidden></DialogTitle>
 					{selectedSchedule && (
 						<PayTemDetails
-							paySchedule={selectedSchedule}
+							paySchedule={payTemplates}
 							upcomingPayrolls={generateUpcomingPayrolls(selectedSchedule)}
 							onEdit={() => handleEdit(selectedSchedule)}
 						/>
@@ -403,12 +401,12 @@ const PayScheduleTemplates = () => {
 							editingSchedule
 								? {
 										name: editingSchedule.name,
-										pay_period: editingSchedule.frequency,
+										pay_period: editingSchedule.pay_period,
 										start_day: 1,
 										payment_rule: 'LAST_DAY',
 										payment_day: 0,
 										week_start_day: 1,
-										is_active: editingSchedule.isActive,
+										is_active: editingSchedule.is_active,
 								  }
 								: undefined
 						}
@@ -419,6 +417,17 @@ const PayScheduleTemplates = () => {
 				</DialogContent>
 			</Dialog>
 		</div>
+		// <div className='p-6 max-w-6xl mx-auto'>
+		// 	{payTemplates.length > 0 && (
+		// 		<PayTemDetails
+		// 			paySchedule={payTemplates}
+		// 			upcomingPayrolls={[]}
+		// 			onEdit={function (): void {
+		// 				throw new Error('Function not implemented.');
+		// 			}}
+		// 		/>
+		// 	)}
+		// </div>
 	);
 };
 

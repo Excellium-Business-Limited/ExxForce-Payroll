@@ -289,32 +289,26 @@ const loanReq = ({ loans }: LoanReqProps) => {
 								<LoanForm />
 							</SheetContent>
 						</Sheet>
-						<Button
-							onClick={() => setIsImportModalOpen(true)}
-							variant={'outline'}
-							className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-							Import Loans
-						</Button>
-						{isImportModalOpen && (
-							<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-								<div className='bg-white rounded-lg max-w-md w-full mx-4'>
-									<Import
-										title='Loans'
-										isOpen={isImportModalOpen}
-										onClose={() => setIsImportModalOpen(false)}
-										onSubmit={handleImport}>
-										<div>
-											<li>• Loan Type (required)</li>
-											<li>• Employee Name (required)</li>
-											<li>• Amount (required)</li>
-											<li>• Start Date (required)</li>
-											<li>• Interest Rate (optional)</li>
-											<li>• Repayment Terms (optional)</li>
-										</div>
-									</Import>
-								</div>
-							</div>
-						)}
+						<Dialogs title={'Import'}>
+							<Import
+								title='Loans'
+								isOpen={false}
+								onClose={function (): void {
+									throw new Error('Function not implemented.');
+								}}
+								onSubmit={handleImport}
+								children={
+									<div>
+										<li>• Loan Type (required)</li>
+										<li>• Employee Name (required)</li>
+										<li>• Amount (required)</li>
+										<li>• Start Date (required)</li>
+										<li>• Interest Rate (optional)</li>
+										<li>• Repayment Terms (optional)</li>
+									</div>
+								}
+							/>
+						</Dialogs>
 					</div>
 				</div>
 			</div>
