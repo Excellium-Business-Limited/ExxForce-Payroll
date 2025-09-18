@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Eye, Calendar, User, AlertCircle, RefreshCw } from 'lucide-react';
+import { FileText, Download, Eye, Calendar, User, AlertCircle, RefreshCw, Plus } from 'lucide-react';
 import axios from 'axios';
 import { useGlobal } from '@/app/Context/context';
 
@@ -93,7 +93,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
     }
   };
 
-  // Download document
+  // Download document with improved error handling and file naming
   const handleDownload = async (documentId: number, fileName?: string) => {
     setDownloadingId(documentId);
 
@@ -104,92 +104,103 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
         {
           headers: {
             Authorization: `Bearer ${globalState.accessToken}`,
+            'Accept': 'application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/*, */*',
           },
-          responseType: 'blob', // Important for file downloads
+          responseType: 'blob',
+          timeout: 30000, // 30 second timeout
         }
       );
 
-      // Get the content type from the response headers
-      let contentType = response.headers['content-type'] || 'application/octet-stream';
-      
-      // Try to get filename from Content-Disposition header first
-      let downloadFileName = fileName;
+      console.log('Download response headers:', response.headers);
+      console.log('Content-Type:', response.headers['content-type']);
+      console.log('Content-Length:', response.headers['content-length']);
+
+      // Extract filename from Content-Disposition header or use provided name
+      let downloadFileName = fileName || `document_${documentId}`;
       const contentDisposition = response.headers['content-disposition'];
       
-      console.log('Raw response headers:', response.headers);
-      console.log('Content-Disposition:', contentDisposition);
-      console.log('Original content-type:', contentType);
-      
       if (contentDisposition) {
-        // Enhanced regex to handle quoted and unquoted filenames
-        const quotedMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
-        const unquotedMatch = contentDisposition.match(/filename\s*=\s*([^;,\s]+)/i);
+        // Handle both quoted and unquoted filenames, including UTF-8 encoded ones
+        const matches = [
+          contentDisposition.match(/filename\*=UTF-8''(.+)/i),
+          contentDisposition.match(/filename="([^"]+)"/i),
+          contentDisposition.match(/filename=([^;,\s]+)/i)
+        ];
         
-        if (quotedMatch && quotedMatch[1]) {
-          downloadFileName = quotedMatch[1];
-          console.log('Extracted filename (quoted):', downloadFileName);
-        } else if (unquotedMatch && unquotedMatch[1]) {
-          downloadFileName = unquotedMatch[1];
-          console.log('Extracted filename (unquoted):', downloadFileName);
-        }
-      }
-      
-      // If we have a filename, determine the correct content type from the extension
-      if (downloadFileName) {
-        const expectedMimeType = getMimeTypeFromExtension(downloadFileName);
-        console.log('Expected MIME type from extension:', expectedMimeType);
-        
-        // Always use the MIME type based on file extension for better accuracy
-        if (expectedMimeType !== 'application/octet-stream') {
-          contentType = expectedMimeType;
-          console.log('Updated content type to:', contentType);
-        }
-        
-        // Ensure filename has correct extension if missing
-        const currentExtension = getFileExtension(downloadFileName);
-        if (!currentExtension && contentType !== 'application/octet-stream') {
-          const extensionFromMime = getFileExtensionFromContentType(contentType);
-          if (extensionFromMime) {
-            downloadFileName = `${downloadFileName}${extensionFromMime}`;
+        for (const match of matches) {
+          if (match?.[1]) {
+            downloadFileName = decodeURIComponent(match[1].trim());
+            break;
           }
         }
-      } else {
-        // If no filename, create one with proper extension
-        const extension = getFileExtensionFromContentType(contentType);
-        downloadFileName = `document_${documentId}${extension}`;
       }
       
-      // Create blob with the correct content type
+      // Verify we actually got binary data
+      if (!response.data || response.data.size === 0) {
+        throw new Error('Received empty response');
+      }
+
+      // Resolve the correct filename and content type using headers, name and file signature
+      const { fileName: finalName, contentType } = await resolveNameAndType(
+        response.data,
+        downloadFileName,
+        response.headers['content-type']
+      );
+
+      console.log('Final download filename:', finalName);
+      console.log('Final content type:', contentType);
+      console.log('Blob size:', response.data.size);
+
+      // Create blob with explicit content type
       const blob = new Blob([response.data], { type: contentType });
+      
+      // Verify blob was created successfully
+      if (blob.size === 0) {
+        throw new Error('Failed to create blob from response data');
+      }
+      
+      // Create download URL and trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
+  link.download = finalName;
+      link.style.display = 'none';
       
-      // Use the determined filename
-      link.setAttribute('download', downloadFileName);
-      
-      // Append to body, click, and remove
+      // Add to DOM, click, then cleanup
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
       
-      // Clean up the URL
-      window.URL.revokeObjectURL(url);
+      // Cleanup URL after a short delay
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
 
-      console.log('Document downloaded successfully:', downloadFileName, 'Content-Type:', contentType);
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error('Download failed:', error);
+      let errorMessage = 'Failed to download document';
+      
       if (axios.isAxiosError(error)) {
-        alert(`Download failed: ${error.response?.data?.message || 'Unknown error'}`);
-      } else {
-        alert('Failed to download document');
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Download timeout - file may be too large';
+        } else if (error.response?.status === 404) {
+          errorMessage = 'Document not found';
+        } else if (error.response?.status === 403) {
+          errorMessage = 'Access denied - insufficient permissions';
+        } else {
+          errorMessage = error.response?.data?.message || error.message || 'Download failed';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+      
+      alert(errorMessage);
     } finally {
       setDownloadingId(null);
     }
   };
 
-  // Preview document (opens in new tab for viewing, not downloading)
+  // Preview document with simplified logic
   const handlePreview = async (documentId: number, fileName?: string) => {
     try {
       const baseURL = `${tenant}.exxforce.com`;
@@ -198,182 +209,72 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
         {
           headers: {
             Authorization: `Bearer ${globalState.accessToken}`,
+            'Accept': 'application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/*, */*',
           },
           responseType: 'blob',
+          timeout: 30000,
         }
       );
 
-      // Determine the correct content type
-      let contentType = response.headers['content-type'] || 'application/octet-stream';
-      
-      // Try to get filename from Content-Disposition header
-      let previewFileName = fileName;
-      const contentDisposition = response.headers['content-disposition'];
-      
-      console.log('Preview - Content-Disposition:', contentDisposition);
-      console.log('Preview - Original content-type:', contentType);
-      
-      if (contentDisposition) {
-        // Enhanced regex to handle quoted and unquoted filenames
-        const quotedMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
-        const unquotedMatch = contentDisposition.match(/filename\s*=\s*([^;,\s]+)/i);
-        
-        if (quotedMatch && quotedMatch[1]) {
-          previewFileName = quotedMatch[1];
-          console.log('Preview - Extracted filename (quoted):', previewFileName);
-        } else if (unquotedMatch && unquotedMatch[1]) {
-          previewFileName = unquotedMatch[1];
-          console.log('Preview - Extracted filename (unquoted):', previewFileName);
-        }
+      console.log('Preview response headers:', response.headers);
+      console.log('Preview Content-Type:', response.headers['content-type']);
+
+      // Verify we got data
+      if (!response.data || response.data.size === 0) {
+        throw new Error('Received empty response');
       }
-      
-      // If we have a filename, ensure content type matches the file extension
-      if (previewFileName) {
-        const expectedMimeType = getMimeTypeFromExtension(previewFileName);
-        console.log('Preview - Expected MIME type from extension:', expectedMimeType);
-        
-        if (expectedMimeType !== 'application/octet-stream') {
-          contentType = expectedMimeType;
-          console.log('Preview - Updated content type to:', contentType);
-        }
-      }
-      
-      // Create blob with correct content type for viewing (not downloading)
+
+      // Resolve name/type to fix incorrect text/plain and ensure PDFs preview correctly
+      const fallbackName = fileName || `document_${documentId}`;
+      const { fileName: finalName, contentType } = await resolveNameAndType(
+        response.data,
+        fallbackName,
+        response.headers['content-type']
+      );
+
+      // Create blob with proper content type
       const blob = new Blob([response.data], { type: contentType });
       const url = window.URL.createObjectURL(blob);
       
-      // Create a new window/tab for preview
-      const previewWindow = window.open('', '_blank');
+      console.log('Preview blob created:', { size: blob.size, type: blob.type });
       
-      if (previewWindow) {
-        // Check if it's a viewable content type
-        if (contentType.includes('pdf') || contentType === 'application/pdf') {
-          // For PDFs - embed directly
-          previewWindow.document.write(`
-            <html>
-              <head>
-                <title>Document Preview - ${previewFileName || 'Document'}</title>
-                <style>
-                  body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-                  .header { background: #f8f9fa; padding: 10px 20px; border-bottom: 1px solid #e9ecef; }
-                  .header h3 { margin: 0; color: #495057; }
-                  embed { display: block; }
-                </style>
-              </head>
-              <body>
-                <div class="header">
-                  <h3>📄 ${previewFileName || 'Document Preview'}</h3>
-                </div>
-                <embed src="${url}" type="application/pdf" width="100%" height="calc(100vh - 60px)" />
-              </body>
-            </html>
-          `);
-        } else if (contentType.includes('image/')) {
-          // For images
-          previewWindow.document.write(`
-            <html>
-              <head>
-                <title>Image Preview - ${previewFileName || 'Image'}</title>
-                <style>
-                  body { margin: 0; padding: 0; display: flex; flex-direction: column; background: #f0f0f0; font-family: Arial, sans-serif; }
-                  .header { background: white; padding: 15px 20px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                  .header h3 { margin: 0; color: #333; }
-                  .image-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
-                  img { max-width: 100%; max-height: calc(100vh - 120px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 4px; }
-                </style>
-              </head>
-              <body>
-                <div class="header">
-                  <h3>🖼️ ${previewFileName || 'Image Preview'}</h3>
-                </div>
-                <div class="image-container">
-                  <img src="${url}" alt="Document Preview" />
-                </div>
-              </body>
-            </html>
-          `);
-        } else if (contentType.includes('text/') || contentType.includes('wordprocessingml') || contentType.includes('msword')) {
-          // For text files and Word docs that can't be previewed
-          previewWindow.document.write(`
-            <html>
-              <head>
-                <title>Preview - ${previewFileName || 'Document'}</title>
-                <style>
-                  body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f8f9fa; }
-                  .container { background: white; border-radius: 8px; padding: 40px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                  .icon { font-size: 48px; margin-bottom: 20px; }
-                  h2 { color: #495057; margin-bottom: 16px; }
-                  p { color: #6c757d; line-height: 1.5; margin-bottom: 20px; }
-                  button { padding: 12px 24px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-                  button:hover { background: #0056b3; }
-                  .file-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <div class="icon">📝</div>
-                  <h2>Document Preview</h2>
-                  <div class="file-info">
-                    <strong>File:</strong> ${previewFileName || 'Unknown'}<br>
-                    <strong>Type:</strong> ${contentType}<br>
-                    <strong>Format:</strong> ${getFileExtension(previewFileName || '').toUpperCase()} Document
-                  </div>
-                  <p>This document type requires downloading to view the full content. Word documents, Excel sheets, and other office files cannot be previewed directly in the browser.</p>
-                  <button onclick="window.close()">Close Preview</button>
-                </div>
-              </body>
-            </html>
-          `);
-        } else {
-          // For non-viewable files, show a message
-          previewWindow.document.write(`
-            <html>
-              <head>
-                <title>Preview Not Available</title>
-                <style>
-                  body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f8f9fa; }
-                  .container { background: white; border-radius: 8px; padding: 40px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                  .icon { font-size: 48px; margin-bottom: 20px; }
-                  h2 { color: #495057; margin-bottom: 16px; }
-                  p { color: #6c757d; line-height: 1.5; margin-bottom: 20px; }
-                  button { padding: 12px 24px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-                  button:hover { background: #0056b3; }
-                  .file-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <div class="icon">📎</div>
-                  <h2>Preview Not Available</h2>
-                  <div class="file-info">
-                    <strong>File:</strong> ${previewFileName || 'Unknown'}<br>
-                    <strong>Type:</strong> ${contentType}
-                  </div>
-                  <p>This file type cannot be previewed in the browser. Please download the file to view its contents.</p>
-                  <button onclick="window.close()">Close Preview</button>
-                </div>
-              </body>
-            </html>
-          `);
-        }
-      } else {
-        // Fallback if popup is blocked
-        window.location.href = url;
+      // Open in new tab for preview - works well for PDFs and images
+      const newWindow = window.open(url, '_blank');
+      if (!newWindow) {
+        // Fallback if popup blocked - download instead
+        console.warn('Popup blocked, falling back to download');
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = finalName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
       
-      // Clean up the URL after a longer delay to ensure it loads
+      // Cleanup URL after delay
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
       }, 10000);
 
-      console.log('Document preview opened successfully', 'Content-Type:', contentType);
     } catch (error) {
-      console.error('Error previewing document:', error);
+      console.error('Preview failed:', error);
+      let errorMessage = 'Failed to preview document';
+      
       if (axios.isAxiosError(error)) {
-        alert(`Preview failed: ${error.response?.data?.message || 'Unknown error'}`);
-      } else {
-        alert('Failed to preview document');
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Preview timeout - file may be too large';
+        } else if (error.response?.status === 404) {
+          errorMessage = 'Document not found';
+        } else if (error.response?.status === 403) {
+          errorMessage = 'Access denied - insufficient permissions';
+        } else {
+          errorMessage = error.response?.data?.message || error.message || 'Preview failed';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+      
+      alert(errorMessage);
     }
   };
 
@@ -444,22 +345,132 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ employee, onUploadDocumen
 
   // Get file extension from content type (fallback)
   const getFileExtensionFromContentType = (contentType: string): string => {
+    // Clean content type and convert to lowercase
+    const cleanContentType = contentType.split(';')[0].trim().toLowerCase();
+    
     const mimeToExtension: Record<string, string> = {
       'application/pdf': '.pdf',
       'application/msword': '.doc',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
       'application/vnd.ms-excel': '.xls',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+      'application/vnd.ms-powerpoint': '.ppt',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
       'image/jpeg': '.jpg',
       'image/jpg': '.jpg',
       'image/png': '.png',
       'image/gif': '.gif',
+      'image/bmp': '.bmp',
+      'image/svg+xml': '.svg',
+      'image/webp': '.webp',
       'text/plain': '.txt',
+      'text/csv': '.csv',
+      'text/html': '.html',
       'application/zip': '.zip',
       'application/x-zip-compressed': '.zip',
+      'application/vnd.rar': '.rar',
+      'application/x-rar-compressed': '.rar',
+      'application/x-7z-compressed': '.7z',
+      'application/json': '.json',
+      'application/xml': '.xml',
+      'text/xml': '.xml',
     };
     
-    return mimeToExtension[contentType.toLowerCase()] || '';
+    return mimeToExtension[cleanContentType] || '';
+  };
+
+  // Detect common file types from the first few bytes of a blob (magic numbers)
+  const detectMimeFromBlob = async (blob: Blob): Promise<{ mime?: string; ext?: string }> => {
+    try {
+      const maxHeader = 16;
+      const buf = await blob.slice(0, maxHeader).arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      const startsWith = (sig: number[]) => sig.every((b, i) => bytes[i] === b);
+
+      // PDF: 25 50 44 46 2D => %PDF-
+      if (startsWith([0x25, 0x50, 0x44, 0x46, 0x2D])) {
+        return { mime: 'application/pdf', ext: '.pdf' };
+      }
+      // PNG
+      if (startsWith([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+        return { mime: 'image/png', ext: '.png' };
+      }
+      // JPG
+      if (startsWith([0xFF, 0xD8, 0xFF])) {
+        return { mime: 'image/jpeg', ext: '.jpg' };
+      }
+      // GIF
+      if (startsWith([0x47, 0x49, 0x46, 0x38])) {
+        return { mime: 'image/gif', ext: '.gif' };
+      }
+      // BMP
+      if (startsWith([0x42, 0x4D])) {
+        return { mime: 'image/bmp', ext: '.bmp' };
+      }
+      // ZIP/OOXML (docx/xlsx/pptx) - cannot easily distinguish without deeper inspection
+      if (startsWith([0x50, 0x4B, 0x03, 0x04])) {
+        return { mime: 'application/zip', ext: '.zip' };
+      }
+      // RAR4 / RAR5
+      if (startsWith([0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00]) || startsWith([0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x01, 0x00])) {
+        return { mime: 'application/x-rar-compressed', ext: '.rar' };
+      }
+      // 7z
+      if (startsWith([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C])) {
+        return { mime: 'application/x-7z-compressed', ext: '.7z' };
+      }
+      // Legacy MS Office Compound File Binary
+      if (startsWith([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])) {
+        return { mime: 'application/msword', ext: '.doc' };
+      }
+    } catch (e) {
+      // ignore and fall back
+      console.warn('File signature detection failed', e);
+    }
+    return {};
+  };
+
+  // Ensure we have a sensible content type and filename extension
+  const resolveNameAndType = async (
+    rawBlob: Blob,
+    proposedName: string,
+    headerContentType?: string
+  ): Promise<{ fileName: string; contentType: string }> => {
+    let fileName = proposedName || 'document';
+    let contentType = (headerContentType || 'application/octet-stream').split(';')[0].trim().toLowerCase();
+
+    // If filename has an extension, prefer its MIME over an obviously wrong text/plain
+    const nameExt = getFileExtension(fileName);
+    if (nameExt) {
+      const mimeFromName = getMimeTypeFromExtension(fileName);
+      if (mimeFromName && (contentType === 'text/plain' || contentType === 'application/octet-stream')) {
+        contentType = mimeFromName;
+      }
+    }
+
+    // If no extension or it's .txt but content is binary, sniff the blob
+    if (!nameExt || nameExt.toLowerCase() === '.txt') {
+      const sniff = await detectMimeFromBlob(rawBlob);
+      if (sniff.mime) {
+        // Override incorrect content type
+        contentType = sniff.mime;
+        // Only append/replace extension if missing or .txt
+        if (!nameExt || nameExt.toLowerCase() === '.txt') {
+          if (!fileName.toLowerCase().endsWith(sniff.ext || '')) {
+            fileName = fileName.replace(/\.+[^.]*$/, ''); // strip existing ext if any
+            if (sniff.ext) fileName += sniff.ext;
+          }
+        }
+      }
+    }
+
+    // If still no extension, try mapping the (possibly corrected) content type
+    if (!getFileExtension(fileName)) {
+      const extFromType = getFileExtensionFromContentType(contentType);
+      if (extFromType) fileName += extFromType;
+    }
+
+    return { fileName, contentType };
   };
 
   // Get file icon based on file extension
