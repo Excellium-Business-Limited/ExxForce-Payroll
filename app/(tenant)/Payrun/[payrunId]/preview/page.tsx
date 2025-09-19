@@ -139,7 +139,7 @@ const page = () => {
 							<TableHeader>
 								<TableRow className='flex justify-between'>
 									<TableHead>DESCRIPTION</TableHead>
-									<TableHead>AMOUNT(NGN)</TableHead>
+									<TableHead>AMOUNT(₦)</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -168,7 +168,7 @@ const page = () => {
 							<TableHeader>
 								<TableRow className='flex justify-between'>
 									<TableHead>DESCRIPTION</TableHead>
-									<TableHead>AMOUNT(NGN)</TableHead>
+									<TableHead>AMOUNT(₦)</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -204,7 +204,7 @@ const page = () => {
 							<TableHeader>
 								<TableRow className='flex justify-between'>
 									<TableHead>DESCRIPTION</TableHead>
-									<TableHead>AMOUNT(NGN)</TableHead>
+									<TableHead>AMOUNT(₦)</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>

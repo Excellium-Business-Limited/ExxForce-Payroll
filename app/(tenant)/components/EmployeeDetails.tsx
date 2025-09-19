@@ -7,7 +7,6 @@ import {
 	Trash2,
 	Clock,
 	FileText,
-	DollarSign,
 	Calendar,
 	CreditCard,
 	Upload,
@@ -1199,7 +1198,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 														value={employee.account_name}
 													/>
 													<DetailField
-														label='Salary Amount (NGN)'
+														label='Salary Amount (₦)'
 														value={formatCurrency(getSalaryValue(employee))}
 													/>
 													<DetailField

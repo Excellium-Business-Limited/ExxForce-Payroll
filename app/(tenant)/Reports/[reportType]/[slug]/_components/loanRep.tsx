@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import {
 	CreditCard,
-	DollarSign,
 	TrendingUp,
 	TrendingDown,
 	Search,
@@ -244,7 +243,7 @@ const LoanReport: React.FC<LoanReportProps> = ({ data }) => {
 								<p className='text-sm text-gray-500'>Disbursed</p>
 							</div>
 							<div className='p-3 bg-blue-100 rounded-full'>
-								<DollarSign className='h-6 w-6 text-blue-600' />
+								<span className='h-6 w-6 text-blue-600 font-bold'>₦</span>
 							</div>
 						</div>
 					</div>

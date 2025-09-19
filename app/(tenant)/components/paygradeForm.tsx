@@ -46,7 +46,7 @@ export default function LoanForm() {
 							<Label
 								htmlFor='payamount'
 								className='text-sm font-medium mb-2'>
-								Amount (NGN)
+								Amount (₦)
 							</Label>
 							<Input
 								id='payamount'

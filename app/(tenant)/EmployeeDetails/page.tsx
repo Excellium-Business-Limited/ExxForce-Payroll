@@ -7,7 +7,6 @@ import {
 	Trash2,
 	Clock,
 	FileText,
-	DollarSign,
 	Calendar,
 	CreditCard,
 	Upload,

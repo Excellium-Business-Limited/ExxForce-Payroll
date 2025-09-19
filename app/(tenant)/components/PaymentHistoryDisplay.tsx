@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Download, FileText, Eye, DollarSign } from 'lucide-react';
+import { Calendar, Download, FileText, Eye } from 'lucide-react';
 import { useGlobal } from '@/app/Context/context';
 import axios from 'axios';
 
@@ -266,7 +266,7 @@ const PaymentHistoryDisplay: React.FC<PaymentHistoryDisplayProps> = ({
             <div className='bg-white rounded-lg shadow-lg p-6 w-56 h-36 border'>
               <div className='flex items-center justify-between mb-4'>
                 <div className='w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center'>
-                  <DollarSign className='w-4 h-4 text-blue-600' />
+                  <span className='text-blue-600 font-bold'>₦</span>
                 </div>
                 <div className='text-xs text-gray-400'>Payments</div>
               </div>
@@ -305,7 +305,7 @@ const PaymentHistoryDisplay: React.FC<PaymentHistoryDisplayProps> = ({
         <button
           onClick={fetchPaymentHistory}
           className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2'>
-          <DollarSign className='w-4 h-4' />
+          <span className='font-bold'>₦</span>
           Refresh
         </button>
       </div>
