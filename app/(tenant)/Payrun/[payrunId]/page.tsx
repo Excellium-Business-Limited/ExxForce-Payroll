@@ -27,6 +27,7 @@ import FilterSort, {
 	SortOption,
 } from '../../components/FilterSort';
 import { Pagination, PageSizeSelector } from '../../components/pagination';
+import Loading from '@/components/ui/Loading';
 interface PayRun {
 	id: number;
 	name: string;
@@ -62,7 +63,7 @@ interface Employee {
 const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 	const router = useRouter();
 	const [payRun, setPayRun] = useState<PayRun | null>(null);
-	const [isLoading, setIsLoading] = useState<Boolean>(false);
+	const [isLoading, setIsLoading] = useState<Boolean>(true);
 	const [employees, setEmployees] = useState<Employee[]>([]);
 	const [planName, setPlanName] = useState<string>('');
 	const [paySummary, setPaySummary] = useState<Summary>();
@@ -94,7 +95,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 			})),
 		};
 	}, [employees]);
-	
+
 	const sortOptions: SortOption[] = [
 		{ value: 'name', label: 'Employee Name' },
 		{ value: 'paygrade', label: 'Pay Grade' },
@@ -180,6 +181,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 		const baseURL = `https://${tenant}.exxforce.com`;
 
 		const fetchData = async () => {
+			setIsLoading(true)
 			try {
 				const [payRunRes, employeesRes, planRes, paySum] = await Promise.all([
 					axios.get<PayRun>(`${baseURL}/tenant/payrun/${payrunId}`, {
@@ -219,6 +221,8 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 				if (err.status === 401) {
 					router.push('/login');
 				}
+			}finally{
+				setIsLoading(false)
 			}
 		};
 		fetchData();
@@ -261,6 +265,17 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 			setIsLoading(false); // Don't forget to reset loading state
 		}
 	};
+
+		if (isLoading){
+			return (
+				<Loading
+					message='Loading Payrun Details...'
+					size='medium'
+					variant='spinner'
+					overlay={false}
+				/>
+			);
+		}
 
 	return (
 		<div className='h-[1080px]'>
@@ -408,7 +423,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 					sortOptions={sortOptions}
 					onSortChange={setSortBy}
 					onSortOrderChange={setSortOrder}
-					className='mb-4'
+					className='mb-4 flex flex-row'
 				/>
 				<Card>
 					<Table>
@@ -482,7 +497,8 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 													<EllipsisVertical />
 												</PopoverTrigger>
 												<PopoverContent className='grid grid-cols-1 !p-0 !m-0 w-fit'>
-													<Link href={'./paytemps/preview'}>
+													<Link
+														href={`./${payrunId}/preview/${payrun.employee_id}`}>
 														<Button
 															variant={'default'}
 															className='flex bg-white text-black hover:bg-secondary w-fit'>
