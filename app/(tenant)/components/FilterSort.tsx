@@ -60,9 +60,9 @@ const FilterSort: React.FC<FilterSortProps> = ({
 }) => {
   return (
     <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm ${className}`}>
-      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
+      <div className="flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center">
         {/* Search */}
-        <div className="w-full lg:flex-none lg:w-[340px] xl:w-[400px] min-w-0">
+        <div className="w-fit lg:flex-none lg:w-[150px] xl:w-[200px] min-w-0">
           <div className="relative z-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
