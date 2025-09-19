@@ -130,7 +130,7 @@ const dashTable = () => {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{loansList.map((loan) => {
+						{loansList.slice(0, 3).map((loan) => {
 							return (
 								<TableRow key={loan.id}>
 									<TableCell className='px-4 py-3 text-left tracking-wider'>

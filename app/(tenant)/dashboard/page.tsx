@@ -38,24 +38,23 @@ const Dashboard = () => {
 		const checkAuth = () => {
 			const token = getAccessToken();
 			const tenantValue = getTenant();
-			setIsLoading(true)
+			setIsLoading(true);
 			if (token && tenantValue) {
 				setAuthReady(true);
 				setTnt(tenantValue);
-				setIsLoading(false)
+				setIsLoading(false);
 			} else {
 				// Keep checking until auth is ready
 				setTimeout(checkAuth, 100);
 			}
-			
 		};
-		
+
 		checkAuth();
 	}, []);
 
 	const getSalaries = () => {
 		if (!employees.length) return '₦0';
-		
+
 		const Salaries = employees.map((employee: any) => employee.custom_salary);
 		const totalSalary = Salaries.reduce(
 			(acc: number, curr: number) => Number(acc) + Number(curr),
@@ -82,8 +81,11 @@ const Dashboard = () => {
 
 		try {
 			setIsLoading(true);
-			console.log('Fetching payroll data with token:', token.substring(0, 10) + '...');
-			
+			console.log(
+				'Fetching payroll data with token:',
+				token.substring(0, 10) + '...'
+			);
+
 			const response = await fetch(
 				`${baseURL}/tenant/reports/payroll-summary/all?from_date=2025-01-01&to_date=2026-03-31`,
 				{
@@ -115,7 +117,7 @@ const Dashboard = () => {
 		if (!authReady || !tnt) return;
 
 		const accessToken = globalState.accessToken || getAccessToken();
-		
+
 		if (!accessToken) {
 			console.error('No access token available for employees');
 			return;
@@ -127,7 +129,7 @@ const Dashboard = () => {
 			setEmployees(data);
 			console.log('Employees fetched successfully:', data);
 		} catch (error) {
-			console.error("Error fetching employees:", error);
+			console.error('Error fetching employees:', error);
 		}
 	}, [authReady]);
 
@@ -143,10 +145,10 @@ const Dashboard = () => {
 	useEffect(() => {
 		if (authReady && tnt) {
 			const accessToken = getAccessToken();
-			updateGlobalState({ 
-				tenant: tnt, 
+			updateGlobalState({
+				tenant: tnt,
 				accessToken: accessToken,
-				isAuthenticated: true 
+				isAuthenticated: true,
 			});
 		}
 	}, [authReady]);
@@ -269,14 +271,12 @@ const Dashboard = () => {
 									height={20}
 								/>
 							</span>
-							<h5 className=''>Prorated Salaries</h5>
+							<h5 className=''>Paid Salaries</h5>
 						</article>
 						<hr />
 						<span>
 							<h2 className='font-bold'>{paid} Employees</h2>
-							<p className='text-xs text-muted-foreground'>
-								Paid Employees
-							</p>
+							<p className='text-xs text-muted-foreground'>have recieved salaries</p>
 						</span>
 					</Card>
 				</div>
@@ -287,7 +287,16 @@ const Dashboard = () => {
 			</div>
 			<div className='grid grid-cols-3 m-8  gap-4'>
 				<div className='col-span-2 bg-white rounded-lg p-4 shadow-xl h-[340px]'>
-					<h3 className='font-semibold text-md'>Employee Loans</h3>
+					<div className='flex justify-between gap-2'>
+						<h3 className='font-semibold text-md'>Employee Loans</h3>
+						<a href='/Loan' className='cursor-pointer'>
+							<Button
+								variant={'default'}
+								className='bg-blue-600 text-white text-md font-light cursor-pointer hover:bg-white hover:text-blue-600'> 
+								View all loans
+							</Button>
+						</a>
+					</div>
 					<DashTable />
 				</div>
 				{/* <div className='col-span-2 bg-white rounded-lg p-4 shadow h-[340px] flex flex-col content-center items-center'>

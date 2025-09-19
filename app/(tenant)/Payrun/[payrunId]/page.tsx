@@ -94,6 +94,7 @@ const page = ({ params }: { params: Promise<{ payrunId: string }> }) => {
 			})),
 		};
 	}, [employees]);
+	
 	const sortOptions: SortOption[] = [
 		{ value: 'name', label: 'Employee Name' },
 		{ value: 'paygrade', label: 'Pay Grade' },

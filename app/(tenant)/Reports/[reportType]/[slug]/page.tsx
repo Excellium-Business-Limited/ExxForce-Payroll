@@ -195,7 +195,7 @@ export default function ReportPage({
 				headers: { Authorization: `Bearer ${token}` },
 			});
 
-			console.log('API response:', res.data);
+			console.log('API response Activity Log:', res.data);
 			setData(res.data);
 		} catch (err: any) {
 			console.error('Error fetching activity log:', err);
