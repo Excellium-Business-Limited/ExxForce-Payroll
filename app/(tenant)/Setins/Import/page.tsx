@@ -7,7 +7,7 @@ import ImportModal from '../../components/Import';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function ImportHub() {
-  const [active, setActive] = useState<'employees' | 'loans' | 'paygrades' | 'salaryComponents'>('employees');
+  const [active, setActive] = useState<'employees' | 'loans' | 'paygrades' | 'salaryComponents' | 'employeeSalaryComponents'>('employees');
 
   const onSubmit = async (formData: FormData) => {
     // Route to backend based on selection
@@ -19,6 +19,7 @@ export default function ImportHub() {
       loans: `https://${base}.exxforce.com/tenant/loans/import-csv`,
       paygrades: `https://${base}.exxforce.com/tenant/paygrade/import-csv`,
       salaryComponents: `https://${base}.exxforce.com/tenant/salary-components/import-csv`,
+      employeeSalaryComponents: `https://${base}.exxforce.com/tenant/employee-salary-components/import-csv`,
     };
     const res = await fetch(urlMap[active], {
       method: 'POST',
@@ -33,12 +34,13 @@ export default function ImportHub() {
       <h1 className='text-2xl font-semibold'>Import</h1>
       <p className='text-sm text-muted-foreground'>Import salary components, pay grades, employees, and loans.</p>
 
-      <Tabs value={active} onValueChange={(v) => setActive(v as any)}>
+    <Tabs value={active} onValueChange={(v) => setActive(v as any)}>
         <TabsList>
           <TabsTrigger value='employees'>Employees</TabsTrigger>
           <TabsTrigger value='loans'>Loans</TabsTrigger>
           <TabsTrigger value='paygrades'>Pay Grades</TabsTrigger>
           <TabsTrigger value='salaryComponents'>Salary Components</TabsTrigger>
+      <TabsTrigger value='employeeSalaryComponents'>Employee Salary Component</TabsTrigger>
         </TabsList>
 
         <TabsContent value='employees'>
@@ -99,6 +101,23 @@ export default function ImportHub() {
             >
               <li>• Component Name, Type (earning/deduction) (required)</li>
               <li>• Percentage or Fixed Amount (required)</li>
+            </ImportModal>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value='employeeSalaryComponents'>
+          <Card className='p-0 overflow-hidden'>
+            <ImportModal
+              title='Import Employee Salary Component'
+              isOpen={true}
+              onClose={() => {}}
+              onSubmit={onSubmit}
+              inlineMode
+            >
+              <li>• Employee ID (required)</li>
+              <li>• Component Name (must exist)</li>
+              <li>• Amount or Percentage (required)</li>
+              <li>• Effective Date (optional)</li>
             </ImportModal>
           </Card>
         </TabsContent>
