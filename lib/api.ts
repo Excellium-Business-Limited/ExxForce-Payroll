@@ -1,6 +1,6 @@
 // lib/api.ts
 import axios from 'axios';
-import { getAccessToken, getTenant } from "./auth";
+import { getAccessToken, performTokenRefresh } from "./auth";
 
 // Get the API URL from environment variables
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -32,12 +32,18 @@ apiClient.interceptors.request.use(
 // Add response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      window.location.href = '/login';
+  async (error) => {
+    const original = error.config || {};
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true;
+      const refreshed = await performTokenRefresh();
+      if (refreshed) {
+        original.headers = original.headers || {};
+        original.headers.Authorization = `Bearer ${refreshed}`;
+        return apiClient(original);
+      }
+      // broadcast expiration; UI should show modal and then redirect
+      window.dispatchEvent(new CustomEvent('session:expired'));
     }
     return Promise.reject(error);
   }

@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useGlobal } from '@/app/Context/context';
-import { login } from '@/lib/api';
+import { login, fetchEmployeesCached } from '@/lib/api';
 import { setTenant, saveTokens } from '@/lib/auth';
 
 export function LoginForm({ className }: { className?: string }) {
@@ -53,7 +53,7 @@ export function LoginForm({ className }: { className?: string }) {
 			saveTokens(access, refresh);
 			setTenant(tenant);
 
-			// Update global state with all necessary data
+						// Update global state with all necessary data
 			updateGlobalState({
 				tenant: tenant,
 				accessToken: access, // Make sure this matches your global state property name
@@ -61,7 +61,14 @@ export function LoginForm({ className }: { className?: string }) {
 				isAuthenticated: true,
 			});
 
-			// Wait a bit longer to ensure everything is properly saved
+						// Prefetch employees to warm cache for faster first paint
+						try {
+							await fetchEmployeesCached(tenant, { ttlMs: 60_000, force: true });
+						} catch (e) {
+							console.warn('Prefetch employees failed (non-blocking):', e);
+						}
+
+						// Wait a bit longer to ensure everything is properly saved
 			setTimeout(() => {
 				const redirectPath = new URL(redirect).pathname;
 				console.log('Redirecting to:', redirectPath);
