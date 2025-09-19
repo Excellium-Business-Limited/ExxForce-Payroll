@@ -181,6 +181,34 @@ const sidebar = ({ className }: { className?: string }) => {
 											</Link>
 										</SidebarMenuSubItem>
 									</SidebarMenuSub>
+										<SidebarMenuSub className='overflow-visible'>
+											<SidebarMenuSubItem className='font-light'>
+												<Link href={'/Setins/Import'}>
+													<div
+														className={`${
+															pathname === '/Setins/Import'
+																? 'bg-[#3D56A8] rounded p-1 mx-1'
+															: ''
+														}`}> 
+														Import
+													</div>
+												</Link>
+											</SidebarMenuSubItem>
+										</SidebarMenuSub>
+										<SidebarMenuSub className='overflow-visible'>
+											<SidebarMenuSubItem className='font-light'>
+												<Link href={'/Setins/Integrations'}>
+													<div
+														className={`${
+															pathname === '/Setins/Integrations'
+																? 'bg-[#3D56A8] rounded p-1 mx-1'
+															: ''
+														}`}> 
+														Integrations
+													</div>
+												</Link>
+											</SidebarMenuSubItem>
+										</SidebarMenuSub>
 								</CollapsibleContent>
 							</SidebarMenuItem>
 						</Collapsible>

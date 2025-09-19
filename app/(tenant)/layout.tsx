@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './components/sidebar';
 import Navigation from './components/Nav';
 import { TokenRefreshProvider } from '@/lib/Refresh';
+import SessionTimeoutModal from './components/SessionTimeoutModal';
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -35,6 +36,7 @@ export default function RootLayout({
 						<div className='grid w-full'>
 							<Navigation />
 							<main className='w-full'>{children}</main>
+							<SessionTimeoutModal />
 						</div>
 					</SidebarProvider>
 				</div>
