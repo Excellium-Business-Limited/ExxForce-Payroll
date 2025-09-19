@@ -72,7 +72,7 @@ const DepList = () => {
 						<DialogTrigger asChild>
 							<Button
 								variant={'outline'}
-								className='bg-[#3D56A8] text-white'>
+								className='bg-blue-600 text-white'>
 								+ Add Department
 							</Button>
 						</DialogTrigger>

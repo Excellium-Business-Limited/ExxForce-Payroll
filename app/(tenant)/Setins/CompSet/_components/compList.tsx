@@ -76,7 +76,7 @@ const companyList = () => {
 						className='self-end'>
 						<Button
 							variant='outline'
-							className=' rounded-[7px] px-[24px]  bg-[#3a56b8] text-white'>
+							className=' rounded-[7px] px-[24px]  bg-blue-600 text-white'>
 							+ Add Company
 						</Button>
 					</SheetTrigger>

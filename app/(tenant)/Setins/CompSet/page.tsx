@@ -25,11 +25,11 @@ const page = () => {
 								className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-b-blue-600 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
 								Company
 							</TabsTrigger>
-							<TabsTrigger
+							{/* <TabsTrigger
 								value='Designation'
 								className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-b-blue-600 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>
 								Designation
-							</TabsTrigger>
+							</TabsTrigger> */}
 							<TabsTrigger
 								value='Department'
 								className='data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-b-blue-600 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-4 pt-2 px-0 rounded-none font-medium'>

@@ -1,6 +1,12 @@
-import React from 'react';
+'use client';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Users, TrendingUp, Calculator, Building } from 'lucide-react';
-
+import FilterSort, {
+	FilterOption,
+	SortOption,
+} from '../../../../components/FilterSort';
+import { Pagination, PageSizeSelector } from '../../../../components/pagination';
+import clsx from 'clsx';
 // Interface definitions
 interface TaxTotals {
 	gross: number;
@@ -35,6 +41,16 @@ interface TaxSummaryReportProps {
 }
 
 const TaxSummaryReport: React.FC<TaxSummaryReportProps> = ({ data }) => {
+	// Add state for filtering, sorting, and pagination
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
+	const [searchValue, setSearchValue] = useState('');
+	const [filters, setFilters] = useState<Record<string, string>>({
+		department: 'All',
+	});
+	const [sortBy, setSortBy] = useState('employee');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
 	// Add null/undefined checks
 	if (!data) {
 		return (
@@ -78,14 +94,79 @@ const TaxSummaryReport: React.FC<TaxSummaryReportProps> = ({ data }) => {
 	// Calculate average tax rate
 	const averageTaxRate = calculateTaxRate(totals.paye, totals.gross);
 
-	// Group employees by payrun for better organization
-	const groupedByPayrun = employees.reduce((acc, emp) => {
-		if (!acc[emp.payrun]) {
-			acc[emp.payrun] = [];
-		}
-		acc[emp.payrun].push(emp);
-		return acc;
-	}, {} as Record<string, EmployeeTaxData[]>);
+	// Define filter and sort options
+	const filterOptions: Record<string, FilterOption[]> = useMemo(() => {
+		const uniqueDepartments = [
+			...new Set(employees.map((emp) => emp.department).filter(Boolean)),
+		];
+		return {
+			department: uniqueDepartments.map((dept) => ({
+				value: dept,
+				label: dept,
+			})),
+		};
+	}, [employees]);
+
+	const sortOptions: SortOption[] = [
+		{ value: 'employee', label: 'Employee Name' },
+		{ value: 'department', label: 'Department' },
+		{ value: 'gross', label: 'Gross Pay' },
+		{ value: 'paye', label: 'PAYE Tax' },
+	];
+
+	// Filtering and sorting logic
+	const filteredAndSortedEmployees = useMemo(() => {
+		let filtered = employees.filter((emp) => {
+			const searchMatch =
+				searchValue === '' ||
+				emp.employee.toLowerCase().includes(searchValue.toLowerCase()) ||
+				emp.department.toLowerCase().includes(searchValue.toLowerCase()) ||
+				emp.payrun.toLowerCase().includes(searchValue.toLowerCase());
+
+			const deptMatch =
+				filters.department === 'All' || emp.department === filters.department;
+
+			return searchMatch && deptMatch;
+		});
+
+		filtered.sort((a, b) => {
+			let aValue = a[sortBy as keyof EmployeeTaxData];
+			let bValue = b[sortBy as keyof EmployeeTaxData];
+
+			if (['gross', 'taxable_income', 'paye'].includes(sortBy)) {
+				aValue = Number(aValue) || 0;
+				bValue = Number(bValue) || 0;
+			}
+
+			if (typeof aValue === 'string' && typeof bValue === 'string') {
+				aValue = aValue.toLowerCase();
+				bValue = bValue.toLowerCase();
+			}
+
+			if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+			return 0;
+		});
+
+		return filtered;
+	}, [employees, searchValue, filters, sortBy, sortOrder]);
+
+	// Pagination logic
+	const paginatedEmployees = useMemo(() => {
+		const startIndex = (currentPage - 1) * pageSize;
+		return filteredAndSortedEmployees.slice(startIndex, startIndex + pageSize);
+	}, [filteredAndSortedEmployees, currentPage, pageSize]);
+
+	const handleFilterChange = (filterKey: string, value: string) => {
+		setFilters((prev) => ({
+			...prev,
+			[filterKey]: value,
+		}));
+	};
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchValue, filters, sortBy, sortOrder]);
 
 	return (
 		<div className='min-h-screen bg-gray-50 p-6'>
@@ -261,6 +342,20 @@ const TaxSummaryReport: React.FC<TaxSummaryReportProps> = ({ data }) => {
 							Employee Tax Details
 						</h3>
 					</div>
+					<div className='p-4 border-b border-gray-200'>
+						<FilterSort
+							searchValue={searchValue}
+							onSearchChange={setSearchValue}
+							filters={filters}
+							filterOptions={filterOptions}
+							onFilterChange={handleFilterChange}
+							sortBy={sortBy}
+							sortOrder={sortOrder}
+							sortOptions={sortOptions}
+							onSortChange={setSortBy}
+							onSortOrderChange={setSortOrder}
+						/>
+					</div>
 					<div className='overflow-x-auto'>
 						{employees.length === 0 ? (
 							<p className='text-gray-500 text-center py-8'>
@@ -294,7 +389,7 @@ const TaxSummaryReport: React.FC<TaxSummaryReportProps> = ({ data }) => {
 									</tr>
 								</thead>
 								<tbody className='bg-white divide-y divide-gray-200'>
-									{employees.map((emp, index) => {
+									{paginatedEmployees.map((emp, index) => {
 										const taxRate = calculateTaxRate(
 											emp.paye,
 											emp.taxable_income
@@ -346,6 +441,18 @@ const TaxSummaryReport: React.FC<TaxSummaryReportProps> = ({ data }) => {
 								</tbody>
 							</table>
 						)}
+					</div>
+					<div className='flex justify-between items-center mt-4 p-4'>
+						<PageSizeSelector
+							pageSize={pageSize}
+							onChange={setPageSize}
+						/>
+						<Pagination
+							currentPage={currentPage}
+							pageSize={pageSize}
+							totalItems={filteredAndSortedEmployees.length}
+							onPageChange={setCurrentPage}
+						/>
 					</div>
 				</div>
 

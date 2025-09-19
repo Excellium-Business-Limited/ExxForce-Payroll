@@ -19,6 +19,7 @@ import {
 	Edit,
 	EllipsisVertical,
 	Eye,
+	Trash2,
 } from 'lucide-react';
 import {
 	Popover,
@@ -217,6 +218,9 @@ const monthly = ({ payruns, value }: MonthlyProps & { value: string }) => {
 			window.location.href = '/Payrun';
 		}
 	};
+	const handleEdit = () => {
+		return alert('Function Implementation Loading')
+	}
 
 	if (payruns.length === 0) {
 		return (
@@ -432,14 +436,13 @@ const monthly = ({ payruns, value }: MonthlyProps & { value: string }) => {
 																onClick={() =>
 																	handleDraftSubmit(payrun.id.toString())
 																}>
+																<CheckIcon
+																	className='font-bold'
+																	size={18}
+																/>
 																<p className='font-light'>
 																	Submit for Approval
 																</p>
-															</Button>
-															<Button
-																variant={'default'}
-																className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
-																<p className='text-red-600'>Delete Payrun</p>
 															</Button>
 														</div>
 													) : null}
@@ -454,9 +457,19 @@ const monthly = ({ payruns, value }: MonthlyProps & { value: string }) => {
 													</Button>
 													<Button
 														variant={'default'}
-														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
+														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start' onClick={handleEdit}>
 														<Edit /> <p className='font-light'>Edit Schedule</p>
 													</Button>
+													{payrun.STATUS !== 'APPROVED' ? (
+														<div>
+															<Button
+																variant={'default'}
+																className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>
+																<Trash2 color='#e53e3e' size={18}/>
+																<p className='text-red-600'>Delete Payrun</p>
+															</Button>
+														</div>
+													) : null}
 													<Button
 														variant={'default'}
 														className='flex bg-white text-black hover:bg-secondary w-fit p-0.5  justify-start'>

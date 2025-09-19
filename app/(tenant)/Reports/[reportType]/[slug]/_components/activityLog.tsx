@@ -255,7 +255,7 @@ const ActivityLogsReport: React.FC<ActivityLogsReportProps> = ({ data }) => {
 							</thead>
 							<tbody className='bg-white divide-y divide-gray-200'>
 								{data.map((activity: ActivityLog) => (
-									<tr key={activity.id}>
+									<tr key={activity.object_id}>
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 											{formatDate(activity.timestamp)}
 										</td>
