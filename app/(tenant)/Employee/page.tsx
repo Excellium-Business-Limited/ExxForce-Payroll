@@ -33,7 +33,10 @@ interface Employee {
   job_title: string;
   department_name: string;
   pay_grade_name: string;
+  // Keep custom_salary for type compatibility, but UI uses effective_gross
   custom_salary: number;
+  // Backend now provides effective_gross instead of custom_salary
+  effective_gross?: number | string;
   bank_name: string;
   account_number: string;
   account_name: string;
@@ -118,7 +121,7 @@ const EmployeePage: React.FC = () => {
     { value: 'employee_id', label: 'Employee ID' },
     { value: 'department_name', label: 'Department' },
     { value: 'start_date', label: 'Start Date' },
-    { value: 'custom_salary', label: 'Salary' },
+  { value: 'effective_gross', label: 'Gross Salary' },
   ];
 
   // Debounce search value
@@ -185,7 +188,7 @@ const EmployeePage: React.FC = () => {
       let bValue: any = b[sortBy as keyof Employee];
 
       // Handle different data types
-      if (sortBy === 'custom_salary') {
+      if (sortBy === 'effective_gross') {
         aValue = Number(aValue) || 0;
         bValue = Number(bValue) || 0;
       } else if (sortBy === 'start_date') {
@@ -836,7 +839,7 @@ const EmployeePage: React.FC = () => {
                     {getEmployeeType(employee.employment_type)}
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                    {formatCurrency(employee.custom_salary)}
+                    {formatCurrency(Number((employee as any).effective_gross))}
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap text-sm'>
                     {employee.start_date ? (
