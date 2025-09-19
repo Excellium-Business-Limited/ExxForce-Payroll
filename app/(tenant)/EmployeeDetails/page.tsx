@@ -319,7 +319,8 @@ const EmployeeDetailsPage: React.FC = () => {
 	};
 
 	const handleAddLoan = () => {
-		console.log('Add loan functionality to be implemented');
+		// Navigate to the Loans section/page
+		router.push('/Loan');
 	};
 
 	const handleUploadDocument = () => {
