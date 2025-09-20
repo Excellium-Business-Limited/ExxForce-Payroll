@@ -60,7 +60,9 @@ function PortalTabsNav({
   );
 }
 
-export default function EmployeePortalPage() {
+export const dynamic = 'force-dynamic';
+
+function EmployeePortalInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const employeeId = searchParams.get('id');
@@ -371,5 +373,13 @@ export default function EmployeePortalPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function EmployeePortalPage() {
+  return (
+    <Suspense fallback={<div className='p-6'><Loading message='Loading portal...' size='medium' variant='spinner' overlay={false} /></div>}>
+      <EmployeePortalInner />
+    </Suspense>
   );
 }
